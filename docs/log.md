@@ -10,9 +10,13 @@ o  Getting started
     *  Sync
 o  Start with server
     *  Boiler plate from example in notes
-    o  Read how receive packets from listener
-    o  Make separate object to listen to protocol messages and post debug from it
-    o  How test conn?
+    *  Read how receive packets from listener
+    *  Make separate object to listen to protocol messages and post debug 
+       from it
+    *  How test conn? (netcat)
+    o  Bundle wait for command word then hand off
+        o  See https://appliedgo.net/networking/ and anticipate gob payload
+        o  Do it
 
 ------------------------------------------------------------------------------
 
@@ -22,3 +26,9 @@ github.com/peterhoward42/toy-kafka/...
     client
         produce
         consume
+
+------------------------------------------------------------------------------
+Conn interface
+------------------------------------------------------------------------------
+
+Read(b []byte) (n int, err error)

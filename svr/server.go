@@ -26,9 +26,13 @@ func (*Server) Run(msg string) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		go func(connection net.Conn) {
-            // Do something on stuff that arrives here.
-			connection.Close()
-		}(conn)
+		log.Printf("Accepted a connection")
+		defer conn.Close()
+
+		// Launch a per-connection command interpreter in a goroutine, that
+		// consumes the incoming stream.
+
+        interpreter := NewInterpreter()
+        go interpreter.Interpret(conn)
 	}
 }
