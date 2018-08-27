@@ -7,8 +7,12 @@ o  Getting started
     *  Install go
     *  Create and checkout repo with readme
     *  Add go .gitignore
-    o  Sync
-    o  Start with server
+    *  Sync
+o  Start with server
+    *  Boiler plate from example in notes
+    o  Read how receive packets from listener
+    o  Make separate object to listen to protocol messages and post debug from it
+    o  How test conn?
 
 ------------------------------------------------------------------------------
 
