@@ -1,6 +1,8 @@
 package  svr
 
 import (
+    "bufio"
+    "encoding/gob"
 	"log"
 	"net"
 )
@@ -13,25 +15,19 @@ func NewInterpreter() *Interpreter {
 	}
 }
 
-type complexData struct {
-	N int
-	S string
-	M map[string]int
-	P []byte
-	C *complexData
-}
-
 func (*Interpreter) Interpret(conn net.Conn) {
+	defer conn.Close()
     rw := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
+    dec := gob.NewDecoder(rw)
+    var commandCode CommandCode
 
-	// For each incoming command...
+	// Switch depending on command code at start of each incoming message.
 	for {
-	    var data complexData
-	    dec := gob.NewDecoder(rw)
-        err := dec.Decode(&data) // Blocks waiting for sufficient input.
+        err := dec.Decode(&commandCode) // Blocks waiting for sufficient input.
         if err != nil {
             log.Println("Error decoding GOB data:", err)
             return
+        log.Println("Recevied command code: %v", commandCode)
         }
     }
 }

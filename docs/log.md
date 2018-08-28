@@ -14,9 +14,22 @@ o  Start with server
     *  Make separate object to listen to protocol messages and post debug 
        from it
     *  How test conn? (netcat)
-    o  Bundle wait for command word then hand off
-        o  See https://appliedgo.net/networking/ and anticipate gob payload
-        o  Do it
+    *  The defer close cannot before control passes to the go routine with 
+       interpreter
+    *  See https://appliedgo.net/networking/ and anticipate gob payload
+    o  Start scratch cli client to test command dispatch
+        o  start with plain producer client with hard code emitssion of produce
+           message
+            o  design payload for whole produce message, starting with 
+               command code
+            o  code it
+                *  cmd line app taking topic from args
+                *  invite enter messages
+                *  send each one as entered
+                *  echo ack
+                o  read how to initiate connn and sned gob, suspect make 
+                   persistent connection and hold it
+        o  how does server respond?
 
 ------------------------------------------------------------------------------
 
@@ -31,4 +44,4 @@ github.com/peterhoward42/toy-kafka/...
 Conn interface
 ------------------------------------------------------------------------------
 
-Read(b []byte) (n int, err error)
+command comes first as is short int

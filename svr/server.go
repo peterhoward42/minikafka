@@ -27,7 +27,6 @@ func (*Server) Run(msg string) {
 			log.Fatal(err)
 		}
 		log.Printf("Accepted a connection")
-		defer conn.Close()
 
 		// Launch a per-connection command interpreter in a goroutine, that
 		// consumes the incoming stream.
