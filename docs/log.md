@@ -18,18 +18,13 @@ o  Start with server
        interpreter
     *  See https://appliedgo.net/networking/ and anticipate gob payload
     o  Start scratch cli client to test command dispatch
-        o  start with plain producer client with hard code emitssion of produce
-           message
-            o  design payload for whole produce message, starting with 
-               command code
-            o  code it
-                *  cmd line app taking topic from args
-                *  invite enter messages
-                *  send each one as entered
-                *  echo ack
-                o  read how to initiate connn and sned gob, suspect make 
-                   persistent connection and hold it
         o  how does server respond?
+            o  succeeds in decoding entire payload, but cant save in a 
+                command key instance
+                *  send only command key
+                o  is dec.Decode() blocking or spinning? = blocking except when
+                   EOF is stuck in pipe, then spins ?
+                o  wait for ack, then continue to send message
 
 ------------------------------------------------------------------------------
 

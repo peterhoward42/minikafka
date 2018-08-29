@@ -35,7 +35,7 @@ func main() {
         message_num, err := producer.SendMessage(msg_text)
 
         if err != nil {
-            log.Printf("Error from producer: %v", err)
+            log.Printf("Error SendMessage: %v", err)
             continue
         }
         log.Printf("Server acknowledged message number: %v", message_num)

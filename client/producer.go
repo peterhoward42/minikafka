@@ -2,14 +2,18 @@ package client
 
 import (
     "bufio"
+    "encoding/gob"
     "errors"
     "fmt"
     "net"
+
+    "github.com/peterhoward42/toy-kafka/svr"
 )
 
 type Producer struct {
     topic string
-    serverReadWriter *bufio.ReadWriter
+    rw bufio.ReadWriter
+    gobEncoder *gob.Encoder
 }
 
 func NewProducer(topic string) (*Producer, error) {
@@ -22,14 +26,33 @@ func NewProducer(topic string) (*Producer, error) {
 		    err))
 	}
 	rw := bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn))
+	enc := gob.NewEncoder(rw)
 
 	return &Producer{
 	    topic: topic,
-	    serverReadWriter: rw,
+	    rw: *rw,
+	    gobEncoder: enc,
 	}, nil
 }
 
-func (*Producer) SendMessage(message string) (msg_num int, err error) {
+func (prod *Producer) SendMessage(message string) (
+        msg_num int, err error) {
+
+    err = prod.gobEncoder.Encode(svr.ProduceCmd)
+	if err != nil {
+		return -1, errors.New(fmt.Sprintf(
+		    "Failed to encode ProduceCmd with: %v", err))
+	}
+	err = prod.rw.Flush()
+	if err != nil {
+		return -1, errors.New(fmt.Sprintf(
+		    "Flush failed in SendMessage, with: %v", err))
+	}
+
+	// Read the acknowledgement before sending message payload.
+
+	// todo - how to read and inspect the response
+
     return 0, fmt.Errorf("place holder")
 }
 
