@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package protocol;
+
+service ToyKafka {
+  rpc Produce(ProduceRequest) returns (MsgNumber){}
+}
+
+message Topic {
+  string topic = 1;
+}
+
+message Payload {
+  bytes payload = 1;
+}
+
+message ProduceRequest {
+  Topic topic = 1;
+  Payload payload = 2;
+}
+
+message MsgNumber {
+  int32 msg_number = 1;
+}

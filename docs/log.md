@@ -8,9 +8,32 @@ o  Switch to grpc
         *  ditch svr interpreter
         *  ditch srv protocol
         *  Cut down server to almost nothing awaiting tutorial shape
-        o  Commit and push explaining what is
-            *  Conn to github?
-            o  add / commit
-            o  pull / merge
-            o  push
+        *  Commit and push explaining what is
     o  Literally start adding code as per tutorial
+        *  Initiate a protocol dir with toykafka.proto
+        *  Define and wrk only with a unary produce message to start with
+            *  Make proto fil
+        *  Compile it inti toykafka.pb.go and grok tpes and interfaces
+        o  Maker server 
+            *  Cut down example to min viable
+            *  Get it to compile
+            *  Call it from cmd
+                *  Division of responsibilities wrong between command and
+                   server class
+            o  Try running it
+            o  Should server's produce method be private
+        o  Make client
+        o  Try it out
+
+
+o  Add tests
+o  Add TLS
+o  Add flags or env config
+
+
+----------------------------------------------------------------
+Correct boundary for server
+----------------------------------------------------------------
+Cmd should instantiate  and configure server
+    o  inject host/port
+Then mandate it to serve

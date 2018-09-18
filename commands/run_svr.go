@@ -5,7 +5,9 @@ import "fmt"
 import "github.com/peterhoward42/toy-kafka/svr"
 
 func main() {
-    svr := svr.NewServer(42)
-    svr.Run("fibble")
+	host := "localhost"
+	port := 8086
+	svr := svr.NewServer()
+	svr.Serve(host, port)
 	fmt.Println("Finished")
 }
