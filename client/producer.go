@@ -1,28 +1,53 @@
 package client
 
 import (
-	"bufio"
-	"encoding/gob"
-	"errors"
+	"context"
 	"fmt"
-	"net"
+	"log"
+	"time"
 
-	"github.com/peterhoward42/toy-kafka/svr"
+	"google.golang.org/grpc"
+
+	pb "github.com/peterhoward42/toy-kafka/protocol"
 )
 
+// Producer provides a convenience API to a ToyKafkaClient to simplify the
+// process of sending *Produce* messages.
 type Producer struct {
-	topic string
+	topic       string
+	clientProxy pb.ToyKafkaClient
 }
 
-func NewProducer(topic string) (*Producer, error) {
+// NewProducer provides a new Producer instance that is bound to given server
+// address, and a given message topic.
+func NewProducer(topic string, host string, port int) (*Producer, error) {
 
-	return &Producer{
-		topic:      topic
-	}, nil
+	p := &Producer{topic: topic}
+	serverAddr := fmt.Sprintf("%s:%d", host, port)
+	opts := []grpc.DialOption{}
+	conn, err := grpc.Dial(serverAddr, opts...)
+	if err != nil {
+		log.Fatalf("fail to dial: %v", err)
+	}
+	defer conn.Close()
+	p.clientProxy = pb.NewToyKafkaClient(conn)
+	return p, nil
 }
 
-func (prod *Producer) SendMessage(message string) (
-	msg_num int, err error) {
-
-	return 0, fmt.Errorf("Not implemented yet.")
+// SendMessage is the primary API method for Producer, which sends a Produce
+// message comprising the given string to the server.
+func (p *Producer) SendMessage(message string) (msgNum int32, err error) {
+	log.Printf("Sending msg.")
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	payloadBytes := []byte(message)
+	topic := &pb.Topic{Topic: p.topic}
+	payload := &pb.Payload{Payload: payloadBytes}
+	produceRequest := &pb.ProduceRequest{Topic: topic, Payload: payload}
+	msgNumber, err := p.clientProxy.Produce(ctx, produceRequest)
+	if err != nil {
+		log.Fatalf("Call to client proxy Produce() failed: %v.", err)
+	}
+	log.Printf("Message acknowledged.")
+	return msgNumber.GetMsgNumber(), err
 }

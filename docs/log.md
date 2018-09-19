@@ -14,16 +14,26 @@ o  Switch to grpc
         *  Define and wrk only with a unary produce message to start with
             *  Make proto fil
         *  Compile it inti toykafka.pb.go and grok tpes and interfaces
-        o  Maker server 
+        *  Maker server 
             *  Cut down example to min viable
             *  Get it to compile
             *  Call it from cmd
                 *  Division of responsibilities wrong between command and
                    server class
-            o  Try running it
-            o  Should server's produce method be private
+            *  Try running it
         o  Make client
-        o  Try it out
+            *  Cut down example to min viable
+            *  Integrate with cli command
+            *  Get to compile
+                *  Two main()s !
+            o  Try against server
+                o  Need to configure security
+                    o  Server
+                    o  Client
+        o  Must we have timeout on request
+    o  How get go generate to work
+    o  Make it do the real thing for a produce against a in-memory backend.
+    o  Add in get command
 
 
 o  Add tests
