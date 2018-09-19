@@ -24,12 +24,11 @@ func NewProducer(topic string, host string, port int) (*Producer, error) {
 
 	p := &Producer{topic: topic}
 	serverAddr := fmt.Sprintf("%s:%d", host, port)
-	opts := []grpc.DialOption{}
+	opts := []grpc.DialOption{grpc.WithInsecure()}
 	conn, err := grpc.Dial(serverAddr, opts...)
 	if err != nil {
 		log.Fatalf("fail to dial: %v", err)
 	}
-	defer conn.Close()
 	p.clientProxy = pb.NewToyKafkaClient(conn)
 	return p, nil
 }
@@ -38,7 +37,7 @@ func NewProducer(topic string, host string, port int) (*Producer, error) {
 // message comprising the given string to the server.
 func (p *Producer) SendMessage(message string) (msgNum int32, err error) {
 	log.Printf("Sending msg.")
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	payloadBytes := []byte(message)
 	topic := &pb.Topic{Topic: p.topic}

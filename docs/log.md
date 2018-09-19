@@ -21,29 +21,27 @@ o  Switch to grpc
                 *  Division of responsibilities wrong between command and
                    server class
             *  Try running it
-        o  Make client
+        *  Make client
             *  Cut down example to min viable
             *  Integrate with cli command
             *  Get to compile
                 *  Two main()s !
-            o  Try against server
-                o  Need to configure security
-                    o  Server
-                    o  Client
-        o  Must we have timeout on request
+            *  Try against server
+                *  Need to configure security on client
+        o  No good doing defer conn.Close() in NewProducer, but when?
+        o  Must we have timeout on request?
     o  How get go generate to work
-    o  Make it do the real thing for a produce against a in-memory backend.
-    o  Add in get command
-
-
+    o  Shared default host/port
+    o  Make it do the *real* thing for a produce against a in-memory backend.
+        o  Add to store (with mutex)
+        o  Increment that topic's next message number (to use)
+    o  Now do getter client
+    o  Now do time expunge housekeeping
+    o  12-factor conformance
 o  Add tests
-o  Add TLS
-o  Add flags or env config
+o  Add TLS / and or JWT auth
+o  Prioritize from: redis backend, pub/sub, dockerize, deploy k8s.
 
 
 ----------------------------------------------------------------
-Correct boundary for server
 ----------------------------------------------------------------
-Cmd should instantiate  and configure server
-    o  inject host/port
-Then mandate it to serve
