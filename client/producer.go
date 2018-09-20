@@ -18,8 +18,8 @@ type Producer struct {
 	clientProxy pb.ToyKafkaClient
 }
 
-// NewProducer provides a new Producer instance that is bound to given server
-// address, and a given message topic.
+// NewProducer provides a new Producer instance that is bound to a given
+// server address, and a given message topic.
 func NewProducer(topic string, host string, port int) (*Producer, error) {
 
 	p := &Producer{topic: topic}

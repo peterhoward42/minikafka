@@ -28,20 +28,18 @@ o  Switch to grpc
                 *  Two main()s !
             *  Try against server
                 *  Need to configure security on client
-        o  No good doing defer conn.Close() in NewProducer, but when?
-        o  Must we have timeout on request?
-    o  How get go generate to work
+        *  Make backlog / shift stuff into it
+        *  No good doing defer conn.Close() in NewProducer, but when?
+    *  How get go generate to work
     o  Shared default host/port
     o  Make it do the *real* thing for a produce against a in-memory backend.
         o  Add to store (with mutex)
         o  Increment that topic's next message number (to use)
     o  Now do getter client
-    o  Now do time expunge housekeeping
-    o  12-factor conformance
+    o  Now do time based message evition housekeeping
+    o  Configure host from envars
 o  Add tests
 o  Add TLS / and or JWT auth
-o  Prioritize from: redis backend, pub/sub, dockerize, deploy k8s.
-
 
 ----------------------------------------------------------------
 ----------------------------------------------------------------
