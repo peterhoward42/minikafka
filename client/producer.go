@@ -35,7 +35,7 @@ func NewProducer(topic string, host string, port int) (*Producer, error) {
 
 // SendMessage is the primary API method for Producer, which sends a Produce
 // message comprising the given string to the server.
-func (p *Producer) SendMessage(message string) (msgNum int32, err error) {
+func (p *Producer) SendMessage(message string) (msgNum uint32, err error) {
 	log.Printf("Sending msg.")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
