@@ -31,12 +31,20 @@ o  Switch to grpc
         *  Make backlog / shift stuff into it
         *  No good doing defer conn.Close() in NewProducer, but when?
     *  How get go generate to work
-    o  Shared default host/port
-        o  expose a contstant from server module
-        o  use it in client
-        o  use it in server
+    *  Shared default host/port
     o  Make it do the *real* thing for a produce against a in-memory backend.
         o  Add to store (with mutex)
+            *  Design BackingStore interface
+            *  Design memory schema
+            o  Create memory backed implementation of the backingstore
+                *  Create packages and interface
+                *  Code mem impl
+                *  Get to compile
+                o  Instantiate backing store in svr at boot time
+                o  Call store on it
+                o  Mutex protected write to ds
+                o  Return values
+            o  Test it
         o  Increment that topic's next message number (to use)
     o  Now do getter client
     o  Now do time based message evition housekeeping

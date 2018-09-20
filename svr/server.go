@@ -9,16 +9,21 @@ import (
 	"google.golang.org/grpc"
 
 	pb "github.com/peterhoward42/toy-kafka/protocol"
+	"github.com/peterhoward42/toy-kafka/svr/backends"
 )
 
 // Server *is* the toy kafka (grpc) server.
 type Server struct {
+	store backends.BackingStore // Interface to pluggable alternatives.
 }
 
 // NewServer creates and initialises a new server, but does not fire
 // up the underlying grpc server.
 func NewServer() *Server {
-	return &Server{}
+	// First implementation uses an in-memory, volatile storage
+	// solution.
+	backingStore := backends.NewMemStore()
+	return &Server{backingStore}
 }
 
 // Serve mandates the server to start serving.
@@ -38,6 +43,13 @@ func (s *Server) Serve(host string, port int) {
 // required by toykafka.proto.
 func (s *Server) Produce(
 	ctx context.Context, req *pb.ProduceRequest) (*pb.MsgNumber, error) {
-	// Placeholder code - returns a hard-coded result.
-	return &pb.MsgNumber{MsgNumber: 42}, nil
+
+	// Delegate storage to the backing store provider.
+	topicStr := req.GetTopic().Topic
+	messageBytes := req.GetPayload().Payload
+	msgNumber, err := s.store.Store(topicStr, messageBytes)
+	if err != nil {
+		log.Fatalf("Error storing message: %v", err)
+	}
+	return &pb.MsgNumber{MsgNumber: msgNumber}, nil
 }

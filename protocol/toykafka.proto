@@ -20,5 +20,5 @@ message ProduceRequest {
 }
 
 message MsgNumber {
-  int32 msg_number = 1;
+  uint32 msg_number = 1;
 }

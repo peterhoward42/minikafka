@@ -34,7 +34,7 @@ func (m *Topic) Reset()         { *m = Topic{} }
 func (m *Topic) String() string { return proto.CompactTextString(m) }
 func (*Topic) ProtoMessage()    {}
 func (*Topic) Descriptor() ([]byte, []int) {
-	return fileDescriptor_toykafka_21a3ffd99066f8b6, []int{0}
+	return fileDescriptor_toykafka_b0fac29e1443ae14, []int{0}
 }
 func (m *Topic) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Topic.Unmarshal(m, b)
@@ -72,7 +72,7 @@ func (m *Payload) Reset()         { *m = Payload{} }
 func (m *Payload) String() string { return proto.CompactTextString(m) }
 func (*Payload) ProtoMessage()    {}
 func (*Payload) Descriptor() ([]byte, []int) {
-	return fileDescriptor_toykafka_21a3ffd99066f8b6, []int{1}
+	return fileDescriptor_toykafka_b0fac29e1443ae14, []int{1}
 }
 func (m *Payload) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Payload.Unmarshal(m, b)
@@ -111,7 +111,7 @@ func (m *ProduceRequest) Reset()         { *m = ProduceRequest{} }
 func (m *ProduceRequest) String() string { return proto.CompactTextString(m) }
 func (*ProduceRequest) ProtoMessage()    {}
 func (*ProduceRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_toykafka_21a3ffd99066f8b6, []int{2}
+	return fileDescriptor_toykafka_b0fac29e1443ae14, []int{2}
 }
 func (m *ProduceRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ProduceRequest.Unmarshal(m, b)
@@ -146,7 +146,7 @@ func (m *ProduceRequest) GetPayload() *Payload {
 }
 
 type MsgNumber struct {
-	MsgNumber            int32    `protobuf:"varint,1,opt,name=msg_number,json=msgNumber,proto3" json:"msg_number,omitempty"`
+	MsgNumber            uint32   `protobuf:"varint,1,opt,name=msg_number,json=msgNumber,proto3" json:"msg_number,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -156,7 +156,7 @@ func (m *MsgNumber) Reset()         { *m = MsgNumber{} }
 func (m *MsgNumber) String() string { return proto.CompactTextString(m) }
 func (*MsgNumber) ProtoMessage()    {}
 func (*MsgNumber) Descriptor() ([]byte, []int) {
-	return fileDescriptor_toykafka_21a3ffd99066f8b6, []int{3}
+	return fileDescriptor_toykafka_b0fac29e1443ae14, []int{3}
 }
 func (m *MsgNumber) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_MsgNumber.Unmarshal(m, b)
@@ -176,7 +176,7 @@ func (m *MsgNumber) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgNumber proto.InternalMessageInfo
 
-func (m *MsgNumber) GetMsgNumber() int32 {
+func (m *MsgNumber) GetMsgNumber() uint32 {
 	if m != nil {
 		return m.MsgNumber
 	}
@@ -262,9 +262,9 @@ var _ToyKafka_serviceDesc = grpc.ServiceDesc{
 	Metadata: "toykafka.proto",
 }
 
-func init() { proto.RegisterFile("toykafka.proto", fileDescriptor_toykafka_21a3ffd99066f8b6) }
+func init() { proto.RegisterFile("toykafka.proto", fileDescriptor_toykafka_b0fac29e1443ae14) }
 
-var fileDescriptor_toykafka_21a3ffd99066f8b6 = []byte{
+var fileDescriptor_toykafka_b0fac29e1443ae14 = []byte{
 	// 209 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x2b, 0xc9, 0xaf, 0xcc,
 	0x4e, 0x4c, 0xcb, 0x4e, 0xd4, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0xe2, 0x00, 0x53, 0xc9, 0xf9,
@@ -275,9 +275,9 @@ var fileDescriptor_toykafka_21a3ffd99066f8b6 = []byte{
 	0xa9, 0xc5, 0x25, 0x42, 0xaa, 0xc8, 0x86, 0x71, 0x1b, 0xf1, 0xeb, 0xc1, 0xec, 0xd3, 0x03, 0x5b,
 	0x06, 0x35, 0x5d, 0x48, 0x1b, 0x61, 0x24, 0x13, 0x58, 0xa1, 0x20, 0x42, 0x21, 0xd4, 0x5a, 0x84,
 	0x2d, 0x5a, 0x5c, 0x9c, 0xbe, 0xc5, 0xe9, 0x7e, 0xa5, 0xb9, 0x49, 0xa9, 0x45, 0x42, 0xb2, 0x5c,
-	0x5c, 0xb9, 0xc5, 0xe9, 0xf1, 0x79, 0x60, 0x1e, 0xd8, 0x16, 0xd6, 0x20, 0xce, 0x5c, 0x98, 0xb4,
+	0x5c, 0xb9, 0xc5, 0xe9, 0xf1, 0x79, 0x60, 0x1e, 0xd8, 0x16, 0xde, 0x20, 0xce, 0x5c, 0x98, 0xb4,
 	0x91, 0x1b, 0x17, 0x47, 0x48, 0x7e, 0xa5, 0x37, 0xc8, 0xc7, 0x42, 0x56, 0x5c, 0xec, 0x50, 0xd7,
 	0x09, 0x49, 0x20, 0x19, 0x8f, 0xe2, 0x60, 0x29, 0x61, 0x84, 0x0c, 0xdc, 0x12, 0x25, 0x86, 0x24,
-	0x36, 0xb0, 0xa8, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff, 0xcf, 0xcf, 0xfe, 0x76, 0x40, 0x01, 0x00,
+	0x36, 0xb0, 0xa8, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff, 0x47, 0xd6, 0x2f, 0xf6, 0x40, 0x01, 0x00,
 	0x00,
 }
