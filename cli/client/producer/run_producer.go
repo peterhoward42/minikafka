@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/peterhoward42/toy-kafka/client"
+	"github.com/peterhoward42/toy-kafka/protocol"
 )
 
 func main() {
@@ -20,8 +21,9 @@ func main() {
 		log.Fatal("You must specify a topic using the '-topic flag'")
 	}
 
+	// Todo - required host, and override port from environment variables.
 	host := "localhost"
-	port := 8086
+	port := protocol.DefaultPort
 	producer, err := client.NewProducer(*topic, host, port)
 	if err != nil {
 		log.Fatalf("Failed to create Producer, with error: %v", err)

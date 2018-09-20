@@ -32,6 +32,9 @@ o  Switch to grpc
         *  No good doing defer conn.Close() in NewProducer, but when?
     *  How get go generate to work
     o  Shared default host/port
+        o  expose a contstant from server module
+        o  use it in client
+        o  use it in server
     o  Make it do the *real* thing for a produce against a in-memory backend.
         o  Add to store (with mutex)
         o  Increment that topic's next message number (to use)
