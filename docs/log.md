@@ -5,12 +5,15 @@
 *  Clean up comments a bit
 o  Now do time based message culling
     *  Let test be > N seconds old. Server setting. 
-    o  Swithcing to feature branch
+    *  Swithcing to feature branch
+    o  Have server launch a goroutine for this - constructed with a age 
+       limit param
     o  Server launch param for now.
     o  Decision making run by svr
     o  Passes message to store (extend interface)
     o  Log the culls from the svr not the store
     o  memstore impl...
+o  Consider error handling from the startCulling go routine?
 o  Now do getter client
 o  Configure host from envars
 o  Add tests

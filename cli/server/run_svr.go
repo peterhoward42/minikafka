@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 import (
 	"github.com/peterhoward42/toy-kafka/protocol"
@@ -9,9 +12,14 @@ import (
 
 func main() {
 	// Todo: Override port from environment variables.
+	// Todo: Override retentionsTime from command line argument.
+
 	host := "localhost"
 	port := protocol.DefaultPort
 	svr := svr.NewServer()
-	svr.Serve(host, port)
+
+	const retentionTime = time.Duration(time.Second * 2)
+	svr.Serve(host, port, retentionTime)
+
 	fmt.Println("Server Finished")
 }
