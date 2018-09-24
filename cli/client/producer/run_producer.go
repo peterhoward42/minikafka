@@ -36,14 +36,11 @@ func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 		messageTxt := scanner.Text()
-		messageNum, err := producer.SendMessage(messageTxt)
+		_, err := producer.SendMessage(messageTxt)
 
 		if err != nil {
 			log.Printf("Error SendMessage: %v", err)
 			continue
 		}
-		log.Printf("Server acknowledged message number: %v", messageNum)
 	}
-
-	fmt.Printf("Finished\n")
 }

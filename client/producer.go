@@ -36,7 +36,7 @@ func NewProducer(topic string, host string, port int) (*Producer, error) {
 // SendMessage is the primary API method for Producer, which sends a Produce
 // message comprising the given string to the server.
 func (p *Producer) SendMessage(message string) (msgNum uint32, err error) {
-	log.Printf("Sending msg.")
+	log.Printf("Producer sending msg.")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	payloadBytes := []byte(message)
@@ -47,6 +47,6 @@ func (p *Producer) SendMessage(message string) (msgNum uint32, err error) {
 	if err != nil {
 		log.Fatalf("Call to client proxy Produce() failed: %v.", err)
 	}
-	log.Printf("Message acknowledged.")
+	log.Printf("Reply message number: %v", msgNumber)
 	return msgNumber.GetMsgNumber(), err
 }

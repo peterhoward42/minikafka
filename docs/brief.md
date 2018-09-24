@@ -9,7 +9,8 @@ Can specify topics.
 Only granularity is topic.
 No partitions and thus segments.
 No clustering.
-One file per topic.
+Start with in-memory (volatile) backing store.
+Switch later to Redit backing store.
 Simple discard time.
 Multiple concurrent clients.
 Protocol simplified to minimum viable to make *something*.
