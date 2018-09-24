@@ -5,6 +5,7 @@
 *  Clean up comments a bit
 o  Now do time based message culling
     *  Let test be > N seconds old. Server setting. 
+    o  Swithcing to feature branch
     o  Server launch param for now.
     o  Decision making run by svr
     o  Passes message to store (extend interface)
