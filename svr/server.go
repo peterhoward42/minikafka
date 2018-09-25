@@ -59,7 +59,9 @@ func (s *Server) startCulling(retentionTime time.Duration) {
 		// unary-minus on the *retentionTime* time.Duration struct.
 		maxAge := time.Now().Add(-retentionTime)
 		// Delegate to the backing store implementation.
-		s.store.RemoveOldMessages(maxAge)
+		err := s.store.RemoveOldMessages(maxAge); if err != nil {
+            log.Fatalf("Error removing old messages: %v", err)
+        }
 	}
 }
 

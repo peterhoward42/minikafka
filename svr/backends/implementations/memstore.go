@@ -40,6 +40,7 @@ func (m *MemStore) Store(topic string, message contract.Message) (
 	messageNumber int, err error) {
 
 	mutex.Lock()
+    defer mutex.Unlock()
 
 	// Special case, if this is a new topic.
 	if _, ok := m.messagesPerTopic[topic]; ok == false {
@@ -56,23 +57,26 @@ func (m *MemStore) Store(topic string, message contract.Message) (
 	msgToAdd := messageStorage{message, time.Now(), m.newestMessageNumber[topic]}
 	m.messagesPerTopic[topic] = append(m.messagesPerTopic[topic], msgToAdd)
 
-	mutex.Unlock()
 	return m.newestMessageNumber[topic], nil
 }
 
 // RemoveOldMessages is defined by, and documented in the
 // backends/contract/BackingStore interface.
-func (m *MemStore) RemoveOldMessages(maxAge time.Time) {
+func (m *MemStore) RemoveOldMessages(maxAge time.Time) error {
 	mutex.Lock()
+    defer mutex.Unlock()
 	for topic := range m.messagesPerTopic {
-		m.removeOldMessagesFromTopic(topic, maxAge)
+		err := m.removeOldMessagesFromTopic(topic, maxAge); if err != nil {
+            return err
+        }
 	}
-	mutex.Unlock()
+    return nil
 }
 
 // RemoveOldMessagesFromTopic is a topic-specific helper function for the
 // whole-store RemoveOldMessages method.
-func (m *MemStore) removeOldMessagesFromTopic(topic string, maxAge time.Time) {
+func (m *MemStore) removeOldMessagesFromTopic(
+        topic string, maxAge time.Time) error {
 	messages := m.messagesPerTopic[topic]
 	keepFrom := sort.Search(len(messages), func(i int) bool {
 		return messages[i].creationTime.After(maxAge)
@@ -90,6 +94,7 @@ func (m *MemStore) removeOldMessagesFromTopic(topic string, maxAge time.Time) {
 		copy(freshSlice, messagesToKeep)
 		m.messagesPerTopic[topic] = freshSlice
 	}
+    return nil
 }
 
 // ------------------------------------------------------------------------

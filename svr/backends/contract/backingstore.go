@@ -20,5 +20,5 @@ type BackingStore interface {
 
 	// RemoveOldMessages removes any messages in the store that were stored
 	// before the time specified.
-	RemoveOldMessages(maxAge time.Time)
+	RemoveOldMessages(maxAge time.Time) (err error)
 }

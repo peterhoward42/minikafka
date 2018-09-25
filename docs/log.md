@@ -20,7 +20,10 @@ o  Now do time based message culling
         *  Runs
         *  Removing the right ones
     *  Add and housekeeping?
-o  Consider error handling from the startCulling go routine?
+    *  Consider error handling from the startCulling go routine?
+        *  cascade err return value thru api and both remove impl
+        *  check for it back in svr
+    o  Merge this branch into head
 o  Now do getter client
 o  Configure host from envars
 o  Add tests
