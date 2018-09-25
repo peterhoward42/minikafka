@@ -16,7 +16,7 @@ type BackingStore interface {
 	// Store adds the given message to the sequence of Messages already
 	// held in the store for a Topic, and return the message number thus
 	// asigned to it.
-	Store(topic string, message Message) (messageNumber uint32, err error)
+	Store(topic string, message Message) (messageNumber int, err error)
 
 	// RemoveOldMessages removes any messages in the store that were stored
 	// before the time specified.

@@ -1,7 +1,6 @@
 package implementations
 
 import (
-	"sort"
 	"sync"
 	"time"
 
@@ -11,39 +10,53 @@ import (
 // MemStore implements the svr/backends/contract/BackingStore interface using
 // a volatile, in-process memory store.
 type MemStore struct {
-	allTopics map[string]*oneTopic // Keyed on topic.
+	// Fundamental storage is separated by topic, and comprises simply an
+	// time-ordered slice of *messageStorage* objects. (These hold
+	// their own payload, creation time, and message-number.
+	allTopics map[string][]messageStorage // Keyed on topic.
 }
 
 // NewMemStore constructs and initializes an empty MemStore instance.
 func NewMemStore() *MemStore {
-	return &MemStore{map[string]*oneTopic{}}
+	return &MemStore{map[string][]messageStorage{}}
 }
 
 var mutex = &sync.Mutex{} // Protect mutation of the MemStore.
 
+// ------------------------------------------------------------------------
 // METHODS TO SATISFY THE BackingStore INTERFACE.
+// ------------------------------------------------------------------------
 
 // Store is defined by, and documented in the backends/contract/BackingStore
 // interface.
 func (m *MemStore) Store(topic string, message contract.Message) (
-	messageNumber uint32, err error) {
+	messageNumber int, err error) {
 
 	mutex.Lock()
 
-	// New topic?
-	tpc, ok := m.allTopics[topic]
+	// Special case, this is a new topic.
+	_, ok := m.allTopics[topic]
 	if ok == false {
-		tpc := newOneTopic()
-		m.allTopics[topic] = tpc
+		m.allTopics[topic] = []messageStorage{}
 	}
 
-	tpc.messages = append(tpc.messages, message)
-	tpc.newestMessageNumber++
-	tpc.created[tpc.newestMessageNumber] = time.Now()
+	// Now the general case.
 
-	n := tpc.newestMessageNumber // Copy avoids mutation risk before return.
+	// Allocate the next available message number.
+	count := len(m.allTopics[topic])
+	var messageNum int
+	if count == 0 {
+		messageNum = 1
+	} else {
+		messageNum = m.allTopics[topic][count-1].messageNumber + 1
+	}
+
+	// Make and add the new message.
+	msgToAdd := messageStorage{message, time.Now(), messageNum}
+	m.allTopics[topic] = append(m.allTopics[topic], msgToAdd)
+
 	mutex.Unlock()
-	return n, nil
+	return messageNum, nil
 }
 
 // RemoveOldMessages is defined by, and documented in the
@@ -51,17 +64,8 @@ func (m *MemStore) Store(topic string, message contract.Message) (
 func (m *MemStore) RemoveOldMessages(maxAge time.Time) {
 	// Protect the memory from concurrent access.
 	mutex.Lock()
-
-	earliest := sort.Search(fibble)
-
-	// What datastructures to releate messages to creation time?
-	// a map[topic][msgnumber] = creation Time obj.
-	// When set? time of addition.
-	// How to do reduction in one go? = use sort.Search to find slice indices.
-	// Coping with none such. await
-	// What side effects pruning needed? = remove spent keys in created
-
-	// Release the mutex
+	for _, tpc := range m.allTopics {
+	}
 	mutex.Unlock()
 }
 
@@ -69,16 +73,10 @@ func (m *MemStore) RemoveOldMessages(maxAge time.Time) {
 // AUXILLIARY TYPES AND THEIR METHODS.
 // ------------------------------------------------------------------------
 
-type messageStream []contract.Message
-
-type oneTopic struct {
-	messages            messageStream
-	newestMessageNumber uint32
-	created             map[uint32]time.Time
-}
-
-func newOneTopic() *oneTopic {
-	return &oneTopic{
-		messages: []contract.Message{},
-	}
+// messageStorage encapsulates a message payload (bytes), plus its creation time,
+// and message number.
+type messageStorage struct {
+	payload       contract.Message
+	creationTime  time.Time
+	messageNumber int
 }
