@@ -18,7 +18,7 @@ func main() {
 	port := protocol.DefaultPort
 	svr := svr.NewServer()
 
-	const retentionTime = time.Duration(time.Second * 2)
+	const retentionTime = time.Duration(time.Second * 5)
 	svr.Serve(host, port, retentionTime)
 
 	fmt.Println("Server Finished")

@@ -51,7 +51,8 @@ func (s *Server) Serve(host string, port int, retentionTime time.Duration) {
 // own goroutine), which removes messages from the backing store when their age
 // exceeds *retentionTime*.
 func (s *Server) startCulling(retentionTime time.Duration) {
-	ticker := time.NewTicker(retentionTime)
+    cullCheckFrequency := time.Duration(2) * time.Second
+	ticker := time.NewTicker(cullCheckFrequency)
 	for range ticker.C {
 		// Note time.Add() and time.Sub() operate with differing types,
 		// and the use of Add() here is deliberate. Also that you can do
@@ -79,5 +80,5 @@ func (s *Server) Produce(
 	if err != nil {
 		log.Fatalf("Error storing message: %v", err)
 	}
-	return &pb.MsgNumber{MsgNumber: msgNumber}, nil
+	return &pb.MsgNumber{MsgNumber: uint32(msgNumber)}, nil
 }
