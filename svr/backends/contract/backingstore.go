@@ -21,4 +21,9 @@ type BackingStore interface {
 	// RemoveOldMessages removes any messages in the store that were stored
 	// before the time specified.
 	RemoveOldMessages(maxAge time.Time) (err error)
+
+	// Provide a list of all the messages held for this topic, whose message
+	// number is greater than or equal to that requested.
+	Poll(topic string, fromMsgNumber int) (messages []Message,
+		nextMsgNumber int, err error)
 }

@@ -40,7 +40,7 @@ func (m *MemStore) Store(topic string, message contract.Message) (
 	messageNumber int, err error) {
 
 	mutex.Lock()
-    defer mutex.Unlock()
+	defer mutex.Unlock()
 
 	// Special case, if this is a new topic.
 	if _, ok := m.messagesPerTopic[topic]; ok == false {
@@ -64,19 +64,42 @@ func (m *MemStore) Store(topic string, message contract.Message) (
 // backends/contract/BackingStore interface.
 func (m *MemStore) RemoveOldMessages(maxAge time.Time) error {
 	mutex.Lock()
-    defer mutex.Unlock()
+	defer mutex.Unlock()
 	for topic := range m.messagesPerTopic {
-		err := m.removeOldMessagesFromTopic(topic, maxAge); if err != nil {
-            return err
-        }
+		err := m.removeOldMessagesFromTopic(topic, maxAge)
+		if err != nil {
+			return err
+		}
 	}
-    return nil
+	return nil
 }
+
+// Poll is defined by, and documented in the backends/contract/BackingStore
+// interface.
+func (m *MemStore) Poll(topic string, fromMsgNumber int) (
+	foundMessages []contract.Message, nextMsgNumber int, err error) {
+
+	storedMessages := m.messagesPerTopic[topic]
+	serveFrom := sort.Search(len(storedMessages), func(i int) bool {
+		return storedMessages[i].messageNumber >= fromMsgNumber
+	})
+	foundMessages = []contract.Message{}
+	for _, msg := range storedMessages[serveFrom:] {
+		foundMessages = append(foundMessages, msg.payload)
+	}
+	nServed := len(foundMessages)
+	nextMsgNumber = fromMsgNumber + nServed
+	return
+}
+
+// ------------------------------------------------------------------------
+// Helper functions.
+// ------------------------------------------------------------------------
 
 // RemoveOldMessagesFromTopic is a topic-specific helper function for the
 // whole-store RemoveOldMessages method.
 func (m *MemStore) removeOldMessagesFromTopic(
-        topic string, maxAge time.Time) error {
+	topic string, maxAge time.Time) error {
 	messages := m.messagesPerTopic[topic]
 	keepFrom := sort.Search(len(messages), func(i int) bool {
 		return messages[i].creationTime.After(maxAge)
@@ -94,7 +117,7 @@ func (m *MemStore) removeOldMessagesFromTopic(
 		copy(freshSlice, messagesToKeep)
 		m.messagesPerTopic[topic] = freshSlice
 	}
-    return nil
+	return nil
 }
 
 // ------------------------------------------------------------------------
