@@ -4,6 +4,7 @@ package protocol;
 
 service ToyKafka {
   rpc Produce(ProduceRequest) returns (MsgNumber){}
+  rpc Poll(PollRequest) returns (PollResponse){}
 }
 
 message Topic {
@@ -21,4 +22,14 @@ message ProduceRequest {
 
 message MsgNumber {
   uint32 msg_number = 1;
+}
+
+message PollRequest {
+  string topic = 1;
+  uint32 from_msg_number = 2;
+}
+
+message PollResponse {
+    repeated Payload payloads = 1;
+    uint32 next_msg_number = 2;
 }

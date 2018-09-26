@@ -65,9 +65,9 @@ func (s *Server) startCulling(retentionTime time.Duration) {
 	}
 }
 
-// gRPC HANDLER METHODS BELOW
-// IF WE END UP WITH MORE THAN 2 OR 3 - SPLIT INTO SEPARATE MODULE OR EVEN
-// PACKAGE
+//------------------------------------------------------------------------
+// gRPC HANDLERS
+//------------------------------------------------------------------------
 
 // Produce is the server's handler function for the *Produce* API call.
 func (s *Server) Produce(
@@ -77,10 +77,29 @@ func (s *Server) Produce(
 	messageBytes := req.GetPayload().Payload
 
 	// Delegate storage to the backing store provider.
-
 	msgNumber, err := s.store.Store(topicStr, messageBytes)
 	if err != nil {
 		log.Fatalf("Error storing message: %v", err)
 	}
 	return &pb.MsgNumber{MsgNumber: uint32(msgNumber)}, nil
+}
+
+// Poss is the server's handler function for the *Poll* API call.
+func (s *Server) Poll(context.Context, *PollRequest) (*PollResponse, error) {
+	topicStr := req.GetTopic().Topic
+	fromMsgNumber := req.GetFromMsgNumber()
+
+    // Delegate the query to the backing store.
+    messages, nextMsgNumber, err := s.store.Poll(topicStr, fromMsgNumber)
+
+    if err != nil {
+		log.Fatalf("Error reported by backend for Poll: %v", err)
+    }
+    payloads := []Payload{}
+    for msg in range messages {
+        payloads = append(payloads, Payload{Payload: msg})
+    }
+    return &PollResponse{
+            Payloads: payloads,
+            NextMsgNumber: next_msgNumber}, nil
 }

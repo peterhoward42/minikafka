@@ -34,7 +34,7 @@ func (m *Topic) Reset()         { *m = Topic{} }
 func (m *Topic) String() string { return proto.CompactTextString(m) }
 func (*Topic) ProtoMessage()    {}
 func (*Topic) Descriptor() ([]byte, []int) {
-	return fileDescriptor_toykafka_b0fac29e1443ae14, []int{0}
+	return fileDescriptor_toykafka_8c67076f49df0913, []int{0}
 }
 func (m *Topic) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Topic.Unmarshal(m, b)
@@ -72,7 +72,7 @@ func (m *Payload) Reset()         { *m = Payload{} }
 func (m *Payload) String() string { return proto.CompactTextString(m) }
 func (*Payload) ProtoMessage()    {}
 func (*Payload) Descriptor() ([]byte, []int) {
-	return fileDescriptor_toykafka_b0fac29e1443ae14, []int{1}
+	return fileDescriptor_toykafka_8c67076f49df0913, []int{1}
 }
 func (m *Payload) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Payload.Unmarshal(m, b)
@@ -111,7 +111,7 @@ func (m *ProduceRequest) Reset()         { *m = ProduceRequest{} }
 func (m *ProduceRequest) String() string { return proto.CompactTextString(m) }
 func (*ProduceRequest) ProtoMessage()    {}
 func (*ProduceRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_toykafka_b0fac29e1443ae14, []int{2}
+	return fileDescriptor_toykafka_8c67076f49df0913, []int{2}
 }
 func (m *ProduceRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_ProduceRequest.Unmarshal(m, b)
@@ -156,7 +156,7 @@ func (m *MsgNumber) Reset()         { *m = MsgNumber{} }
 func (m *MsgNumber) String() string { return proto.CompactTextString(m) }
 func (*MsgNumber) ProtoMessage()    {}
 func (*MsgNumber) Descriptor() ([]byte, []int) {
-	return fileDescriptor_toykafka_b0fac29e1443ae14, []int{3}
+	return fileDescriptor_toykafka_8c67076f49df0913, []int{3}
 }
 func (m *MsgNumber) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_MsgNumber.Unmarshal(m, b)
@@ -183,11 +183,105 @@ func (m *MsgNumber) GetMsgNumber() uint32 {
 	return 0
 }
 
+type PollRequest struct {
+	Topic                string   `protobuf:"bytes,1,opt,name=topic,proto3" json:"topic,omitempty"`
+	FromMsgNumber        uint32   `protobuf:"varint,2,opt,name=from_msg_number,json=fromMsgNumber,proto3" json:"from_msg_number,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *PollRequest) Reset()         { *m = PollRequest{} }
+func (m *PollRequest) String() string { return proto.CompactTextString(m) }
+func (*PollRequest) ProtoMessage()    {}
+func (*PollRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_toykafka_8c67076f49df0913, []int{4}
+}
+func (m *PollRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PollRequest.Unmarshal(m, b)
+}
+func (m *PollRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PollRequest.Marshal(b, m, deterministic)
+}
+func (dst *PollRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PollRequest.Merge(dst, src)
+}
+func (m *PollRequest) XXX_Size() int {
+	return xxx_messageInfo_PollRequest.Size(m)
+}
+func (m *PollRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_PollRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PollRequest proto.InternalMessageInfo
+
+func (m *PollRequest) GetTopic() string {
+	if m != nil {
+		return m.Topic
+	}
+	return ""
+}
+
+func (m *PollRequest) GetFromMsgNumber() uint32 {
+	if m != nil {
+		return m.FromMsgNumber
+	}
+	return 0
+}
+
+type PollResponse struct {
+	Payloads             []*Payload `protobuf:"bytes,1,rep,name=payloads,proto3" json:"payloads,omitempty"`
+	NextMsgNumber        uint32     `protobuf:"varint,2,opt,name=next_msg_number,json=nextMsgNumber,proto3" json:"next_msg_number,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}   `json:"-"`
+	XXX_unrecognized     []byte     `json:"-"`
+	XXX_sizecache        int32      `json:"-"`
+}
+
+func (m *PollResponse) Reset()         { *m = PollResponse{} }
+func (m *PollResponse) String() string { return proto.CompactTextString(m) }
+func (*PollResponse) ProtoMessage()    {}
+func (*PollResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_toykafka_8c67076f49df0913, []int{5}
+}
+func (m *PollResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_PollResponse.Unmarshal(m, b)
+}
+func (m *PollResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_PollResponse.Marshal(b, m, deterministic)
+}
+func (dst *PollResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_PollResponse.Merge(dst, src)
+}
+func (m *PollResponse) XXX_Size() int {
+	return xxx_messageInfo_PollResponse.Size(m)
+}
+func (m *PollResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_PollResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_PollResponse proto.InternalMessageInfo
+
+func (m *PollResponse) GetPayloads() []*Payload {
+	if m != nil {
+		return m.Payloads
+	}
+	return nil
+}
+
+func (m *PollResponse) GetNextMsgNumber() uint32 {
+	if m != nil {
+		return m.NextMsgNumber
+	}
+	return 0
+}
+
 func init() {
 	proto.RegisterType((*Topic)(nil), "protocol.Topic")
 	proto.RegisterType((*Payload)(nil), "protocol.Payload")
 	proto.RegisterType((*ProduceRequest)(nil), "protocol.ProduceRequest")
 	proto.RegisterType((*MsgNumber)(nil), "protocol.MsgNumber")
+	proto.RegisterType((*PollRequest)(nil), "protocol.PollRequest")
+	proto.RegisterType((*PollResponse)(nil), "protocol.PollResponse")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -203,6 +297,7 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type ToyKafkaClient interface {
 	Produce(ctx context.Context, in *ProduceRequest, opts ...grpc.CallOption) (*MsgNumber, error)
+	Poll(ctx context.Context, in *PollRequest, opts ...grpc.CallOption) (*PollResponse, error)
 }
 
 type toyKafkaClient struct {
@@ -222,9 +317,19 @@ func (c *toyKafkaClient) Produce(ctx context.Context, in *ProduceRequest, opts .
 	return out, nil
 }
 
+func (c *toyKafkaClient) Poll(ctx context.Context, in *PollRequest, opts ...grpc.CallOption) (*PollResponse, error) {
+	out := new(PollResponse)
+	err := c.cc.Invoke(ctx, "/protocol.ToyKafka/Poll", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ToyKafkaServer is the server API for ToyKafka service.
 type ToyKafkaServer interface {
 	Produce(context.Context, *ProduceRequest) (*MsgNumber, error)
+	Poll(context.Context, *PollRequest) (*PollResponse, error)
 }
 
 func RegisterToyKafkaServer(s *grpc.Server, srv ToyKafkaServer) {
@@ -249,6 +354,24 @@ func _ToyKafka_Produce_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ToyKafka_Poll_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(PollRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ToyKafkaServer).Poll(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/protocol.ToyKafka/Poll",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ToyKafkaServer).Poll(ctx, req.(*PollRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _ToyKafka_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "protocol.ToyKafka",
 	HandlerType: (*ToyKafkaServer)(nil),
@@ -257,27 +380,36 @@ var _ToyKafka_serviceDesc = grpc.ServiceDesc{
 			MethodName: "Produce",
 			Handler:    _ToyKafka_Produce_Handler,
 		},
+		{
+			MethodName: "Poll",
+			Handler:    _ToyKafka_Poll_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "toykafka.proto",
 }
 
-func init() { proto.RegisterFile("toykafka.proto", fileDescriptor_toykafka_b0fac29e1443ae14) }
+func init() { proto.RegisterFile("toykafka.proto", fileDescriptor_toykafka_8c67076f49df0913) }
 
-var fileDescriptor_toykafka_b0fac29e1443ae14 = []byte{
-	// 209 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0xe2, 0x2b, 0xc9, 0xaf, 0xcc,
-	0x4e, 0x4c, 0xcb, 0x4e, 0xd4, 0x2b, 0x28, 0xca, 0x2f, 0xc9, 0x17, 0xe2, 0x00, 0x53, 0xc9, 0xf9,
-	0x39, 0x4a, 0xb2, 0x5c, 0xac, 0x21, 0xf9, 0x05, 0x99, 0xc9, 0x42, 0x22, 0x5c, 0xac, 0x25, 0x20,
-	0x86, 0x04, 0xa3, 0x02, 0xa3, 0x06, 0x67, 0x10, 0x84, 0xa3, 0xa4, 0xcc, 0xc5, 0x1e, 0x90, 0x58,
-	0x99, 0x93, 0x9f, 0x98, 0x22, 0x24, 0xc1, 0xc5, 0x5e, 0x00, 0x61, 0x82, 0x95, 0xf0, 0x04, 0xc1,
-	0xb8, 0x4a, 0x29, 0x5c, 0x7c, 0x01, 0x45, 0xf9, 0x29, 0xa5, 0xc9, 0xa9, 0x41, 0xa9, 0x85, 0xa5,
-	0xa9, 0xc5, 0x25, 0x42, 0xaa, 0xc8, 0x86, 0x71, 0x1b, 0xf1, 0xeb, 0xc1, 0xec, 0xd3, 0x03, 0x5b,
-	0x06, 0x35, 0x5d, 0x48, 0x1b, 0x61, 0x24, 0x13, 0x58, 0xa1, 0x20, 0x42, 0x21, 0xd4, 0x5a, 0x84,
-	0x2d, 0x5a, 0x5c, 0x9c, 0xbe, 0xc5, 0xe9, 0x7e, 0xa5, 0xb9, 0x49, 0xa9, 0x45, 0x42, 0xb2, 0x5c,
-	0x5c, 0xb9, 0xc5, 0xe9, 0xf1, 0x79, 0x60, 0x1e, 0xd8, 0x16, 0xde, 0x20, 0xce, 0x5c, 0x98, 0xb4,
-	0x91, 0x1b, 0x17, 0x47, 0x48, 0x7e, 0xa5, 0x37, 0xc8, 0xc7, 0x42, 0x56, 0x5c, 0xec, 0x50, 0xd7,
-	0x09, 0x49, 0x20, 0x19, 0x8f, 0xe2, 0x60, 0x29, 0x61, 0x84, 0x0c, 0xdc, 0x12, 0x25, 0x86, 0x24,
-	0x36, 0xb0, 0xa8, 0x31, 0x20, 0x00, 0x00, 0xff, 0xff, 0x47, 0xd6, 0x2f, 0xf6, 0x40, 0x01, 0x00,
-	0x00,
+var fileDescriptor_toykafka_8c67076f49df0913 = []byte{
+	// 297 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x6c, 0x91, 0x5b, 0x4b, 0xfb, 0x40,
+	0x10, 0xc5, 0xdb, 0xfe, 0xff, 0xb5, 0xc9, 0xf4, 0x86, 0xe3, 0x85, 0x50, 0x28, 0x94, 0x15, 0x45,
+	0x14, 0xf3, 0x50, 0x1f, 0x04, 0xbf, 0x42, 0x51, 0x42, 0xe8, 0x7b, 0x49, 0x93, 0x6d, 0x91, 0x26,
+	0x99, 0x98, 0x4d, 0xc0, 0x3c, 0xf9, 0xd5, 0x65, 0x37, 0x97, 0x8d, 0x92, 0xa7, 0xec, 0xcc, 0x9c,
+	0x9c, 0xdf, 0xd9, 0x59, 0x98, 0x65, 0x54, 0x9c, 0xbc, 0xc3, 0xc9, 0xb3, 0x93, 0x94, 0x32, 0x42,
+	0x43, 0x7d, 0x7c, 0x0a, 0xd9, 0x12, 0x86, 0x5b, 0x4a, 0x3e, 0x7c, 0xbc, 0x84, 0x61, 0x26, 0x0f,
+	0x56, 0x7f, 0xd5, 0xbf, 0x37, 0xdd, 0xb2, 0x60, 0x37, 0x30, 0x72, 0xbc, 0x22, 0x24, 0x2f, 0x40,
+	0x0b, 0x46, 0x49, 0x79, 0x54, 0x92, 0x89, 0x5b, 0x97, 0x2c, 0x80, 0x99, 0x93, 0x52, 0x90, 0xfb,
+	0xdc, 0xe5, 0x9f, 0x39, 0x17, 0x19, 0xde, 0xb6, 0xcd, 0xc6, 0xeb, 0xb9, 0x5d, 0xf3, 0x6c, 0x05,
+	0xab, 0xdc, 0xf1, 0x51, 0x5b, 0x0e, 0x94, 0xf0, 0x5c, 0x0b, 0x2b, 0xac, 0xa6, 0x3c, 0x80, 0xf9,
+	0x26, 0x8e, 0xef, 0x79, 0xb4, 0xe7, 0x29, 0x2e, 0x01, 0x22, 0x71, 0xdc, 0xc5, 0xaa, 0x52, 0x94,
+	0xa9, 0x6b, 0x46, 0xf5, 0x98, 0x6d, 0x60, 0xec, 0x50, 0x18, 0xd6, 0x71, 0x3a, 0xef, 0x86, 0x77,
+	0x30, 0x3f, 0xa4, 0x14, 0xed, 0x5a, 0x46, 0x03, 0x65, 0x34, 0x95, 0xed, 0x86, 0xc5, 0x38, 0x4c,
+	0x4a, 0x33, 0x91, 0x50, 0x2c, 0x38, 0x3e, 0x81, 0x51, 0x65, 0x12, 0x56, 0x7f, 0xf5, 0xaf, 0x3b,
+	0x76, 0x23, 0x91, 0x98, 0x98, 0x7f, 0x65, 0x1d, 0x18, 0xd9, 0x6e, 0x30, 0xeb, 0x6f, 0x30, 0xb6,
+	0x54, 0x6c, 0xe4, 0x2b, 0xe1, 0x2b, 0x8c, 0xaa, 0x8d, 0xa2, 0xd5, 0xf2, 0xfe, 0xb5, 0xe4, 0xc5,
+	0x85, 0x9e, 0xe8, 0xb0, 0x3d, 0x7c, 0x81, 0xff, 0x32, 0x2e, 0x5e, 0xb5, 0x7e, 0xd4, 0xbb, 0x58,
+	0x5c, 0xff, 0x6d, 0x97, 0xb7, 0x62, 0xbd, 0xfd, 0x99, 0x1a, 0x3c, 0xff, 0x04, 0x00, 0x00, 0xff,
+	0xff, 0x3e, 0x00, 0xfa, 0xab, 0x2d, 0x02, 0x00, 0x00,
 }

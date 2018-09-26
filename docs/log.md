@@ -3,36 +3,45 @@
         almost verbatim so have skel to modify
 
 *  Clean up comments a bit
-o  Now do time based message culling
-    *  Let test be > N seconds old. Server setting. 
-    *  Swithcing to feature branch
-    *  Have server launch a goroutine for this - constructed with a age 
-       limit param
-    *  Server launch param for now.
-    *  Decision making run by svr
-    *  Passes message to store (extend interface)
-    *  Debug the cycling call and depletion
-        *  Compiles
-        *  Fix inexorable growth problem of backing array
-        *  Runs client/server?
-            *  Is returning message number as one?
-        *  Add logging of message numbers culled
-        *  Runs
-        *  Removing the right ones
-    *  Add and housekeeping?
-    *  Consider error handling from the startCulling go routine?
-        *  cascade err return value thru api and both remove impl
-        *  check for it back in svr
-    o  Merge this branch into head
+*  Now do time based message culling
+o  Timeout to specify *my* client api contracts
+    o  In client code or pan-client?
 o  Now do getter client
+    *  Read / digest kafka model
+    o  Add in consume api to docs above
+        o  top level readme with section on services and client apis
+        o  upgrade produce api code to self doc
+        o  check doc is good enough
 o  Configure host from envars
 o  Add tests
 o  Add TLS / and or JWT auth
+o  Package level readme with refs
 
 ----------------------------------------------------------------
+Consumer API
 ----------------------------------------------------------------
-Policy any message been in store longer than N seconds.
+Call it Poll.
+Consumer maintains own offset.
+Offset defined as message number of first message returned by next Poll.
+Consider secondary committed offset maybe.
 
-Threshold setter on storage interface and constructor, to be stored in the 
-store.
+// might be good to inject starting message number when construct consumer 
+// object, and thereafter have the consumer remember it.
 
+consumer = Consumer(connection details)
+
+consumer.Subscribe(topics...) // register interests
+
+consumer.Poll()     // gets any records with offsets >= [topic] onwards.
+                    // auto updates consumers offset[topic] accordingly
+
+                    // nb if offset msg has been removed will start from
+                    // next avail
+
+                    // might be good for Poll's returned payload to include
+                    // which message numbers each message is.
+
+                    // is an error if no topics are subscribed
+
+what happens if you ask for message numbers that don't exist yet?
+    = silent return no messages
