@@ -12,19 +12,20 @@ import (
 )
 
 // Consumer is a ToyKafka client object dedicated to sending *poll* messages to
-// the server.
+// the server using gRPC.
 type Consumer struct {
-	topic             string
-	fromMessageNumber int
-	clientProxy       pb.ToyKafkaClient
+	topic       string
+	readFrom    int               // Message number.
+	clientProxy pb.ToyKafkaClient // gRPC component.
 }
 
-// NewConsumer provides a new Consumer instance that is bound to a given
-// server address, and a given message topic.
-func NewConsumer(topic string, fromMessageNumber int,
+// NewConsumer provides a new Consumer client instance that is bound to a given
+// server address, and a given message topic. The caller specifies which
+// message number position they wish the subsequent polling to start.
+func NewConsumer(topic string, readFrom int,
 	host string, port int) (*Consumer, error) {
 
-	p := &Consumer{topic: topic, fromMessageNumber: fromMessageNumber}
+	p := &Consumer{topic: topic, readFrom: readFrom}
 	serverAddr := fmt.Sprintf("%s:%d", host, port)
 	opts := []grpc.DialOption{grpc.WithInsecure()}
 	conn, err := grpc.Dial(serverAddr, opts...)
@@ -36,13 +37,14 @@ func NewConsumer(topic string, fromMessageNumber int,
 }
 
 // Poll is the primary API method for Consumer, which sends a Poll
-// message citing the message number from which to read.
+// message to the server and returns the messages provided back to the caller.
+// It also advances its internal *readFrom* position state accordingly.
 func (c *Consumer) Poll() (messages []MessagePayload, err error) {
-	log.Printf("Consumer sending a Poll msg.")
+	log.Printf("Consumer Client Poll")
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 	pollRequest := &pb.PollRequest{
-		Topic: c.topic, FromMsgNumber: uint32(c.fromMessageNumber)}
+		Topic: c.topic, FromMsgNumber: uint32(c.readFrom)}
 	pollResponse, err := c.clientProxy.Poll(ctx, pollRequest)
 	if err != nil {
 		log.Fatalf("Call to client proxy Poll() failed: %v.", err)
@@ -53,7 +55,7 @@ func (c *Consumer) Poll() (messages []MessagePayload, err error) {
 		payload := payloadObj.GetPayload()
 		messages = append(messages, payload)
 	}
-	c.fromMessageNumber = int(pollResponse.GetNextMsgNumber())
-	log.Printf("Received %v messages", len(payloads))
+	c.readFrom = int(pollResponse.GetNextMsgNumber())
+	log.Printf("Consumer client Poll received  %v messages", len(payloads))
 	return
 }

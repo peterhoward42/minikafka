@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"time"
 
@@ -10,6 +9,10 @@ import (
 	"github.com/peterhoward42/toy-kafka/protocol"
 )
 
+// This command launches a command-line interface to a Toy-Kafka consumer client.
+// You provide a topic for it to subscribe to with the -topic flag. It will then
+// consume (and report on), both the existing messages in this topic, and newly 
+// arriving ones, by polling the server every 3 seconds.
 func main() {
 
 	// Extract topic from command line args.
@@ -20,29 +23,26 @@ func main() {
 		log.Fatal("You must specify a topic using the '-topic flag'")
 	}
 
-	// Todo - required host, and override port from environment variables.
+	// Todo - fetch host, and override port from environment variables.
 	host := "localhost"
 	port := protocol.DefaultPort
-	// We will start reading at the beginning of the stream when the ClI
-	// boots.
-	readFrom := 1
+	readFrom := 1 // Start consuming at message 1.
 	consumer, err := client.NewConsumer(*topic, readFrom, host, port)
 	if err != nil {
 		log.Fatalf("Failed to create Consumer, with error: %v", err)
 	}
 
-	// Poll at intervals reporting on these events and what comes back.
+	// Poll at regular intervals, reporting one what is thus received.
 	ticker := time.NewTicker(3 * time.Second)
 	defer ticker.Stop()
 	for range ticker.C {
-		fmt.Printf("About to poll...")
+		log.Printf("CLI Poll")
 		messages, err := consumer.Poll()
 		if err != nil {
 			log.Fatalf("Error generated in call to Poll(): %v", err)
 		}
-		fmt.Printf("Received these messages...")
-		for _, msg := range messages {
-			fmt.Printf("%v", msg)
+		for n, msg := range messages {
+			log.Printf("%d: %s", n, string(msg))
 		}
 	}
 }

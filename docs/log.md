@@ -31,7 +31,19 @@ o  Now do getter client
         *  Double check conume protected by a mutex
 
     o  Nail vernacular - starting with readme and write here.
-    o  Include protocol land
+        *  message
+        *  consumer producer api
+        *  read-from position // current / nex
+        o  update manually written code
+            o  ditch MessagePayload in favour of Message
+            o  ditch all use of word payload
+            o  ditch messagestorage somehow
+        o  updae protobuf to say read from instead of message number
+    o  Use new logger with prefix
+    o  switch to doc.go
+    o  test docco in godoc
+
+    o  Improve names also in protocol land
     o  Use throughout
     o  Tidy and make consistent all log messages
     o  Several functions used named arguments but routinely re-create the
