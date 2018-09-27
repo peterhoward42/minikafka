@@ -79,6 +79,9 @@ func (m *MemStore) RemoveOldMessages(maxAge time.Time) error {
 func (m *MemStore) Poll(topic string, fromMsgNumber int) (
 	foundMessages []contract.Message, nextMsgNumber int, err error) {
 
+	mutex.Lock()
+	defer mutex.Unlock()
+
 	storedMessages := m.messagesPerTopic[topic]
 	serveFrom := sort.Search(len(storedMessages), func(i int) bool {
 		return storedMessages[i].messageNumber >= fromMsgNumber

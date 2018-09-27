@@ -11,8 +11,8 @@ import (
 	pb "github.com/peterhoward42/toy-kafka/protocol"
 )
 
-// Producer provides a convenience API to a ToyKafkaClient to simplify the
-// process of sending *Produce* messages.
+// Producer is a ToyKafkaClient client object dedicated to sending *produce*
+// messages to the server.
 type Producer struct {
 	topic       string
 	clientProxy pb.ToyKafkaClient
@@ -33,15 +33,15 @@ func NewProducer(topic string, host string, port int) (*Producer, error) {
 	return p, nil
 }
 
-// SendMessage is the primary API method for Producer, which sends a Produce
-// message comprising the given string to the server.
-func (p *Producer) SendMessage(message string) (msgNum uint32, err error) {
+// SendMessage is the primary API method for Producer, which sends
+// the given message payload to the server in a Produce message.
+func (p *Producer) SendMessage(messagePayload MessagePayload) (
+	msgNum uint32, err error) {
 	log.Printf("Producer sending msg.")
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	payloadBytes := []byte(message)
 	topic := &pb.Topic{Topic: p.topic}
-	payload := &pb.Payload{Payload: payloadBytes}
+	payload := &pb.Payload{Payload: messagePayload}
 	produceRequest := &pb.ProduceRequest{Topic: topic, Payload: payload}
 	msgNumber, err := p.clientProxy.Produce(ctx, produceRequest)
 	if err != nil {

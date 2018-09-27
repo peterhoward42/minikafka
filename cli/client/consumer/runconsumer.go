@@ -1,11 +1,10 @@
 package main
 
 import (
-	"bufio"
 	"flag"
 	"fmt"
 	"log"
-	"os"
+	"time"
 
 	"github.com/peterhoward42/toy-kafka/client"
 	"github.com/peterhoward42/toy-kafka/protocol"
@@ -24,23 +23,26 @@ func main() {
 	// Todo - required host, and override port from environment variables.
 	host := "localhost"
 	port := protocol.DefaultPort
-	consumer, err := client.NewConsumer(*topic, host, port)
+	// We will start reading at the beginning of the stream when the ClI
+	// boots.
+	readFrom := 1
+	consumer, err := client.NewConsumer(*topic, readFrom, host, port)
 	if err != nil {
 		log.Fatalf("Failed to create Consumer, with error: %v", err)
 	}
 
-	// Invite user to enter lines.
-	fmt.Printf("Enter messages, one per line, and press ENTER.\n")
-
-	// Ingest lines and send each one as a *produce* command.
-	scanner := bufio.NewScanner(os.Stdin)
-	for scanner.Scan() {
-		messageTxt := scanner.Text()
-		_, err := producer.SendMessage(messageTxt)
-
+	// Poll at intervals reporting on these events and what comes back.
+	ticker := time.NewTicker(3 * time.Second)
+	defer ticker.Stop()
+	for range ticker.C {
+		fmt.Printf("About to poll...")
+		messages, err := consumer.Poll()
 		if err != nil {
-			log.Printf("Error SendMessage: %v", err)
-			continue
+			log.Fatalf("Error generated in call to Poll(): %v", err)
+		}
+		fmt.Printf("Received these messages...")
+		for _, msg := range messages {
+			fmt.Printf("%v", msg)
 		}
 	}
 }

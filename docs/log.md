@@ -14,13 +14,32 @@ o  Now do getter client
     *  Code back-end implementation
     *  Get this part to compile and run passively (run server)
     o  Create CLI poll client, similar to produce client
-        o  Decide division of responsibilities between cli and consumer lib for:
-            o  setting topic
-            o  pollling interval
-            o  deciding what message number a new consumer should start from
-            o  holding next message number state
-        o  Check against readme
-    o  Test polling using the CLI
+        *  becide division of responsibilities between cli and consumer lib for:
+            *  setting topic client = object construction
+            *  polling interval = outside world
+            *  deciding what message number a new consumer should start from
+                    = client object construction
+            *  holding next message number state - the client object
+        *  Check against readme
+        *  Code API for client object
+        *  Build CLI round it
+            *  Get what have to compile and debug timed loop
+            *  Put real reads inside the loop
+                *  Timeout - produce is using string as message - clear up
+                    *  What types do we have outside of protocol for the 
+                       message type?
+        *  Double check conume protected by a mutex
+
+    o  Nail vernacular - starting with readme and write here.
+    o  Include protocol land
+    o  Use throughout
+    o  Tidy and make consistent all log messages
+    o  Several functions used named arguments but routinely re-create the
+        objects?
+    o  Test
+            o  Maybe a demo of all doing stuff from differeing go routines?
+    o  Make sure not needlessly duplicated types like message
+    o  Make sure only client objects exposed to protocol types
 o  Update doc strings in API to sufficient quality for go doc being useful.
 o  Configure host from envars
 o  Add tests

@@ -36,7 +36,7 @@ func main() {
 	scanner := bufio.NewScanner(os.Stdin)
 	for scanner.Scan() {
 		messageTxt := scanner.Text()
-		_, err := producer.SendMessage(messageTxt)
+		_, err := producer.SendMessage([]byte(messageTxt))
 
 		if err != nil {
 			log.Printf("Error SendMessage: %v", err)
