@@ -3,6 +3,7 @@ syntax = "proto3";
 package protocol;
 
 service ToyKafka {
+  // Produce returns the message number assigned to the stored message.
   rpc Produce(ProduceRequest) returns (MsgNumber){}
   rpc Poll(PollRequest) returns (PollResponse){}
 }
@@ -26,10 +27,13 @@ message MsgNumber {
 
 message PollRequest {
   string topic = 1;
-  uint32 from_msg_number = 2;
+  MsgNumber read_from = 2;
 }
 
 message PollResponse {
+    // payloads holds the returned messages.
     repeated Payload payloads = 1;
-    uint32 next_msg_number = 2;
+    // new_read_from tells the requester where they should update their
+    // read_from value to to move past the returned messages.
+    MsgNumber new_read_from = 2;
 }

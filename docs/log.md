@@ -3,22 +3,25 @@
         *  drop payload
         *  embrace stored message
         *  Embrace stored message but only in backing impl and private
-        o  Poll should say readFrom at every level
-            o  protobuf
-            o  contract
-            o  backing store impl
-            o  should find no remaining refs to msgNum or messageNum
-        o  Centralise type for byte slice called message
-            o  Should no longer need contract.Message
-        o  Use readFrom in protobuf
+        *  Poll should say readFrom at every level
+        *  Centralise type for byte slice called Message
+            *  Delete contract.Message
+            *  Work through build errors arising to fix up
+        *  Now scan all source for correct nomenclature
+    *  Does it still work?
     o  Bug - returned next readfrom returned by implementation Poll should be 
        based on final message returned, not counting!
        o  Need a failing test!
+    o  Reduce the number of uint32 casts by using them natively consider
+    o  defaultconfig is a smell
 
     o  seperate cli for server concedptually from that for clients
         o  should there be a server command in svr tree, not cli?
         o  careful design of what things injected, and from cmd line or from
            env
+    o  inject all timings
+        o  message age
+        o  poll interval
     o  consider different style of docco - active / do this
     o  Use new logger with prefix
     o  switch to doc.go

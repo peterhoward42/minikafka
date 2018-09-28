@@ -21,7 +21,7 @@ type Consumer struct {
 
 // NewConsumer provides a new Consumer client instance that is bound to a given
 // server address, and a given message topic. The caller specifies which
-// message number position they wish the subsequent polling to start.
+// message number read-from position they wish the subsequent polling to start.
 func NewConsumer(topic string, readFrom int,
 	host string, port int) (*Consumer, error) {
 
@@ -43,8 +43,9 @@ func (c *Consumer) Poll() (messages []MessagePayload, err error) {
 	log.Printf("Consumer Client Poll")
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
+	readFrom := &pb.MsgNumber{MsgNumber: uint32(c.readFrom)}
 	pollRequest := &pb.PollRequest{
-		Topic: c.topic, FromMsgNumber: uint32(c.readFrom)}
+		Topic: c.topic, ReadFrom: readFrom}
 	pollResponse, err := c.clientProxy.Poll(ctx, pollRequest)
 	if err != nil {
 		log.Fatalf("Call to client proxy Poll() failed: %v.", err)
@@ -55,7 +56,7 @@ func (c *Consumer) Poll() (messages []MessagePayload, err error) {
 		payload := payloadObj.GetPayload()
 		messages = append(messages, payload)
 	}
-	c.readFrom = int(pollResponse.GetNextMsgNumber())
+	c.readFrom = int(pollResponse.GetNewReadFrom().GetMsgNumber())
 	log.Printf("Consumer client Poll received  %v messages", len(payloads))
 	return
 }

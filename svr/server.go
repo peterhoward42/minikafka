@@ -94,7 +94,7 @@ func (s *Server) Poll(ctx context.Context, req *pb.PollRequest) (
 	// package up the data to return to suit a gRPC response.
 
 	topicStr := req.GetTopic()
-	fromMsgNumber := req.GetFromMsgNumber()
+	fromMsgNumber := req.GetReadFrom().GetMsgNumber()
 	messages, nextMsgNumber, err := s.store.Poll(topicStr, int(fromMsgNumber))
 	if err != nil {
 		log.Fatalf("Error reported by backend for Poll: %v", err)
@@ -104,6 +104,6 @@ func (s *Server) Poll(ctx context.Context, req *pb.PollRequest) (
 		payloads = append(payloads, &pb.Payload{Payload: msg})
 	}
 	return &pb.PollResponse{
-		Payloads:      payloads,
-		NextMsgNumber: uint32(nextMsgNumber)}, nil
+		Payloads:    payloads,
+		NewReadFrom: &pb.MsgNumber{MsgNumber: uint32(nextMsgNumber)}}, nil
 }

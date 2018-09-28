@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/peterhoward42/toy-kafka/svr/backends/contract"
+	toykafka "github.com/peterhoward42/toy-kafka"
 )
 
 // MemStore implements the svr/backends/contract/BackingStore interface using
@@ -36,7 +36,7 @@ var mutex = &sync.Mutex{} // Protects concurrent access of the MemStore.
 
 // Store is defined by, and documented in the backends/contract/BackingStore
 // interface.
-func (m *MemStore) Store(topic string, message contract.Message) (
+func (m *MemStore) Store(topic string, message toykafka.Message) (
 	messageNumber int, err error) {
 
 	mutex.Lock()
@@ -77,22 +77,22 @@ func (m *MemStore) RemoveOldMessages(maxAge time.Time) error {
 
 // Poll is defined by, and documented in the backends/contract/BackingStore
 // interface.
-func (m *MemStore) Poll(topic string, fromMsgNumber int) (
-	foundMessages []contract.Message, nextMsgNumber int, err error) {
+func (m *MemStore) Poll(topic string, readFrom int) (
+	foundMessages []toykafka.Message, newReadFrom int, err error) {
 
 	mutex.Lock()
 	defer mutex.Unlock()
 
 	storedMessages := m.messagesPerTopic[topic]
 	serveFrom := sort.Search(len(storedMessages), func(i int) bool {
-		return storedMessages[i].messageNumber >= fromMsgNumber
+		return storedMessages[i].messageNumber >= readFrom
 	})
-	foundMessages = []contract.Message{}
+	foundMessages = []toykafka.Message{}
 	for _, msg := range storedMessages[serveFrom:] {
 		foundMessages = append(foundMessages, msg.payload)
 	}
 	nServed := len(foundMessages)
-	nextMsgNumber = fromMsgNumber + nServed
+	newReadFrom = readFrom + nServed
 	return
 }
 
@@ -132,7 +132,7 @@ func (m *MemStore) removeOldMessagesFromTopic(
 // implementation which encapsulates a message itself, along with its creation
 // time, and message number.
 type storedMessage struct {
-	payload       contract.Message
+	payload       toykafka.Message
 	creationTime  time.Time
 	messageNumber int
 }
