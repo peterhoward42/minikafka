@@ -1,62 +1,38 @@
-*  Switch to grpc
-    *  Follow go tutorial here: https://grpc.io/docs/tutorials/basic/go.html
-        almost verbatim so have skel to modify
+    *  Agree vernacular:
+        *  message, consumer, producer (apis), readFrom / current
+        *  drop payload
+        *  embrace stored message
+        *  Embrace stored message but only in backing impl and private
+        o  Poll should say readFrom at every level
+            o  protobuf
+            o  contract
+            o  backing store impl
+            o  should find no remaining refs to msgNum or messageNum
+        o  Centralise type for byte slice called message
+            o  Should no longer need contract.Message
+        o  Use readFrom in protobuf
+    o  Bug - returned next readfrom returned by implementation Poll should be 
+       based on final message returned, not counting!
+       o  Need a failing test!
 
-*  Clean up comments a bit
-*  Now do time based message culling
-*  Timeout to specify *my* client api contracts
-    * Do in project README at conceptual level.
-o  Now do getter client
-    *  Read / digest kafka model
-    *  Add in consume api to docs above
-    *  Augment protocol and compile it
-    *  Code server handler
-    *  Code back-end implementation
-    *  Get this part to compile and run passively (run server)
-    o  Create CLI poll client, similar to produce client
-        *  becide division of responsibilities between cli and consumer lib for:
-            *  setting topic client = object construction
-            *  polling interval = outside world
-            *  deciding what message number a new consumer should start from
-                    = client object construction
-            *  holding next message number state - the client object
-        *  Check against readme
-        *  Code API for client object
-        *  Build CLI round it
-            *  Get what have to compile and debug timed loop
-            *  Put real reads inside the loop
-                *  Timeout - produce is using string as message - clear up
-                    *  What types do we have outside of protocol for the 
-                       message type?
-        *  Double check conume protected by a mutex
-
-    o  Nail vernacular - starting with readme and write here.
-        *  message
-        *  consumer producer api
-        *  read-from position // current / nex
-        o  update manually written code
-            o  ditch MessagePayload in favour of Message
-            o  ditch all use of word payload
-            o  ditch messagestorage somehow
-        o  updae protobuf to say read from instead of message number
+    o  seperate cli for server concedptually from that for clients
+        o  should there be a server command in svr tree, not cli?
+        o  careful design of what things injected, and from cmd line or from
+           env
+    o  consider different style of docco - active / do this
     o  Use new logger with prefix
     o  switch to doc.go
     o  test docco in godoc
-
-    o  Improve names also in protocol land
-    o  Use throughout
     o  Tidy and make consistent all log messages
     o  Several functions used named arguments but routinely re-create the
         objects?
     o  Test
-            o  Maybe a demo of all doing stuff from differeing go routines?
-    o  Make sure not needlessly duplicated types like message
+        o  For resilience, and exemplars
     o  Make sure only client objects exposed to protocol types
+o  Consider which error handling can do better than fatal.
 o  Update doc strings in API to sufficient quality for go doc being useful.
-o  Configure host from envars
-o  Add tests
 o  Add TLS / and or JWT auth
-o  Package level readme with refs
+o  Package level doc.go
 
 ----------------------------------------------------------------
 ----------------------------------------------------------------

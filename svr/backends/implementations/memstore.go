@@ -13,22 +13,22 @@ import (
 // a volatile, in-process memory store.
 type MemStore struct {
 	// Fundamental storage is separated by topic, and comprises simply
-	// time-ordered slices of messages held in *messageStorage* objects.
-	// (These hold their own message payload, plus their creation time, and
-	// message-number.
-	messagesPerTopic    map[string][]messageStorage // Keyed on topic.
-	newestMessageNumber map[string]int              // Keyed on topic.
+	// time-ordered slices of messages held in *storedMessage* objects.
+	// (These hold the message itself, plus its creation time, and
+	// message-number.)
+	messagesPerTopic    map[string][]storedMessage // Keyed on topic.
+	newestMessageNumber map[string]int             // Keyed on topic.
 }
 
 // NewMemStore constructs and initializes an empty MemStore instance.
 func NewMemStore() *MemStore {
 	return &MemStore{
-		messagesPerTopic:    map[string][]messageStorage{},
+		messagesPerTopic:    map[string][]storedMessage{},
 		newestMessageNumber: map[string]int{},
 	}
 }
 
-var mutex = &sync.Mutex{} // Protect mutation of the MemStore.
+var mutex = &sync.Mutex{} // Protects concurrent access of the MemStore.
 
 // ------------------------------------------------------------------------
 // METHODS TO SATISFY THE BackingStore INTERFACE.
@@ -44,7 +44,7 @@ func (m *MemStore) Store(topic string, message contract.Message) (
 
 	// Special case, if this is a new topic.
 	if _, ok := m.messagesPerTopic[topic]; ok == false {
-		m.messagesPerTopic[topic] = []messageStorage{}
+		m.messagesPerTopic[topic] = []storedMessage{}
 		m.newestMessageNumber[topic] = 0
 	}
 
@@ -54,7 +54,8 @@ func (m *MemStore) Store(topic string, message contract.Message) (
 	m.newestMessageNumber[topic]++
 
 	// Make and add the new message.
-	msgToAdd := messageStorage{message, time.Now(), m.newestMessageNumber[topic]}
+	msgToAdd := storedMessage{message, time.Now(),
+		m.newestMessageNumber[topic]}
 	m.messagesPerTopic[topic] = append(m.messagesPerTopic[topic], msgToAdd)
 
 	return m.newestMessageNumber[topic], nil
@@ -116,7 +117,7 @@ func (m *MemStore) removeOldMessagesFromTopic(
 		// We make and use a copy of the messagesToKeep slice, to free up the
 		// old backing array for garbage collection. Otherwise it would grow
 		// inexorably.
-		freshSlice := make([]messageStorage, len(messagesToKeep))
+		freshSlice := make([]storedMessage, len(messagesToKeep))
 		copy(freshSlice, messagesToKeep)
 		m.messagesPerTopic[topic] = freshSlice
 	}
@@ -127,9 +128,10 @@ func (m *MemStore) removeOldMessagesFromTopic(
 // AUXILLIARY TYPES AND THEIR METHODS.
 // ------------------------------------------------------------------------
 
-// messageStorage encapsulates a message payload (bytes), plus its creation time,
-// and message number.
-type messageStorage struct {
+// storedMessage is a private type for the MemStore implementation backing store
+// implementation which encapsulates a message itself, along with its creation
+// time, and message number.
+type storedMessage struct {
 	payload       contract.Message
 	creationTime  time.Time
 	messageNumber int
