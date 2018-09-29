@@ -20,8 +20,10 @@ type BackingStore interface {
 		messageNumber int, err error)
 
 	// RemoveOldMessages removes any messages in the store that were stored
-	// before the time specified.
-	RemoveOldMessages(maxAge time.Time) (err error)
+	// before the time specified. It returns information about which messages
+	// got removed - (to make testing straightforward). (Lists of message
+	// numbers, keyed on topic.)
+	RemoveOldMessages(maxAge time.Time) (removed map[string][]int, err error)
 
 	// Provide a list of all the messages held for this topic, whose message
 	// number is greater than or equal to the specified read-from message

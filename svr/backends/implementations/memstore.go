@@ -63,16 +63,18 @@ func (m *MemStore) Store(topic string, message toykafka.Message) (
 
 // RemoveOldMessages is defined by, and documented in the
 // backends/contract/BackingStore interface.
-func (m *MemStore) RemoveOldMessages(maxAge time.Time) error {
+func (m *MemStore) RemoveOldMessages(maxAge time.Time) (
+	removed map[string][]int, err error) {
 	mutex.Lock()
 	defer mutex.Unlock()
+	removed = map[string][]int{}
 	for topic := range m.messagesPerTopic {
-		err := m.removeOldMessagesFromTopic(topic, maxAge)
+		err = m.removeOldMessagesFromTopic(topic, maxAge, removed)
 		if err != nil {
-			return err
+			return
 		}
 	}
-	return nil
+	return
 }
 
 // Poll is defined by, and documented in the backends/contract/BackingStore
@@ -84,16 +86,23 @@ func (m *MemStore) Poll(topic string, readFrom int) (
 	defer mutex.Unlock()
 
 	storedMessages := m.messagesPerTopic[topic]
-	serveFrom := sort.Search(len(storedMessages), func(i int) bool {
+	serveFromIndex := sort.Search(len(storedMessages), func(i int) bool {
 		return storedMessages[i].messageNumber >= readFrom
 	})
+
 	foundMessages = []toykafka.Message{}
-	for _, msg := range storedMessages[serveFrom:] {
-		foundMessages = append(foundMessages, msg.payload)
+	var highest int
+	for _, msg := range storedMessages[serveFromIndex:] {
+		foundMessages = append(foundMessages, msg.message)
+		highest = msg.messageNumber
 	}
-	nServed := len(foundMessages)
-	newReadFrom = readFrom + nServed
-	return
+	nFound := len(foundMessages)
+	if nFound > 0 {
+		newReadFrom = highest + 1
+		return foundMessages, newReadFrom, nil
+	}
+	unchangedReadFrom := readFrom
+	return foundMessages, unchangedReadFrom, nil
 }
 
 // ------------------------------------------------------------------------
@@ -103,24 +112,36 @@ func (m *MemStore) Poll(topic string, readFrom int) (
 // RemoveOldMessagesFromTopic is a topic-specific helper function for the
 // whole-store RemoveOldMessages method.
 func (m *MemStore) removeOldMessagesFromTopic(
-	topic string, maxAge time.Time) error {
+	topic string, maxAge time.Time, removed map[string][]int) error {
+
+	// Find the boundary between the messages to keep and those to remove.
 	messages := m.messagesPerTopic[topic]
-	keepFrom := sort.Search(len(messages), func(i int) bool {
+	removed[topic] = []int{}
+	keepFromIndex := sort.Search(len(messages), func(i int) bool {
 		return messages[i].creationTime.After(maxAge)
 	})
-	messagesToKeep := messages[keepFrom:] // Safe also when keeping none.
 
-	// If we're keeping from index 3, then we're going to remove 0,1,2.
-	nRemoving := keepFrom
-	if nRemoving > 0 {
-		log.Printf("Removing %v old messages from topic: %v", nRemoving, topic)
-		// We make and use a copy of the messagesToKeep slice, to free up the
-		// old backing array for garbage collection. Otherwise it would grow
-		// inexorably.
-		freshSlice := make([]storedMessage, len(messagesToKeep))
-		copy(freshSlice, messagesToKeep)
-		m.messagesPerTopic[topic] = freshSlice
+	messagesToKeep := messages[keepFromIndex:] // Safe when keeping none.
+	numberRemoving := keepFromIndex
+
+	if numberRemoving == 0 {
+		return nil
 	}
+
+	log.Printf("Removing %v old messages from topic: %v", numberRemoving, topic)
+
+	// Harvest the message number of those that are being removed.
+	for _, msg := range messages[:keepFromIndex] {
+		removed[topic] = append(removed[topic], msg.messageNumber)
+	}
+
+	// Replace the incumbent queue slice with a newly minted one so that the
+	// underlying array gets freed for garbage collection. Otherwise it would
+	// grown inexorably.
+	freshSlice := make([]storedMessage, len(messagesToKeep))
+	copy(freshSlice, messagesToKeep)
+	m.messagesPerTopic[topic] = freshSlice
+
 	return nil
 }
 
@@ -132,7 +153,7 @@ func (m *MemStore) removeOldMessagesFromTopic(
 // implementation which encapsulates a message itself, along with its creation
 // time, and message number.
 type storedMessage struct {
-	payload       toykafka.Message
+	message       toykafka.Message
 	creationTime  time.Time
 	messageNumber int
 }
