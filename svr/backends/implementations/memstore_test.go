@@ -56,6 +56,7 @@ func TestRemoveWhenNoneOldEnough(t *testing.T) {
 	ms := NewMemStore()
 	ms.Store("topicA", []byte("foo"))
 
+	// Remove messages older than one hour ago.
 	maxAge := time.Now().Add(time.Duration(-1 * time.Hour))
 	removed, err := ms.RemoveOldMessages(maxAge)
 
@@ -67,6 +68,7 @@ func TestRemoveWhenAllOldEnough(t *testing.T) {
 	ms := NewMemStore()
 	ms.Store("topicA", []byte("foo"))
 
+	// Remove messages older than one hour's hence.
 	maxAge := time.Now().Add(time.Duration(1 * time.Hour))
 	removed, err := ms.RemoveOldMessages(maxAge)
 
@@ -74,11 +76,71 @@ func TestRemoveWhenAllOldEnough(t *testing.T) {
 	assert.Equal(t, 1, len(removed["topicA"]))
 }
 
-/*
-Poll deals with no such topic as it should.
-Poll behaves when there no messages in the store.
-Poll behaves when no messages are newer than time given.
-Poll behaves when all messages are newer than time given.
-Poll behaves when some messages are newer than time given.
+func TestRemoveWhenOnlySomeOldEnough(t *testing.T) {
+	ms := NewMemStore()
+	// Store two messages immediately.
+	ms.Store("topicA", []byte("abc"))
+	ms.Store("topicA", []byte("def"))
+	// Store two more, after a 500ms delay.
+	time.Sleep(time.Millisecond * 500)
+	ms.Store("topicA", []byte("ghi"))
+	ms.Store("topicA", []byte("klm"))
+	// Remove those older than 250ms.
+	maxAge := time.Now().Add(time.Duration(-250 * time.Microsecond))
+	removed, err := ms.RemoveOldMessages(maxAge)
+	// Should be two removed.
+	assert.Nil(t, err)
+	assert.Equal(t, 2, len(removed["topicA"]))
+}
 
-*/
+func TestPollErrorHandlingWhenNoSuchTopic(t *testing.T) {
+	ms := NewMemStore()
+
+	_, _, err := ms.Poll("XXX", 1)
+	assert.EqualError(t, err, "Unknown topic: XXX")
+}
+
+func TestPollWhenTopicIsEmpty(t *testing.T) {
+	ms := NewMemStore()
+	// Bring topic into being.
+	ms.Store("topicA", []byte("foo"))
+	// Remove all messages.
+	maxAge := time.Now().Add(time.Duration(1 * time.Hour))
+	removed, err := ms.RemoveOldMessages(maxAge)
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(removed["topicA"]))
+
+	messages, newReadFrom, err := ms.Poll("topicA", 1)
+	assert.Nil(t, err)
+	assert.Equal(t, 0, len(messages))
+	assert.Equal(t, 1, newReadFrom)
+}
+
+func TestNewReadFromAdvancement(t *testing.T) {
+	ms := NewMemStore()
+	// Add 3 messages.
+	ms.Store("topicA", []byte("foo"))
+	ms.Store("topicA", []byte("bar"))
+	ms.Store("topicA", []byte("baz"))
+	// Check returned values from a Poll that will empty the topic.
+	messages, newReadFrom, err := ms.Poll("topicA", 1)
+	assert.Nil(t, err)
+	assert.Equal(t, 3, len(messages))
+	assert.Equal(t, 4, newReadFrom)
+	// Check returned values when Polling for newever values when there
+	// are none.
+	messages, newReadFrom, err = ms.Poll("topicA", newReadFrom)
+	assert.Nil(t, err)
+	assert.Equal(t, 0, len(messages))
+	assert.Equal(t, 4, newReadFrom)
+
+	// Check returned values when Polling for newever values when there
+	// are some new ones.
+	ms.Store("topicA", []byte("baz"))
+	messages, newReadFrom, err = ms.Poll("topicA", newReadFrom)
+	assert.Nil(t, err)
+	assert.Equal(t, 1, len(messages))
+	assert.Equal(t, 5, newReadFrom)
+}
+
+// next message when have removed some old

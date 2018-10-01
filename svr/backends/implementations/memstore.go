@@ -1,6 +1,7 @@
 package implementations
 
 import (
+	"fmt"
 	"log"
 	"sort"
 	"sync"
@@ -85,7 +86,10 @@ func (m *MemStore) Poll(topic string, readFrom int) (
 	mutex.Lock()
 	defer mutex.Unlock()
 
-	storedMessages := m.messagesPerTopic[topic]
+	storedMessages, ok := m.messagesPerTopic[topic]
+	if !ok {
+		return nil, -1, fmt.Errorf("Unknown topic: %s", topic)
+	}
 	serveFromIndex := sort.Search(len(storedMessages), func(i int) bool {
 		return storedMessages[i].messageNumber >= readFrom
 	})

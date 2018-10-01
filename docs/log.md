@@ -12,6 +12,8 @@
     o  Bug - returned next readfrom returned by implementation Poll should be 
        based on final message returned, not counting!
        o  Need a failing test!
+            o  Work up test suite
+                o  Double check all old enough or none old enough
     o  Reduce the number of uint32 casts by using them natively consider
     o  defaultconfig is a smell
 
