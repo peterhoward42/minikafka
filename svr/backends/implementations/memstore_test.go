@@ -142,5 +142,3 @@ func TestNewReadFromAdvancement(t *testing.T) {
 	assert.Equal(t, 1, len(messages))
 	assert.Equal(t, 5, newReadFrom)
 }
-
-// next message when have removed some old

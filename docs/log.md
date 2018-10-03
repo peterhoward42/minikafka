@@ -9,18 +9,25 @@
             *  Work through build errors arising to fix up
         *  Now scan all source for correct nomenclature
     *  Does it still work?
-    o  Bug - returned next readfrom returned by implementation Poll should be 
+    *  Bug - returned next readfrom returned by implementation Poll should be 
        based on final message returned, not counting!
-       o  Need a failing test!
-            o  Work up test suite
-                o  Double check all old enough or none old enough
-    o  Reduce the number of uint32 casts by using them natively consider
-    o  defaultconfig is a smell
+       *  Need a failing test!
+            *  Work up test suite
+                *  Double check all old enough or none old enough
+    *  Reduce the number of uint32 casts by using them natively consider
+        *  Don't bother.
 
+
+    o  Refactor to make server a first class cli thing whereas clients focussed
+       on libs with illustrative cli
+        o  Start new branch
+        o  Start by documenting in readme the intent, including DI
+        o  Now make it so
     o  seperate cli for server concedptually from that for clients
         o  should there be a server command in svr tree, not cli?
         o  careful design of what things injected, and from cmd line or from
            env
+    o  defaultconfig is a smell
     o  inject all timings
         o  message age
         o  poll interval

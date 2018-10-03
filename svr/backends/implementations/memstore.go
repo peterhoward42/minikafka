@@ -29,7 +29,7 @@ func NewMemStore() *MemStore {
 	}
 }
 
-var mutex = &sync.Mutex{} // Protects concurrent access of the MemStore.
+var mutex = &sync.Mutex{} // Guards concurrent access of the MemStore.
 
 // ------------------------------------------------------------------------
 // METHODS TO SATISFY THE BackingStore INTERFACE.
@@ -153,9 +153,10 @@ func (m *MemStore) removeOldMessagesFromTopic(
 // AUXILLIARY TYPES AND THEIR METHODS.
 // ------------------------------------------------------------------------
 
-// storedMessage is a private type for the MemStore implementation backing store
+// storedMessage is a private type for the MemStore backing store
 // implementation which encapsulates a message itself, along with its creation
 // time, and message number.
+
 type storedMessage struct {
 	message       toykafka.Message
 	creationTime  time.Time
