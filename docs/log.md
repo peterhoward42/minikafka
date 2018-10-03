@@ -20,7 +20,7 @@
 
     o  Refactor to make server a first class cli thing whereas clients focussed
        on libs with illustrative cli
-        o  Start new branch
+        *  Start new branch
         o  Start by documenting in readme the intent, including DI
         o  Now make it so
     o  seperate cli for server concedptually from that for clients
