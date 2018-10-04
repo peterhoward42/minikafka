@@ -17,34 +17,40 @@
     *  Reduce the number of uint32 casts by using them natively consider
         *  Don't bother.
 
-
-    o  Refactor to make server a first class cli thing whereas clients focussed
+    *  Refactor to make server a first class cli thing whereas clients focussed
        on libs with illustrative cli
         *  Start new branch
-        o  Start by documenting in readme the intent, including DI
-        o  Now make it so
-    o  seperate cli for server concedptually from that for clients
-        o  should there be a server command in svr tree, not cli?
-        o  careful design of what things injected, and from cmd line or from
-           env
-    o  defaultconfig is a smell
-    o  inject all timings
-        o  message age
-        o  poll interval
-    o  consider different style of docco - active / do this
+        *  Start by documenting in readme the intent, including DI
+        *  Now make it so
+            *  Directory hierarchy
+            *  Name of sserver launch program
+    o  Timeout seems build is broken?
+    o  Now consider appropriate (12 factor) source ofr each parameterisation 
+       in turn
+        o  Serving IP address for server
+        o  Host and Port to client
+        o  Topic provision to clients
+        o  Max age
+        o  Polling timing params to client
+        o  Timeouts
+
+    o  soften readme sayin gnot intended to be used
+    o  should docco show install and run cli?
+    o  should docco show code examples
     o  Use new logger with prefix
     o  switch to doc.go
     o  test docco in godoc
     o  Tidy and make consistent all log messages
-    o  Several functions used named arguments but routinely re-create the
-        objects?
     o  Test
         o  For resilience, and exemplars
-    o  Make sure only client objects exposed to protocol types
 o  Consider which error handling can do better than fatal.
 o  Update doc strings in API to sufficient quality for go doc being useful.
 o  Add TLS / and or JWT auth
 o  Package level doc.go
+o  Redit backend
+o  Containerisation
+    o  Maybe seperate repo?
+o  Orchestration
 
 ----------------------------------------------------------------
 ----------------------------------------------------------------

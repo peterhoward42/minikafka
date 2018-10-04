@@ -11,7 +11,7 @@ import (
 	"github.com/peterhoward42/toy-kafka/protocol"
 )
 
-// This command launches a command line program that encapsulates a Toy-Kafka
+// This is a command line program that encapsulates a Toy-Kafka
 // *produce* client. You specify a topic using the -topic flag, and then are
 // invited to type in (string) messages, followed by ENTER. These are each sent
 // to the server using the *produce* API.

@@ -10,7 +10,7 @@ import (
 	"github.com/peterhoward42/toy-kafka/svr"
 )
 
-// This commmand launches a program that creates a Toy-Kafka server and
+// This commmand-line program instantiates a Toy-Kafka server and
 // mandates it to start serving.
 func main() {
 	// Todo: Override port from environment variables.
