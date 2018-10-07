@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -20,15 +19,15 @@ type Consumer struct {
 }
 
 // NewConsumer provides a new Consumer client instance that is bound to a given
-// server address, and a given message topic. The caller specifies which
+// host, and a given message topic. The caller specifies which
 // message number read-from position they wish the subsequent polling to start.
+// *host* should be of the form "myhost.com:1234".
 func NewConsumer(topic string, readFrom int,
-	host string, port int) (*Consumer, error) {
+	host string) (*Consumer, error) {
 
 	p := &Consumer{topic: topic, readFrom: readFrom}
-	serverAddr := fmt.Sprintf("%s:%d", host, port)
 	opts := []grpc.DialOption{grpc.WithInsecure()}
-	conn, err := grpc.Dial(serverAddr, opts...)
+	conn, err := grpc.Dial(host, opts...)
 	if err != nil {
 		log.Fatalf("fail to dial: %v", err)
 	}

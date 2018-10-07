@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -19,13 +18,13 @@ type Producer struct {
 }
 
 // NewProducer provides a new Producer instance that is bound to a given
-// server address, and a given message topic.
-func NewProducer(topic string, host string, port int) (*Producer, error) {
+// host, and a given message topic.
+// *host* should be of the form "myhost.com:1234".
+func NewProducer(topic string, host string) (*Producer, error) {
 
 	p := &Producer{topic: topic}
-	serverAddr := fmt.Sprintf("%s:%d", host, port)
 	opts := []grpc.DialOption{grpc.WithInsecure()}
-	conn, err := grpc.Dial(serverAddr, opts...)
+	conn, err := grpc.Dial(host, opts...)
 	if err != nil {
 		log.Fatalf("fail to dial: %v", err)
 	}

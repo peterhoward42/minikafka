@@ -7,8 +7,8 @@ import (
 	"log"
 	"os"
 
+	"github.com/peterhoward42/toy-kafka/cli"
 	"github.com/peterhoward42/toy-kafka/client"
-	"github.com/peterhoward42/toy-kafka/protocol"
 )
 
 // This is a command line program that encapsulates a Toy-Kafka
@@ -17,18 +17,23 @@ import (
 // to the server using the *produce* API.
 func main() {
 
-	// Extract topic from command line args.
+	// Extract command line arguments.
 
-	topic := flag.String("topic", "", "Please specify a topic")
+	var topic, host string
+	flag.StringVar(&topic, "topic", "", "Specify a topic.")
+	flag.StringVar(&host, "host", cli.DefaultHost, "Specify a host.")
 	flag.Parse()
-	if *topic == "" {
-		log.Fatal("You must specify a topic using the '-topic flag'")
+
+	if topic == "" {
+		log.Fatal("You must specify a topic with the -topic flag.")
+	}
+	if host == cli.DefaultHost {
+		log.Printf(
+			"Warning, using default host: %s.\nBetter to specify one with -host flag.",
+			cli.DefaultHost)
 	}
 
-	// Todo - required host, and override port from environment variables.
-	host := "localhost"
-	port := protocol.DefaultPort
-	producer, err := client.NewProducer(*topic, host, port)
+	producer, err := client.NewProducer(topic, host)
 	if err != nil {
 		log.Fatalf("Failed to create Producer, with error: %v", err)
 	}

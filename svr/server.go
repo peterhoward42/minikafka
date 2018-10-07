@@ -1,7 +1,6 @@
 package svr
 
 import (
-	"fmt"
 	"log"
 	"net"
 	"time"
@@ -30,9 +29,12 @@ func NewServer() *Server {
 }
 
 // Serve mandates the server to start serving.
-func (s *Server) Serve(host string, port int, retentionTime time.Duration) {
+// *host* should be of the form "myhost.com:1234".
+// This call also starts the server's automatic removal of old messages from
+// the store - based on the retention time provided.
+func (s *Server) Serve(host string, retentionTime time.Duration) {
 	// Bring up the gRPC server.
-	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", host, port))
+	lis, err := net.Listen("tcp", host)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
@@ -43,7 +45,7 @@ func (s *Server) Serve(host string, port int, retentionTime time.Duration) {
 	// Launch a goroutine to periodically delete expired messages.
 	go s.startCulling(retentionTime)
 
-	log.Printf("Serving on port: %d", port)
+	log.Printf("Serving on host: %s", host)
 	grpcServer.Serve(lis)
 }
 
@@ -51,7 +53,9 @@ func (s *Server) Serve(host string, port int, retentionTime time.Duration) {
 // own goroutine), which removes messages from the backing store when their age
 // exceeds *retentionTime*.
 func (s *Server) startCulling(retentionTime time.Duration) {
-	cullCheckFrequency := time.Duration(2) * time.Second
+	// If we're keeping messages until they are 50 minutes old, we check to see
+	// if any have expired every 5 minutes. (one tenth of the retention time.)
+	cullCheckFrequency := retentionTime / 10
 	ticker := time.NewTicker(cullCheckFrequency)
 	for range ticker.C {
 		// Note time.Add() and time.Sub() operate with differing types,

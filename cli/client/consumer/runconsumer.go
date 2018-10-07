@@ -5,8 +5,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/peterhoward42/toy-kafka/cli"
 	"github.com/peterhoward42/toy-kafka/client"
-	"github.com/peterhoward42/toy-kafka/protocol"
 )
 
 // This command line program contains a Toy-Kafka consumer client.
@@ -15,19 +15,29 @@ import (
 // arriving ones, by polling the server every 3 seconds.
 func main() {
 
-	// Extract topic from command line args.
+	// Extract command line arguments.
 
-	topic := flag.String("topic", "", "Please specify a topic")
+	var topic, host string
+	flag.StringVar(&topic, "topic", "", "Specify a topic.")
+	flag.StringVar(&host, "host", cli.DefaultHost, "Specify a host.")
 	flag.Parse()
-	if *topic == "" {
-		log.Fatal("You must specify a topic using the '-topic flag'")
+
+	if topic == "" {
+		log.Fatal("You must specify a topic with the -topic flag.")
+	}
+	if host == cli.DefaultHost {
+		log.Printf(
+			"Warning, using default host: %s.\nBetter to specify one with -host flag.",
+			cli.DefaultHost)
 	}
 
-	// Todo - fetch host, and override port from environment variables.
-	host := "localhost"
-	port := protocol.DefaultPort
+	// Unlike this examplar consumer command line app, most real-world consumer
+	// apps will not start consuming from message 1 at every boot time. But will
+	// instead persist their current readFrom message number, so as to only
+	// consume messages they have not previously already seen.
+
 	readFrom := 1 // Start consuming at message 1.
-	consumer, err := client.NewConsumer(*topic, readFrom, host, port)
+	consumer, err := client.NewConsumer(topic, readFrom, host)
 	if err != nil {
 		log.Fatalf("Failed to create Consumer, with error: %v", err)
 	}
