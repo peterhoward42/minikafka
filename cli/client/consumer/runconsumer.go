@@ -37,7 +37,8 @@ func main() {
 	// consume messages they have not previously already seen.
 
 	readFrom := 1 // Start consuming at message 1.
-	consumer, err := client.NewConsumer(topic, readFrom, host)
+    timeout := time.Duration(500 * time.Millisecond)
+	consumer, err := client.NewConsumer(topic, readFrom, timeout, host)
 	if err != nil {
 		log.Fatalf("Failed to create Consumer, with error: %v", err)
 	}

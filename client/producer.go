@@ -14,15 +14,20 @@ import (
 // messages to the server.
 type Producer struct {
 	topic       string
+    timeout     time.Duration
 	clientProxy pb.ToyKafkaClient
 }
 
 // NewProducer provides a new Producer instance that is bound to a given
 // host, and a given message topic.
 // *host* should be of the form "myhost.com:1234".
-func NewProducer(topic string, host string) (*Producer, error) {
+func NewProducer(topic string, timeout time.Duration, host string) (
+        *Producer, error) {
 
-	p := &Producer{topic: topic}
+	p := &Producer{
+        topic: topic,
+        timeout: timeout,
+    }
 	opts := []grpc.DialOption{grpc.WithInsecure()}
 	conn, err := grpc.Dial(host, opts...)
 	if err != nil {
@@ -37,7 +42,7 @@ func NewProducer(topic string, host string) (*Producer, error) {
 func (p *Producer) SendMessage(messagePayload MessagePayload) (
 	msgNum uint32, err error) {
 	log.Printf("Producer sending msg.")
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), p.timeout)
 	defer cancel()
 	topic := &pb.Topic{Topic: p.topic}
 	payload := &pb.Payload{Payload: messagePayload}

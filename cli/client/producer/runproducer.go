@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+    "time"
 
 	"github.com/peterhoward42/toy-kafka/cli"
 	"github.com/peterhoward42/toy-kafka/client"
@@ -33,7 +34,9 @@ func main() {
 			cli.DefaultHost)
 	}
 
-	producer, err := client.NewProducer(topic, host)
+
+    timeout := time.Duration(500 * time.Millisecond)
+	producer, err := client.NewProducer(topic, timeout, host)
 	if err != nil {
 		log.Fatalf("Failed to create Producer, with error: %v", err)
 	}

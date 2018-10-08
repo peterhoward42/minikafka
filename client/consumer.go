@@ -15,6 +15,7 @@ import (
 type Consumer struct {
 	topic       string
 	readFrom    int               // Message number.
+    timeout     time.Duration
 	clientProxy pb.ToyKafkaClient // gRPC component.
 }
 
@@ -22,10 +23,10 @@ type Consumer struct {
 // host, and a given message topic. The caller specifies which
 // message number read-from position they wish the subsequent polling to start.
 // *host* should be of the form "myhost.com:1234".
-func NewConsumer(topic string, readFrom int,
+func NewConsumer(topic string, readFrom int, timeout time.Duration,
 	host string) (*Consumer, error) {
 
-	p := &Consumer{topic: topic, readFrom: readFrom}
+	p := &Consumer{topic: topic, readFrom: readFrom, timeout: timeout}
 	opts := []grpc.DialOption{grpc.WithInsecure()}
 	conn, err := grpc.Dial(host, opts...)
 	if err != nil {
@@ -40,7 +41,7 @@ func NewConsumer(topic string, readFrom int,
 // It also advances its internal *readFrom* position state accordingly.
 func (c *Consumer) Poll() (messages []MessagePayload, err error) {
 	log.Printf("Consumer Client Poll")
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
 	defer cancel()
 	readFrom := &pb.MsgNumber{MsgNumber: uint32(c.readFrom)}
 	pollRequest := &pb.PollRequest{

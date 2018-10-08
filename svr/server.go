@@ -30,8 +30,9 @@ func NewServer() *Server {
 
 // Serve mandates the server to start serving.
 // *host* should be of the form "myhost.com:1234".
-// This call also starts the server's automatic removal of old messages from
-// the store - based on the retention time provided.
+// This call also starts a separate go-routine in the server's to do the 
+// automatic removal of old messages fromthe store - based on the retention 
+// time provided.
 func (s *Server) Serve(host string, retentionTime time.Duration) {
 	// Bring up the gRPC server.
 	lis, err := net.Listen("tcp", host)

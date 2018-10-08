@@ -5,38 +5,45 @@ conceptually as Kafka.
 
 - Pub/sub model, for streams of *messages* in topics.
 - Messages are binary, arbitrary-length, opaque, sequences of bytes.
-- Multiple clients may consume the streams independently at their own rate.
-- The server preserves messages until they reach a prescribed age.
+- Multiple clients may post messages into topics.
+- Multiple clients may consume the streams of messages independently at their 
+  own rate.
+- A client's consumption of a message does not remove it from the server's store.
+- The server does evict messages once they reach a prescribed age.
 - Clients post messages using a *produce* API.
-- And receive messages using the *consume* API.
+- Clients recevie messages using the *consume* API.
 
-It's not intended to be used for real, and is very much simpler than Kafka. It's 
-a project conceived to refinforce the author's Go design/coding experience, 
-and offer that for scrutiny.
+The capabilities are very much simpler than those of Kafka. The project was
+undertaken to extend and reinforce the author's Go design/coding experience.
 
 # Components and Architecture
 
-It is a client-server system, with the client libraries offering a Go, Kafka-like
-(proxy) API. The underlying communication protocol is gRPC - unlike Kafka's
+It is a client-server system, with the client libraries offering Go, Kafka-like
+(proxy) APIs. The underlying communication protocol is gRPC - unlike Kafka's
 custom TCP protocol.
 
-The server is implemented as a Go type, with a *Serve* method. And a simple
-command-line program is used to instantiate and run it. The server delegates the
-storage CRUD operations to a backend component - coupled only by a contractual Go
-interface.
+The server is implemented as a Go type, with a *Serve* method. A command line
+program is also provided to instantiate and run it - aspiring to 12-factor design
+principles whereby runtime configuration choices (such as which IP address and
+port to serve on, and the maximum retention time for messages), are read from
+environment variables.
+
+The server delegates the storage CRUD operations to a backend component - coupled
+only by a contractual Go interface.
 
 There are two distinct client libraries; one a *produce* client (for sending
 messages), and the other a *consume* client for receiving them. These too expose
-themselves as Go types with appropriate methods. The expected way for a user of
-the client code to use it, is to incorporate one or the other of the client 
-packages into their own consuming or producing app, and drive it 
-programmatically, to suit the needs of the app.
+themselves as Go types with appropriate high-level proxy methods that hide away
+the underlying gRPC communications. Users of the client libraries will normally
+embed a producer client or a consumer client object in their own client apps, and
+configure the that object programmatically.
 
-However to make it possible to play with it straight out of the box, the code
-provides very simple command line programs to operate the clients. One is a
-*produce* CLI that lets you type in strings and have them sent to the server as
-messages. The other is *consumer* CLI that polls the server for newly arriving
-messages and displays them as they arrive.
+To make it possible to play with with the server and clients straight out of the
+box, (and to support development), the code also provides a pair of very simple 
+command line client apps. One wraps the produce client and lets you type in
+strings that it then sends using the produce API. The other wraps the consume
+client and shows you messages as it receives them.
+
 
 # Service Definition (Conceptual)
 
