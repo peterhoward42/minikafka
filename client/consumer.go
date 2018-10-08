@@ -14,8 +14,8 @@ import (
 // the server using gRPC.
 type Consumer struct {
 	topic       string
-	readFrom    int               // Message number.
-    timeout     time.Duration
+	readFrom    int // Message number.
+	timeout     time.Duration
 	clientProxy pb.ToyKafkaClient // gRPC component.
 }
 
@@ -38,25 +38,38 @@ func NewConsumer(topic string, readFrom int, timeout time.Duration,
 
 // Poll is the primary API method for Consumer, which sends a Poll
 // message to the server and returns the messages provided back to the caller.
-// It also advances its internal *readFrom* position state accordingly.
-func (c *Consumer) Poll() (messages []MessagePayload, err error) {
+// It also advances its internal *readFrom* position state accordingly (ready
+// for the next poll), and additionally notifies the caller of this this in its
+// return values.
+func (c *Consumer) Poll() (
+	messages []MessagePayload, newReadFrom int, err error) {
+
 	log.Printf("Consumer Client Poll")
 	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
 	defer cancel()
+
+	// Derive the message number to read from the state held in this consumer
+	// object.
 	readFrom := &pb.MsgNumber{MsgNumber: uint32(c.readFrom)}
+
 	pollRequest := &pb.PollRequest{
 		Topic: c.topic, ReadFrom: readFrom}
 	pollResponse, err := c.clientProxy.Poll(ctx, pollRequest)
 	if err != nil {
 		log.Fatalf("Call to client proxy Poll() failed: %v.", err)
 	}
+
+	// Capture the messages to return.
 	messages = []MessagePayload{}
 	payloads := pollResponse.GetPayloads()
 	for _, payloadObj := range payloads {
 		payload := payloadObj.GetPayload()
 		messages = append(messages, payload)
 	}
+
+	// Update the newReadFrom message number, ready for the next poll.
 	c.readFrom = int(pollResponse.GetNewReadFrom().GetMsgNumber())
+	newReadFrom = c.readFrom
 	log.Printf("Consumer client Poll received  %v messages", len(payloads))
 	return
 }
