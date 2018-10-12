@@ -4,7 +4,7 @@ package protocol;
 
 service ToyKafka {
   // Produce returns the message number assigned to the stored message.
-  rpc Produce(ProduceRequest) returns (ProduceResponse){}
+  rpc Produce(ProduceRequest) returns (MsgNumber){}
   rpc Poll(PollRequest) returns (PollResponse){}
 }
 
@@ -31,15 +31,9 @@ message PollRequest {
 }
 
 message PollResponse {
-    string error = 1;
     // payloads holds the returned messages.
-    repeated Payload payloads = 2;
+    repeated Payload payloads = 1;
     // new_read_from tells the requester where they should update their
     // read_from value to to move past the returned messages.
-    MsgNumber new_read_from = 3;
-}
-
-message ProduceResponse {
-    string error = 1;
-    MsgNumber allocated_msg_number = 2;
+    MsgNumber new_read_from = 2;
 }

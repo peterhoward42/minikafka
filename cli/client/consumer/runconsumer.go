@@ -28,7 +28,7 @@ func main() {
 	timeout := time.Duration(500 * time.Millisecond)
 	consumer, err := clientlib.NewConsumer(topic, readFrom, timeout, host)
 	if err != nil {
-		log.Fatalf("client.NewConsumer: %v", err)
+		log.Fatalf("Failed to create Consumer, with error: %v", err)
 	}
 
 	// Poll at regular intervals, reporting one what is thus received.
@@ -39,12 +39,13 @@ func main() {
 
 	defer ticker.Stop()
 	for range ticker.C {
+		log.Printf("CLI Poll")
 		messages, newReadFrom, err := consumer.Poll()
 		if err != nil {
-			log.Fatalf("consumer.Poll: %v", err)
+			log.Fatalf("Error generated in call to Poll(): %v", err)
 		}
-		log.Printf("Poll: %d messages, advanced to message: %d .",
-			len(messages), newReadFrom)
+		log.Printf("Received %d messages.", len(messages))
+		log.Printf("Next message to read advanced to: %d", newReadFrom)
 		for _, msg := range messages {
 			log.Printf("  %s", string(msg))
 		}

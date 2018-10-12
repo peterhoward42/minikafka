@@ -2,15 +2,7 @@
         *  Coded strategy to receive errors from culling or grpc
         *  Test?
     *  Centralise parsing of command line for client and server.
-    *  Shouldn't server serve on all NICs?
-    o  Server should not die if consumer subscribes to unknown topic
-        o  Backout putting error field in protobuf responses
-            o  How go back on git?
-                o  commit all local changes
-                o  identify commit you want to be
-                o  check that out
-                o  commit and push with good comment
-            o  Work out which commit we want
+    o  Shouldn't server serve on all NICs?
     o  Go through all of server replacing sensible fatalf calls to
         returning errors and handling with these in cli
     o  Use new logger with prefix
