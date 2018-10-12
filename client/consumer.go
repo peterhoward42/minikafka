@@ -2,7 +2,7 @@ package client
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"time"
 
 	"google.golang.org/grpc"
@@ -30,7 +30,7 @@ func NewConsumer(topic string, readFrom int, timeout time.Duration,
 	opts := []grpc.DialOption{grpc.WithInsecure()}
 	conn, err := grpc.Dial(host, opts...)
 	if err != nil {
-		log.Fatalf("fail to dial: %v", err)
+		return nil, fmt.Errorf("grpc.Dial: %v", err)
 	}
 	p.clientProxy = pb.NewToyKafkaClient(conn)
 	return p, nil
@@ -44,7 +44,6 @@ func NewConsumer(topic string, readFrom int, timeout time.Duration,
 func (c *Consumer) Poll() (
 	messages []MessagePayload, newReadFrom int, err error) {
 
-	log.Printf("Consumer Client Poll")
 	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
 	defer cancel()
 
@@ -56,7 +55,7 @@ func (c *Consumer) Poll() (
 		Topic: c.topic, ReadFrom: readFrom}
 	pollResponse, err := c.clientProxy.Poll(ctx, pollRequest)
 	if err != nil {
-		log.Fatalf("Call to client proxy Poll() failed: %v.", err)
+		return nil, 0, fmt.Errorf("client.Poll: %v", err)
 	}
 
 	// Capture the messages to return.
@@ -70,6 +69,5 @@ func (c *Consumer) Poll() (
 	// Update the newReadFrom message number, ready for the next poll.
 	c.readFrom = int(pollResponse.GetNewReadFrom().GetMsgNumber())
 	newReadFrom = c.readFrom
-	log.Printf("Consumer client Poll received  %v messages", len(payloads))
 	return
 }

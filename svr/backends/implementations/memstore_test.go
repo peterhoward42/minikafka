@@ -36,20 +36,18 @@ func TestRemoveMsgOperatesAcrossTopics(t *testing.T) {
 	ms.Store("topicB", []byte("bar"))
 
 	maxAge := time.Now()
-	removed, _ := ms.RemoveOldMessages(maxAge)
-
-	assert.Equal(t, 1, removed["topicA"][0])
-	assert.Equal(t, 1, removed["topicB"][0])
+	nRemoved, _ := ms.RemoveOldMessages(maxAge)
+	assert.Equal(t, 2, nRemoved)
 }
 
 func TestRemoveOnEmptyStore(t *testing.T) {
 	ms := NewMemStore()
 
 	maxAge := time.Now()
-	removed, err := ms.RemoveOldMessages(maxAge)
+	nRemoved, err := ms.RemoveOldMessages(maxAge)
 
 	assert.Nil(t, err)
-	assert.Equal(t, 0, len(removed))
+	assert.Equal(t, 0, nRemoved)
 }
 
 func TestRemoveWhenNoneOldEnough(t *testing.T) {
@@ -58,10 +56,10 @@ func TestRemoveWhenNoneOldEnough(t *testing.T) {
 
 	// Remove messages older than one hour ago.
 	maxAge := time.Now().Add(time.Duration(-1 * time.Hour))
-	removed, err := ms.RemoveOldMessages(maxAge)
+	nRemoved, err := ms.RemoveOldMessages(maxAge)
 
 	assert.Nil(t, err)
-	assert.Equal(t, 0, len(removed["topicA"]))
+	assert.Equal(t, 0, nRemoved)
 }
 
 func TestRemoveWhenAllOldEnough(t *testing.T) {
@@ -70,10 +68,10 @@ func TestRemoveWhenAllOldEnough(t *testing.T) {
 
 	// Remove messages older than one hour's hence.
 	maxAge := time.Now().Add(time.Duration(1 * time.Hour))
-	removed, err := ms.RemoveOldMessages(maxAge)
+	nRemoved, err := ms.RemoveOldMessages(maxAge)
 
 	assert.Nil(t, err)
-	assert.Equal(t, 1, len(removed["topicA"]))
+	assert.Equal(t, 1, nRemoved)
 }
 
 func TestRemoveWhenOnlySomeOldEnough(t *testing.T) {
@@ -87,10 +85,10 @@ func TestRemoveWhenOnlySomeOldEnough(t *testing.T) {
 	ms.Store("topicA", []byte("klm"))
 	// Remove those older than 250ms.
 	maxAge := time.Now().Add(time.Duration(-250 * time.Microsecond))
-	removed, err := ms.RemoveOldMessages(maxAge)
+	nRemoved, err := ms.RemoveOldMessages(maxAge)
 	// Should be two removed.
 	assert.Nil(t, err)
-	assert.Equal(t, 2, len(removed["topicA"]))
+	assert.Equal(t, 2, nRemoved)
 }
 
 func TestPollErrorHandlingWhenNoSuchTopic(t *testing.T) {
@@ -106,9 +104,9 @@ func TestPollWhenTopicIsEmpty(t *testing.T) {
 	ms.Store("topicA", []byte("foo"))
 	// Remove all messages.
 	maxAge := time.Now().Add(time.Duration(1 * time.Hour))
-	removed, err := ms.RemoveOldMessages(maxAge)
+	nRemoved, err := ms.RemoveOldMessages(maxAge)
 	assert.Nil(t, err)
-	assert.Equal(t, 1, len(removed["topicA"]))
+	assert.Equal(t, 1, nRemoved)
 
 	messages, newReadFrom, err := ms.Poll("topicA", 1)
 	assert.Nil(t, err)

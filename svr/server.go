@@ -75,7 +75,7 @@ func (s *Server) Produce(
 	messageBytes := req.GetPayload().Payload
 	msgNumber, err := s.store.Store(topicStr, messageBytes)
 	if err != nil {
-		log.Fatalf("Error storing message: %v", err)
+		return nil, fmt.Errorf("store.Store: %v", err)
 	}
 	return &pb.MsgNumber{MsgNumber: uint32(msgNumber)}, nil
 }
@@ -91,7 +91,7 @@ func (s *Server) Poll(ctx context.Context, req *pb.PollRequest) (
 	fromMsgNumber := req.GetReadFrom().GetMsgNumber()
 	messages, nextMsgNumber, err := s.store.Poll(topicStr, int(fromMsgNumber))
 	if err != nil {
-		log.Fatalf("Error reported by backend for Poll: %v", err)
+		return nil, fmt.Errorf("store.Poll: %v", err)
 	}
 	payloads := []*pb.Payload{}
 	for _, msg := range messages {
@@ -150,10 +150,13 @@ func (s *Server) startCullingService(
 		// unary-minus on the *retentionTime* time.Duration struct.
 		maxAge := time.Now().Add(-retentionTime)
 		// Delegate to the backing store implementation.
-		_, err := s.store.RemoveOldMessages(maxAge)
+		nRemoved, err := s.store.RemoveOldMessages(maxAge)
 		if err != nil {
 			errc <- fmt.Errorf("store.RemoveOldMessages: %v", err)
 			return
+		}
+		if nRemoved != 0 {
+			log.Printf("Removed %d expired messages", nRemoved)
 		}
 	}
 }

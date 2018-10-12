@@ -40,11 +40,11 @@ func readEnvironmentVariables() (host string, retentionTime time.Duration) {
 
 	if host == "" {
 		log.Fatalf("Please set the %s environment variable\n"+
-			"E.g. localhost:9999", hostEnvVar)
+			"E.g. :9999", hostEnvVar)
 	}
 	if rt == "" {
 		log.Fatalf("Please set the %s environment variable\n"+
-			"E.g. 3s", retentionEnvVar)
+			"E.g. 3s or 10m", retentionEnvVar)
 	}
 
 	retentionTime, err := time.ParseDuration(rt)

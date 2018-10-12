@@ -21,7 +21,7 @@ func main() {
 	timeout := time.Duration(500 * time.Millisecond)
 	producer, err := clientlib.NewProducer(topic, timeout, host)
 	if err != nil {
-		log.Fatalf("Failed to create Producer, with error: %v", err)
+		log.Fatalf("client.NewProducer: %v", err)
 	}
 
 	// Invite user to enter lines.
@@ -34,7 +34,7 @@ func main() {
 		_, err := producer.SendMessage([]byte(messageTxt))
 
 		if err != nil {
-			log.Fatalf("Error SendMessage: %v", err)
+			log.Fatalf("producer.sendMessage: %v", err)
 		}
 	}
 }

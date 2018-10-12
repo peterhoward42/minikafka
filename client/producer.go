@@ -2,7 +2,7 @@ package client
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"time"
 
 	"google.golang.org/grpc"
@@ -14,7 +14,7 @@ import (
 // messages to the server.
 type Producer struct {
 	topic       string
-    timeout     time.Duration
+	timeout     time.Duration
 	clientProxy pb.ToyKafkaClient
 }
 
@@ -22,16 +22,16 @@ type Producer struct {
 // host, and a given message topic.
 // *host* should be of the form "myhost.com:1234".
 func NewProducer(topic string, timeout time.Duration, host string) (
-        *Producer, error) {
+	*Producer, error) {
 
 	p := &Producer{
-        topic: topic,
-        timeout: timeout,
-    }
+		topic:   topic,
+		timeout: timeout,
+	}
 	opts := []grpc.DialOption{grpc.WithInsecure()}
 	conn, err := grpc.Dial(host, opts...)
 	if err != nil {
-		log.Fatalf("fail to dial: %v", err)
+		return nil, fmt.Errorf("grpc.Dial: %v", err)
 	}
 	p.clientProxy = pb.NewToyKafkaClient(conn)
 	return p, nil
@@ -41,7 +41,6 @@ func NewProducer(topic string, timeout time.Duration, host string) (
 // the given message payload to the server in a Produce message.
 func (p *Producer) SendMessage(messagePayload MessagePayload) (
 	msgNum uint32, err error) {
-	log.Printf("Producer sending msg.")
 	ctx, cancel := context.WithTimeout(context.Background(), p.timeout)
 	defer cancel()
 	topic := &pb.Topic{Topic: p.topic}
@@ -49,8 +48,7 @@ func (p *Producer) SendMessage(messagePayload MessagePayload) (
 	produceRequest := &pb.ProduceRequest{Topic: topic, Payload: payload}
 	msgNumber, err := p.clientProxy.Produce(ctx, produceRequest)
 	if err != nil {
-		log.Fatalf("Call to client proxy Produce() failed: %v.", err)
+		return 1, fmt.Errorf("client.Produce: %v", err)
 	}
-	log.Printf("Reply message number: %v", msgNumber)
 	return msgNumber.GetMsgNumber(), err
 }
