@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -13,10 +14,10 @@ import (
 // Consumer is a ToyKafka client object dedicated to sending *poll* messages to
 // the server using gRPC.
 type Consumer struct {
-	topic       string
-	readFrom    int // Message number.
-	timeout     time.Duration
-	clientProxy pb.ToyKafkaClient // gRPC component.
+	topic      string
+	readFrom   int // Message number.
+	timeout    time.Duration
+	gRPCClient pb.ToyKafkaClient // gRPC component.
 }
 
 // NewConsumer provides a new Consumer client instance that is bound to a given
@@ -32,7 +33,7 @@ func NewConsumer(topic string, readFrom int, timeout time.Duration,
 	if err != nil {
 		log.Fatalf("fail to dial: %v", err)
 	}
-	p.clientProxy = pb.NewToyKafkaClient(conn)
+	p.gRPCClient = pb.NewToyKafkaClient(conn)
 	return p, nil
 }
 
@@ -44,7 +45,6 @@ func NewConsumer(topic string, readFrom int, timeout time.Duration,
 func (c *Consumer) Poll() (
 	messages []MessagePayload, newReadFrom int, err error) {
 
-	log.Printf("Consumer Client Poll")
 	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)
 	defer cancel()
 
@@ -54,9 +54,9 @@ func (c *Consumer) Poll() (
 
 	pollRequest := &pb.PollRequest{
 		Topic: c.topic, ReadFrom: readFrom}
-	pollResponse, err := c.clientProxy.Poll(ctx, pollRequest)
+	pollResponse, err := c.gRPCClient.Poll(ctx, pollRequest)
 	if err != nil {
-		log.Fatalf("Call to client proxy Poll() failed: %v.", err)
+		return nil, -1, fmt.Errorf("gRPCClient.Poll: %v", err)
 	}
 
 	// Capture the messages to return.
@@ -70,6 +70,5 @@ func (c *Consumer) Poll() (
 	// Update the newReadFrom message number, ready for the next poll.
 	c.readFrom = int(pollResponse.GetNewReadFrom().GetMsgNumber())
 	newReadFrom = c.readFrom
-	log.Printf("Consumer client Poll received  %v messages", len(payloads))
 	return
 }

@@ -2,7 +2,17 @@
         *  Coded strategy to receive errors from culling or grpc
         *  Test?
     *  Centralise parsing of command line for client and server.
-    o  Shouldn't server serve on all NICs?
+    *  Shouldn't server serve on all NICs?
+    o  Server should not die if consumer subscribes to unknown topic
+        o  Put error payload into responses, and read from these at 
+           the coalfaces.
+            *  change protobuf
+            *  generate the go code
+            *  work through compile errors
+            o  change servers handlers to populate the err field for 
+               application level errors
+            o  change producer to read err in response
+            o  change consumer to read err in response
     o  Go through all of server replacing sensible fatalf calls to
         returning errors and handling with these in cli
     o  Use new logger with prefix

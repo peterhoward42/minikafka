@@ -8,8 +8,6 @@ import (
 	"github.com/peterhoward42/toy-kafka/svr"
 )
 
-const defaultRetentionTime = "5m"
-
 // This commmand-line program instantiates a Toy-Kafka server and
 // mandates it to start serving.
 func main() {
@@ -40,11 +38,11 @@ func readEnvironmentVariables() (host string, retentionTime time.Duration) {
 
 	if host == "" {
 		log.Fatalf("Please set the %s environment variable\n"+
-			"E.g. localhost:9999", hostEnvVar)
+			"E.g. :9999", hostEnvVar)
 	}
 	if rt == "" {
 		log.Fatalf("Please set the %s environment variable\n"+
-			"E.g. 3s", retentionEnvVar)
+			"E.g. 3s or 20m", retentionEnvVar)
 	}
 
 	retentionTime, err := time.ParseDuration(rt)

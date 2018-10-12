@@ -31,7 +31,7 @@ func NewServer() *Server {
 
 // Serve mandates the server to start serving and also to start the automatic
 // culling of expired messages.
-// *host* should be of the form "myhost.com:1234".
+// *host* should be of the form ":1234".
 func (s *Server) Serve(host string, retentionTime time.Duration) error {
 
 	// Channels to receive errors back from the goroutines we launch.
@@ -66,7 +66,7 @@ func (s *Server) Serve(host string, retentionTime time.Duration) error {
 
 // Produce is the server's handler function for the *Produce* API call.
 func (s *Server) Produce(
-	ctx context.Context, req *pb.ProduceRequest) (*pb.MsgNumber, error) {
+	ctx context.Context, req *pb.ProduceRequest) (*pb.ProduceResponse, error) {
 	// Harvest the request details from the incoming gRPC request object,
 	// then delegate the storage work to the backing store, and finally
 	// package up the data to return to suit a gRPC response.
@@ -77,7 +77,10 @@ func (s *Server) Produce(
 	if err != nil {
 		log.Fatalf("Error storing message: %v", err)
 	}
-	return &pb.MsgNumber{MsgNumber: uint32(msgNumber)}, nil
+	return &pb.ProduceResponse{
+		Error:              "",
+		AllocatedMsgNumber: &pb.MsgNumber{MsgNumber: uint32(msgNumber)},
+	}, nil
 }
 
 // Poll is the server's handler function for the *Poll* API call.
@@ -91,7 +94,7 @@ func (s *Server) Poll(ctx context.Context, req *pb.PollRequest) (
 	fromMsgNumber := req.GetReadFrom().GetMsgNumber()
 	messages, nextMsgNumber, err := s.store.Poll(topicStr, int(fromMsgNumber))
 	if err != nil {
-		log.Fatalf("Error reported by backend for Poll: %v", err)
+		return &pb.PollResponse{}, fmt.Errorf("store.Poll: %s", err)
 	}
 	payloads := []*pb.Payload{}
 	for _, msg := range messages {
