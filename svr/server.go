@@ -1,6 +1,7 @@
 package svr
 
 import (
+	"fmt"
 	"log"
 	"net"
 	"time"
@@ -13,7 +14,7 @@ import (
 	"github.com/peterhoward42/toy-kafka/svr/backends/implementations"
 )
 
-// Server *is* the toy kafka (grpc) server.
+// Server *is* the toy kafka server.
 type Server struct {
 	// The coupling between the server and its storage backend is governed
 	// by the BackingStore interface.
@@ -28,51 +29,39 @@ func NewServer() *Server {
 	return &Server{implementations.NewMemStore()}
 }
 
-// Serve mandates the server to start serving.
+// Serve mandates the server to start serving and also to start the automatic
+// culling of expired messages.
 // *host* should be of the form "myhost.com:1234".
-// This call also starts a separate go-routine in the server's to do the 
-// automatic removal of old messages fromthe store - based on the retention 
-// time provided.
-func (s *Server) Serve(host string, retentionTime time.Duration) {
-	// Bring up the gRPC server.
-	lis, err := net.Listen("tcp", host)
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
-	}
-	opts := []grpc.ServerOption{}
-	grpcServer := grpc.NewServer(opts...)
-	pb.RegisterToyKafkaServer(grpcServer, s)
+func (s *Server) Serve(host string, retentionTime time.Duration) error {
 
-	// Launch a goroutine to periodically delete expired messages.
-	go s.startCulling(retentionTime)
+	// Channels to receive errors back from the goroutines we launch.
+	gRPCErrC := make(chan error)
+	cullingErrC := make(chan error)
 
-	log.Printf("Serving on host: %s", host)
-	grpcServer.Serve(lis)
-}
+	// Channel to tell the message culling service to stop.
+	cullingStopC := make(chan bool)
 
-// startCulling is a run-forever function (intended to be run in its
-// own goroutine), which removes messages from the backing store when their age
-// exceeds *retentionTime*.
-func (s *Server) startCulling(retentionTime time.Duration) {
-	// If we're keeping messages until they are 50 minutes old, we check to see
-	// if any have expired every 5 minutes. (one tenth of the retention time.)
-	cullCheckFrequency := retentionTime / 10
-	ticker := time.NewTicker(cullCheckFrequency)
-	for range ticker.C {
-		// Note time.Add() and time.Sub() operate with differing types,
-		// and the use of Add() here is deliberate. Also that you can do
-		// unary-minus on the *retentionTime* time.Duration struct.
-		maxAge := time.Now().Add(-retentionTime)
-		// Delegate to the backing store implementation.
-		_, err := s.store.RemoveOldMessages(maxAge)
-		if err != nil {
-			log.Fatalf("Error removing old messages: %v", err)
-		}
+	grpcServer := grpc.NewServer([]grpc.ServerOption{}...)
+
+	go s.startGrpcServer(gRPCErrC, grpcServer, host)
+	go s.startCullingService(cullingErrC, cullingStopC, retentionTime)
+
+	// Wait forever, or, for either of the the run-forever goroutines to report
+	// that it has stopped on error. When either stops on an error, explitly
+	// stop the other to avoid leaking goroutines.
+	var err error
+	select {
+	case err = <-gRPCErrC:
+		cullingStopC <- true
+		return fmt.Errorf("startGrpcserver: %v", err)
+	case err := <-cullingErrC:
+		grpcServer.GracefulStop()
+		return fmt.Errorf("startCullingService: %v", err)
 	}
 }
 
 //------------------------------------------------------------------------
-// gRPC HANDLERS
+// gRPC REQUEST HANDLERS - as per protobuf spec.
 //------------------------------------------------------------------------
 
 // Produce is the server's handler function for the *Produce* API call.
@@ -111,4 +100,60 @@ func (s *Server) Poll(ctx context.Context, req *pb.PollRequest) (
 	return &pb.PollResponse{
 		Payloads:    payloads,
 		NewReadFrom: &pb.MsgNumber{MsgNumber: uint32(nextMsgNumber)}}, nil
+}
+
+//------------------------------------------------------------------------
+// Internal helpers
+//------------------------------------------------------------------------
+
+// startGrpcServer starts listening on the requested host network interface,
+// introduces the standard library gRPC server to this customer server
+// wrapper, and starts it serving. If it encouters an error while running, it
+// stops itself and signals the error on the error reporting channel passed in.
+func (s *Server) startGrpcServer(
+	errc chan<- error, grpcServer *grpc.Server, host string) {
+
+	lis, err := net.Listen("tcp", host)
+	if err != nil {
+		errc <- fmt.Errorf("net.Listen: %v", err)
+		return
+	}
+	pb.RegisterToyKafkaServer(grpcServer, s)
+
+	err = grpcServer.Serve(lis) // Runs forever, or error encountered.
+	if err != nil {
+		errc <- fmt.Errorf("grpcServer.Serve: %v", err)
+		return
+	}
+}
+
+// startCulling periodically removes messages from the backing store when their
+// age exceeds *retentionTime*. It runs forever, or, until an error occurs, or
+// it receives an instruction to stop on the stop channel passed in. When
+// an error occurs it signals this on the error reporting channel passed in.
+func (s *Server) startCullingService(
+	errc chan<- error, stopc <-chan bool, retentionTime time.Duration) {
+	// If we're keeping messages until they are 50 minutes old, we check to see
+	// if any have expired every 5 minutes. (one tenth of the retention time.)
+	cullCheckFrequency := retentionTime / 10
+	ticker := time.NewTicker(cullCheckFrequency)
+	// For as long as ticks arrive...
+	for range ticker.C {
+		// Been instructed to stop since last tick?
+		select {
+		case <-stopc:
+			return
+		default:
+		}
+		// Note time.Add() and time.Sub() operate with differing types,
+		// and the use of Add() here is deliberate. Also that you can do
+		// unary-minus on the *retentionTime* time.Duration struct.
+		maxAge := time.Now().Add(-retentionTime)
+		// Delegate to the backing store implementation.
+		_, err := s.store.RemoveOldMessages(maxAge)
+		if err != nil {
+			errc <- fmt.Errorf("store.RemoveOldMessages: %v", err)
+			return
+		}
+	}
 }

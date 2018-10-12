@@ -72,10 +72,10 @@ func (m *MemStore) RemoveOldMessages(maxAge time.Time) (
 	for topic := range m.messagesPerTopic {
 		err = m.removeOldMessagesFromTopic(topic, maxAge, removed)
 		if err != nil {
-			return
+			return nil, err
 		}
 	}
-	return
+	return removed, nil
 }
 
 // Poll is defined by, and documented in the backends/contract/BackingStore

@@ -1,13 +1,13 @@
-    *  there is a conceptual bug - that the consumer cli cannot tell which message
-       number it has got up to, so how could a real client take responsibility for
-       persisting this so that after a restart it could mandate the client object to
-       start at the right piont in the stream?
-        *  Check is IS available in the underlying protocol
-        *  So is it just that the API offered by the client type is deficient?
-        *  Upgrade Poll method contract on proxy client
-        *  Satisfy compile needs cascade
-        *  Upgrade consume cli to do something with the returned nextreadfrom
+    *  Timeout - how to observer errors in server about housekeeping
+        *  Coded strategy to receive errors from culling or grpc
+        *  Test?
+    *  Centralise parsing of command line for client and server.
+    o  Shouldn't server serve on all NICs?
+    o  Go through all of server replacing sensible fatalf calls to
+        returning errors and handling with these in cli
     o  Use new logger with prefix
+        *  Necessary? = no
+        o  Review remaining loggng calls
     o  Consider which error handling can do better than fatal.
         o  ATM the server stops if a consumer polls an unknown topic
     o  should docco show install and run cli?

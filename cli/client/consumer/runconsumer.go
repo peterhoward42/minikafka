@@ -1,12 +1,11 @@
 package main
 
 import (
-	"flag"
 	"log"
 	"time"
 
-	"github.com/peterhoward42/toy-kafka/cli"
-	"github.com/peterhoward42/toy-kafka/client"
+	clientcli "github.com/peterhoward42/toy-kafka/cli/client"
+	clientlib "github.com/peterhoward42/toy-kafka/client"
 )
 
 // This command line program contains a Toy-Kafka consumer client.
@@ -15,21 +14,7 @@ import (
 // arriving ones, by polling the server every 3 seconds.
 func main() {
 
-	// Extract command line arguments.
-
-	var topic, host string
-	flag.StringVar(&topic, "topic", "", "Specify a topic.")
-	flag.StringVar(&host, "host", cli.DefaultHost, "Specify a host.")
-	flag.Parse()
-
-	if topic == "" {
-		log.Fatal("You must specify a topic with the -topic flag.")
-	}
-	if host == cli.DefaultHost {
-		log.Printf(
-			"Warning, using default host: %s.\nBetter to specify one with -host flag.",
-			cli.DefaultHost)
-	}
+	topic, host := clientcli.ParseCommandLine()
 
 	// Unlike this examplar consumer command line app, most real-world consumer
 	// apps will not start consuming from message 1 at every boot time. But will
@@ -41,7 +26,7 @@ func main() {
 	// You specify the response timeout for each consumer.Poll() at consumer
 	// construction time.
 	timeout := time.Duration(500 * time.Millisecond)
-	consumer, err := client.NewConsumer(topic, readFrom, timeout, host)
+	consumer, err := clientlib.NewConsumer(topic, readFrom, timeout, host)
 	if err != nil {
 		log.Fatalf("Failed to create Consumer, with error: %v", err)
 	}

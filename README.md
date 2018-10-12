@@ -36,7 +36,7 @@ messages), and the other a *consume* client for receiving them. These too expose
 themselves as Go types with appropriate high-level proxy methods that hide away
 the underlying gRPC communications. Users of the client libraries will normally
 embed a producer client or a consumer client object in their own client apps, and
-configure the that object programmatically.
+configure that object programmatically.
 
 To make it possible to play with with the server and clients straight out of the
 box, (and to support development), the code also provides a pair of very simple 

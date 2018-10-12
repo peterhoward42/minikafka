@@ -2,14 +2,13 @@ package main
 
 import (
 	"bufio"
-	"flag"
 	"fmt"
 	"log"
 	"os"
-    "time"
+	"time"
 
-	"github.com/peterhoward42/toy-kafka/cli"
-	"github.com/peterhoward42/toy-kafka/client"
+	clientcli "github.com/peterhoward42/toy-kafka/cli/client"
+	clientlib "github.com/peterhoward42/toy-kafka/client"
 )
 
 // This is a command line program that encapsulates a Toy-Kafka
@@ -17,26 +16,10 @@ import (
 // invited to type in (string) messages, followed by ENTER. These are each sent
 // to the server using the *produce* API.
 func main() {
+	topic, host := clientcli.ParseCommandLine()
 
-	// Extract command line arguments.
-
-	var topic, host string
-	flag.StringVar(&topic, "topic", "", "Specify a topic.")
-	flag.StringVar(&host, "host", cli.DefaultHost, "Specify a host.")
-	flag.Parse()
-
-	if topic == "" {
-		log.Fatal("You must specify a topic with the -topic flag.")
-	}
-	if host == cli.DefaultHost {
-		log.Printf(
-			"Warning, using default host: %s.\nBetter to specify one with -host flag.",
-			cli.DefaultHost)
-	}
-
-
-    timeout := time.Duration(500 * time.Millisecond)
-	producer, err := client.NewProducer(topic, timeout, host)
+	timeout := time.Duration(500 * time.Millisecond)
+	producer, err := clientlib.NewProducer(topic, timeout, host)
 	if err != nil {
 		log.Fatalf("Failed to create Producer, with error: %v", err)
 	}
