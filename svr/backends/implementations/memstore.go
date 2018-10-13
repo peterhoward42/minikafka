@@ -7,10 +7,12 @@ import (
 	"time"
 
 	toykafka "github.com/peterhoward42/toy-kafka"
+	"github.com/peterhoward42/toy-kafka/svr/backends/contract"
 )
 
 // MemStore implements the svr/backends/contract/BackingStore interface using
-// a volatile, in-process memory store.
+// a volatile, in-process memory store. It exists principally to aid
+// development and testing without being dependent on real storage.
 type MemStore struct {
 	// Fundamental storage is separated by topic, and comprises simply
 	// time-ordered slices of messages held in *storedMessage* objects.
@@ -20,7 +22,7 @@ type MemStore struct {
 	newestMessageNumber map[string]int             // Keyed on topic.
 }
 
-// NewMemStore constructs and initializes an empty MemStore instance.
+// NewMemStore instantiates, initializes and returns a MemStore.
 func NewMemStore() *MemStore {
 	return &MemStore{
 		messagesPerTopic:    map[string][]storedMessage{},
@@ -34,9 +36,15 @@ var mutex = &sync.Mutex{} // Guards concurrent access of the MemStore.
 // METHODS TO SATISFY THE BackingStore INTERFACE.
 // ------------------------------------------------------------------------
 
+// Create is defined by, and documented in the backends/contract/BackingStore
+// interface.
+func (m MemStore) Create() contract.BackingStore {
+	return *NewMemStore()
+}
+
 // Store is defined by, and documented in the backends/contract/BackingStore
 // interface.
-func (m *MemStore) Store(topic string, message toykafka.Message) (
+func (m MemStore) Store(topic string, message toykafka.Message) (
 	messageNumber int, err error) {
 
 	mutex.Lock()
@@ -63,7 +71,7 @@ func (m *MemStore) Store(topic string, message toykafka.Message) (
 
 // RemoveOldMessages is defined by, and documented in the
 // backends/contract/BackingStore interface.
-func (m *MemStore) RemoveOldMessages(maxAge time.Time) (
+func (m MemStore) RemoveOldMessages(maxAge time.Time) (
 	nRemoved int, err error) {
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -79,7 +87,7 @@ func (m *MemStore) RemoveOldMessages(maxAge time.Time) (
 
 // Poll is defined by, and documented in the backends/contract/BackingStore
 // interface.
-func (m *MemStore) Poll(topic string, readFrom int) (
+func (m MemStore) Poll(topic string, readFrom int) (
 	foundMessages []toykafka.Message, newReadFrom int, err error) {
 
 	mutex.Lock()

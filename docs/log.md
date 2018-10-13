@@ -1,9 +1,17 @@
 o  Persistent using filesystem
     *  Design
     *  Write up file sys rationale
-    o  Can we make the backing store test suite re-usable across any backend
+    *  Can we make the backing store test suite re-usable across any backend
        implementation?
+        *  Remind suite facilities
+        *  Regardless, how inject concrete type?
+        *  Needs still be go test .
+        *  Get it to work
+        *  Comment properly and rename as necessary
+        *  Ditch old test file
 o  switch to doc.go
+o  don't call it toy anything
+o  say host should be host but can be just port
 o  test docco in godoc
 o  Tidy and make consistent all log messages
 o  Test
