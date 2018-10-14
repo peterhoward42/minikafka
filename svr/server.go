@@ -11,7 +11,7 @@ import (
 
 	pb "github.com/peterhoward42/toy-kafka/protocol"
 	"github.com/peterhoward42/toy-kafka/svr/backends/contract"
-	"github.com/peterhoward42/toy-kafka/svr/backends/implementations"
+	"github.com/peterhoward42/toy-kafka/svr/backends/implementations/memstore"
 )
 
 // Server *is* the toy kafka server.
@@ -26,7 +26,7 @@ type Server struct {
 func NewServer() *Server {
 	// First implementation uses an in-memory, volatile storage
 	// solution.
-	return &Server{implementations.NewMemStore()}
+	return &Server{memstore.NewMemStore()}
 }
 
 // Serve mandates the server to start serving and also to start the automatic

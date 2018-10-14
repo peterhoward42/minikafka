@@ -1,4 +1,4 @@
-package implementations
+package memstore
 
 import (
 	"fmt"
@@ -8,6 +8,8 @@ import (
 
 	toykafka "github.com/peterhoward42/toy-kafka"
 )
+
+var mutex = &sync.Mutex{} // Guards concurrent access of the MemStore.
 
 // MemStore implements the svr/backends/contract/BackingStore interface using
 // a volatile, in-process memory store. It exists principally to aid
@@ -29,13 +31,14 @@ func NewMemStore() *MemStore {
     }
 }
 
-var mutex = &sync.Mutex{} // Guards concurrent access of the MemStore.
 
 // ------------------------------------------------------------------------
 // METHODS TO SATISFY THE BackingStore INTERFACE.
 // ------------------------------------------------------------------------
 
 func (m MemStore) DeleteContents() {
+	mutex.Lock()
+	defer mutex.Unlock()
     for k := range m.messagesPerTopic {
         delete(m.messagesPerTopic, k)
     }

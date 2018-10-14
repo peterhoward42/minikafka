@@ -13,17 +13,16 @@ import (
 // to test.
 func RunBackingStoreTests(t *testing.T, implementation BackingStore) {
 	testCanStoreToVirginStore(t, implementation)
-	testCanStoreToVirginStore(t, implementation)
-	testCanStoreToExistingTopic(t, implementation)
-	testMessageNumberAllocatedPerTopic(t, implementation)
-	testRemoveMsgOperatesAcrossTopics(t, implementation)
-	testRemoveOnEmptyStore(t, implementation)
-	testRemoveWhenNoneOldEnough(t, implementation)
-	testRemoveWhenAllOldEnough(t, implementation)
-	testRemoveWhenOnlySomeOldEnough(t, implementation)
-	testPollErrorHandlingWhenNoSuchTopic(t, implementation)
-	testPollWhenTopicIsEmpty(t, implementation)
-	testNewReadFromAdvancement(t, implementation)
+	//testCanStoreToExistingTopic(t, implementation)
+	//testMessageNumberAllocatedPerTopic(t, implementation)
+	//testRemoveMsgOperatesAcrossTopics(t, implementation)
+	//testRemoveOnEmptyStore(t, implementation)
+	//testRemoveWhenNoneOldEnough(t, implementation)
+	//testRemoveWhenAllOldEnough(t, implementation)
+	//testRemoveWhenOnlySomeOldEnough(t, implementation)
+	//testPollErrorHandlingWhenNoSuchTopic(t, implementation)
+	//testPollWhenTopicIsEmpty(t, implementation)
+	//testNewReadFromAdvancement(t, implementation)
 }
 
 //----------------------------------------------------------------------------

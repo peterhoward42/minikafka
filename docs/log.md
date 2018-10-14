@@ -4,6 +4,17 @@ o  Persistent using filesystem
     *  Refactor memstore tests into a reusable (for file store) suite also.
     *  Deprecate Create in favour of DeleteAll
     o  TDD filesystem solution using now-reusable test suite.
+        *  stores must exist in differing packages
+        o  start satisfying methods method
+            *  write psuedo code in-situ in terms of analysis document
+            *  find a way to isolate tests
+            o  have a go at the Store virgin test pass
+                o  digress to unit test index independently
+                    o  start with creation programmatically and save to given
+                       file
+    o  this test suite mo - not much good cos doesn't tell you where the
+               problem is.
+    o  augment test for with tests that close and repopen the store
 
 
 
