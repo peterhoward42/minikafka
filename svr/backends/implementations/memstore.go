@@ -23,11 +23,10 @@ type MemStore struct {
 
 // NewMemStore instantiates, initializes and returns a MemStore.
 func NewMemStore() *MemStore {
-	// We have more than one re-initialisation use-cases, and so use
-	// a reusable function.
-	m := MemStore{}
-	m.reinit()
-	return &m
+    return &MemStore{
+        messagesPerTopic : map[string][]storedMessage{},
+        newestMessageNumber : map[string]int{},
+    }
 }
 
 var mutex = &sync.Mutex{} // Guards concurrent access of the MemStore.
@@ -36,9 +35,18 @@ var mutex = &sync.Mutex{} // Guards concurrent access of the MemStore.
 // METHODS TO SATISFY THE BackingStore INTERFACE.
 // ------------------------------------------------------------------------
 
+func (m MemStore) DeleteContents() {
+    for k := range m.messagesPerTopic {
+        delete(m.messagesPerTopic, k)
+    }
+    for k := range m.newestMessageNumber {
+        delete(m.newestMessageNumber, k)
+    }
+}
+
 // Store is defined by, and documented in the backends/contract/BackingStore
 // interface.
-func (m *MemStore) Store(topic string, message toykafka.Message) (
+func (m MemStore) Store(topic string, message toykafka.Message) (
 	messageNumber int, err error) {
 
 	mutex.Lock()
@@ -65,7 +73,7 @@ func (m *MemStore) Store(topic string, message toykafka.Message) (
 
 // RemoveOldMessages is defined by, and documented in the
 // backends/contract/BackingStore interface.
-func (m *MemStore) RemoveOldMessages(maxAge time.Time) (
+func (m MemStore) RemoveOldMessages(maxAge time.Time) (
 	nRemoved int, err error) {
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -81,7 +89,7 @@ func (m *MemStore) RemoveOldMessages(maxAge time.Time) (
 
 // Poll is defined by, and documented in the backends/contract/BackingStore
 // interface.
-func (m *MemStore) Poll(topic string, readFrom int) (
+func (m MemStore) Poll(topic string, readFrom int) (
 	foundMessages []toykafka.Message, newReadFrom int, err error) {
 
 	mutex.Lock()
@@ -110,19 +118,13 @@ func (m *MemStore) Poll(topic string, readFrom int) (
 	return foundMessages, unchangedReadFrom, nil
 }
 
-// DeleteContents is defined by, and documented in the
-// backends/contract/BackingStore interface.
-func (m *MemStore) DeleteContents() {
-	m.reinit()
-}
-
 // ------------------------------------------------------------------------
 // Helper functions.
 // ------------------------------------------------------------------------
 
 // RemoveOldMessagesFromTopic is a topic-specific helper function for the
 // whole-store RemoveOldMessages method.
-func (m *MemStore) removeOldMessagesFromTopic(
+func (m MemStore) removeOldMessagesFromTopic(
 	topic string, maxAge time.Time) (nRemoved int, err error) {
 
 	// Find the boundary between the messages to keep and those to remove.
@@ -151,13 +153,6 @@ func (m *MemStore) removeOldMessagesFromTopic(
 // ------------------------------------------------------------------------
 // AUXILLIARY CODE
 // ------------------------------------------------------------------------
-
-// reinit instantiates new storage datastructures in the store, replacing any
-// that might be there already.
-func (m *MemStore) reinit() {
-	m.messagesPerTopic = map[string][]storedMessage{}
-	m.newestMessageNumber = map[string]int{}
-}
 
 // storedMessage is a private type for the MemStore backing store
 // implementation which encapsulates a message itself, along with its creation

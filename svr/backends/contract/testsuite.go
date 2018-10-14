@@ -11,7 +11,7 @@ import (
 // functionality that implementations should provide - by delegating to a set
 // of individual test functions. You pass in the implementation object you want
 // to test.
-func RunBackingStoreTests(t *testing.T, implementation *BackingStore) {
+func RunBackingStoreTests(t *testing.T, implementation BackingStore) {
 	testCanStoreToVirginStore(t, implementation)
 	testCanStoreToVirginStore(t, implementation)
 	testCanStoreToExistingTopic(t, implementation)
@@ -30,14 +30,14 @@ func RunBackingStoreTests(t *testing.T, implementation *BackingStore) {
 // Unexported tests.
 //----------------------------------------------------------------------------
 
-func testCanStoreToVirginStore(t *testing.T, store *BackingStore) {
+func testCanStoreToVirginStore(t *testing.T, store BackingStore) {
 	store.DeleteContents()
 	msgNum, err := store.Store("topicA", []byte("hello"))
 	assert.Nil(t, err)
 	assert.Equal(t, 1, msgNum)
 }
 
-func testCanStoreToExistingTopic(t *testing.T, store *BackingStore) {
+func testCanStoreToExistingTopic(t *testing.T, store BackingStore) {
 	store.DeleteContents()
 	msgNum, err := store.Store("topicA", []byte("hello"))
 	msgNum, err = store.Store("topicA", []byte("goodbye"))
@@ -45,7 +45,7 @@ func testCanStoreToExistingTopic(t *testing.T, store *BackingStore) {
 	assert.Equal(t, 2, msgNum)
 }
 
-func testMessageNumberAllocatedPerTopic(t *testing.T, store *BackingStore) {
+func testMessageNumberAllocatedPerTopic(t *testing.T, store BackingStore) {
 	store.DeleteContents()
 	msgNum, _ := store.Store("topicA", []byte("foo"))
 	msgNum, _ = store.Store("topicA", []byte("bar"))
@@ -53,7 +53,7 @@ func testMessageNumberAllocatedPerTopic(t *testing.T, store *BackingStore) {
 	assert.Equal(t, 1, msgNum)
 }
 
-func testRemoveMsgOperatesAcrossTopics(t *testing.T, store *BackingStore) {
+func testRemoveMsgOperatesAcrossTopics(t *testing.T, store BackingStore) {
 	store.DeleteContents()
 	store.Store("topicA", []byte("foo"))
 	store.Store("topicB", []byte("bar"))
@@ -63,7 +63,7 @@ func testRemoveMsgOperatesAcrossTopics(t *testing.T, store *BackingStore) {
 	assert.Equal(t, 2, nRemoved)
 }
 
-func testRemoveOnEmptyStore(t *testing.T, store *BackingStore) {
+func testRemoveOnEmptyStore(t *testing.T, store BackingStore) {
 	store.DeleteContents()
 
 	maxAge := time.Now()
@@ -73,7 +73,7 @@ func testRemoveOnEmptyStore(t *testing.T, store *BackingStore) {
 	assert.Equal(t, 0, nRemoved)
 }
 
-func testRemoveWhenNoneOldEnough(t *testing.T, store *BackingStore) {
+func testRemoveWhenNoneOldEnough(t *testing.T, store BackingStore) {
 	store.DeleteContents()
 	store.Store("topicA", []byte("foo"))
 
@@ -85,7 +85,7 @@ func testRemoveWhenNoneOldEnough(t *testing.T, store *BackingStore) {
 	assert.Equal(t, 0, nRemoved)
 }
 
-func testRemoveWhenAllOldEnough(t *testing.T, store *BackingStore) {
+func testRemoveWhenAllOldEnough(t *testing.T, store BackingStore) {
 	store.DeleteContents()
 	store.Store("topicA", []byte("foo"))
 
@@ -97,7 +97,7 @@ func testRemoveWhenAllOldEnough(t *testing.T, store *BackingStore) {
 	assert.Equal(t, 1, nRemoved)
 }
 
-func testRemoveWhenOnlySomeOldEnough(t *testing.T, store *BackingStore) {
+func testRemoveWhenOnlySomeOldEnough(t *testing.T, store BackingStore) {
 	store.DeleteContents()
 	// Store two messages immediately.
 	store.Store("topicA", []byte("abc"))
@@ -114,14 +114,14 @@ func testRemoveWhenOnlySomeOldEnough(t *testing.T, store *BackingStore) {
 	assert.Equal(t, 2, nRemoved)
 }
 
-func testPollErrorHandlingWhenNoSuchTopic(t *testing.T, store *BackingStore) {
+func testPollErrorHandlingWhenNoSuchTopic(t *testing.T, store BackingStore) {
 	store.DeleteContents()
 
 	_, _, err := store.Poll("XXX", 1)
 	assert.EqualError(t, err, "No such topic: XXX")
 }
 
-func testPollWhenTopicIsEmpty(t *testing.T, store *BackingStore) {
+func testPollWhenTopicIsEmpty(t *testing.T, store BackingStore) {
 	store.DeleteContents()
 	// Bring topic into being.
 	store.Store("topicA", []byte("foo"))
@@ -137,7 +137,7 @@ func testPollWhenTopicIsEmpty(t *testing.T, store *BackingStore) {
 	assert.Equal(t, 1, newReadFrom)
 }
 
-func testNewReadFromAdvancement(t *testing.T, store *BackingStore) {
+func testNewReadFromAdvancement(t *testing.T, store BackingStore) {
 	store.DeleteContents()
 	// Add 3 messages.
 	store.Store("topicA", []byte("foo"))

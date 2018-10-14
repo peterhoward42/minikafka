@@ -2,7 +2,7 @@ o  Persistent using filesystem
     *  Design
     *  Write up file sys rationale
     *  Refactor memstore tests into a reusable (for file store) suite also.
-    o  Deprecate Create in favour of DeleteAll
+    *  Deprecate Create in favour of DeleteAll
     o  TDD filesystem solution using now-reusable test suite.
 
 
