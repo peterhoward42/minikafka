@@ -1,14 +1,12 @@
 o  Persistent using filesystem
     *  Design
     *  Write up file sys rationale
-    *  Can we make the backing store test suite re-usable across any backend
-       implementation?
-        *  Remind suite facilities
-        *  Regardless, how inject concrete type?
-        *  Needs still be go test .
-        *  Get it to work
-        *  Comment properly and rename as necessary
-        *  Ditch old test file
+    *  Refactor memstore tests into a reusable (for file store) suite also.
+    o  Deprecate Create in favour of DeleteAll
+    o  TDD filesystem solution using now-reusable test suite.
+
+
+
 o  switch to doc.go
 o  don't call it toy anything
 o  say host should be host but can be just port

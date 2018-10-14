@@ -30,10 +30,6 @@ type BackingStore interface {
 	Poll(topic string, readFrom int) (messages []toykafka.Message,
 		newReadFrom int, err error)
 
-	// Create constructs and initializes an instance of something
-	// that offers this interface. It makes it possible for a single test suite
-	// to be created for the BackingStore interface which takes an implementation
-	// as a construction parameter which it can then use to create instances of
-	// the implementation inside the tests. See ./testsuite.go
-	Create() BackingStore
+    // DeleteContents empties the store of all its contents.
+	DeleteContents()
 }

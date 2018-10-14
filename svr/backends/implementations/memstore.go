@@ -7,7 +7,6 @@ import (
 	"time"
 
 	toykafka "github.com/peterhoward42/toy-kafka"
-	"github.com/peterhoward42/toy-kafka/svr/backends/contract"
 )
 
 // MemStore implements the svr/backends/contract/BackingStore interface using
@@ -24,10 +23,11 @@ type MemStore struct {
 
 // NewMemStore instantiates, initializes and returns a MemStore.
 func NewMemStore() *MemStore {
-	return &MemStore{
-		messagesPerTopic:    map[string][]storedMessage{},
-		newestMessageNumber: map[string]int{},
-	}
+	// We have more than one re-initialisation use-cases, and so use
+	// a reusable function.
+	m := MemStore{}
+	m.reinit()
+	return &m
 }
 
 var mutex = &sync.Mutex{} // Guards concurrent access of the MemStore.
@@ -36,15 +36,9 @@ var mutex = &sync.Mutex{} // Guards concurrent access of the MemStore.
 // METHODS TO SATISFY THE BackingStore INTERFACE.
 // ------------------------------------------------------------------------
 
-// Create is defined by, and documented in the backends/contract/BackingStore
-// interface.
-func (m MemStore) Create() contract.BackingStore {
-	return *NewMemStore()
-}
-
 // Store is defined by, and documented in the backends/contract/BackingStore
 // interface.
-func (m MemStore) Store(topic string, message toykafka.Message) (
+func (m *MemStore) Store(topic string, message toykafka.Message) (
 	messageNumber int, err error) {
 
 	mutex.Lock()
@@ -71,7 +65,7 @@ func (m MemStore) Store(topic string, message toykafka.Message) (
 
 // RemoveOldMessages is defined by, and documented in the
 // backends/contract/BackingStore interface.
-func (m MemStore) RemoveOldMessages(maxAge time.Time) (
+func (m *MemStore) RemoveOldMessages(maxAge time.Time) (
 	nRemoved int, err error) {
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -87,7 +81,7 @@ func (m MemStore) RemoveOldMessages(maxAge time.Time) (
 
 // Poll is defined by, and documented in the backends/contract/BackingStore
 // interface.
-func (m MemStore) Poll(topic string, readFrom int) (
+func (m *MemStore) Poll(topic string, readFrom int) (
 	foundMessages []toykafka.Message, newReadFrom int, err error) {
 
 	mutex.Lock()
@@ -114,6 +108,12 @@ func (m MemStore) Poll(topic string, readFrom int) (
 	}
 	unchangedReadFrom := readFrom
 	return foundMessages, unchangedReadFrom, nil
+}
+
+// DeleteContents is defined by, and documented in the
+// backends/contract/BackingStore interface.
+func (m *MemStore) DeleteContents() {
+	m.reinit()
 }
 
 // ------------------------------------------------------------------------
@@ -149,8 +149,15 @@ func (m *MemStore) removeOldMessagesFromTopic(
 }
 
 // ------------------------------------------------------------------------
-// AUXILLIARY TYPES AND THEIR METHODS.
+// AUXILLIARY CODE
 // ------------------------------------------------------------------------
+
+// reinit instantiates new storage datastructures in the store, replacing any
+// that might be there already.
+func (m *MemStore) reinit() {
+	m.messagesPerTopic = map[string][]storedMessage{}
+	m.newestMessageNumber = map[string]int{}
+}
 
 // storedMessage is a private type for the MemStore backing store
 // implementation which encapsulates a message itself, along with its creation
