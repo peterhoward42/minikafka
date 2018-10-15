@@ -12,8 +12,8 @@ o  Persistent using filesystem
                 o  digress to unit test index independently
                     *  start with creation programmatically and save to given
                        file
-                    o  what about mutexing in test and in whole package?
-                    o  move on to deserialise index test
+                    o  upgrade test to being save and restore
+                    o  add error handling tests on indexing
     o  this test suite mo - not much good cos doesn't tell you where the
                problem is.
     o  augment test for with tests that close and repopen the store

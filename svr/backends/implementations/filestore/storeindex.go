@@ -8,19 +8,19 @@ import (
 )
 
 //-----------------------------------------------------------------------
-// The types from which the index is (hierarchically) composed.
-// Described bottom-up. These export their fields to enable automatic
+// The types from which the index is (hierarchically) composed are defined
+// here bottom-up. These export their fields to enable automatic
 // serialization by gob.
 //-----------------------------------------------------------------------
 
-// MsgMeta holds the message number and creation time for stored message.
+// MsgMeta holds the message number and creation time for one stored message.
 type MsgMeta struct {
 	MsgNum  int32
 	Created time.Time
 }
 
 // FileMeta holds information about the oldest and newest message in
-// a file.
+// one file.
 type FileMeta struct {
 	FileName  string
 	OldestMsg MsgMeta
@@ -52,4 +52,20 @@ func (index *StoreIndex) Save(path string) error {
 		return fmt.Errorf("encoder.Encode(): %v", err)
 	}
 	return nil
+}
+
+// LoadStoreIndex deserializes a StoreIndex from disck and returns it.
+func LoadStoreIndex(fileName string) (*StoreIndex, error) {
+	file, err := os.Open(fileName)
+	if err != nil {
+		return nil, fmt.Errorf("os.Open(): %v", err)
+	}
+	defer file.Close()
+	decoder := gob.NewDecoder(file)
+	var index StoreIndex
+	err = decoder.Decode(&index)
+	if err != nil {
+		return nil, fmt.Errorf("decoder.Decode: %v", err)
+	}
+	return &index, nil
 }
