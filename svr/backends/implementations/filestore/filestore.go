@@ -12,21 +12,21 @@ var mutex = &sync.Mutex{} // Guards concurrent access of the FileStore.
 // FileStore implements the svr/backends/contract/BackingStore interface using
 // files on disk.
 type FileStore struct {
-    rootDir string
+	rootDir string
 }
 
 // NewFileStore instantiates, initializes and returns a FileStore.
 func NewFileStore(rootDir string) *FileStore {
-    return &FileStore{
-        rootDir: rootDir,
-    }
+	return &FileStore{
+		rootDir: rootDir,
+	}
 }
-
 
 // ------------------------------------------------------------------------
 // METHODS TO SATISFY THE BackingStore INTERFACE.
 // ------------------------------------------------------------------------
 
+// DeleteContents removes all contents from the store.
 func (m FileStore) DeleteContents() {
 }
 
@@ -38,26 +38,26 @@ func (m FileStore) Store(topic string, message toykafka.Message) (
 	mutex.Lock()
 	defer mutex.Unlock()
 
-    /*
-    Psuedo code
+	/*
+	   Psuedo code
 
-    Identify directory for topic, making one if necessary.
+	   Identify directory for topic, making one if necessary.
 
-    Read the index file
-    Serialise the message ready for storing (requires msg# from index)
-    Measure size of newest file. (or observe there are none)
-    Decide if going to use existing, open new, or open inaugral
+	   Read the index file
+	   Serialise the message ready for storing (requires msg# from index)
+	   Measure size of newest file. (or observe there are none)
+	   Decide if going to use existing, open new, or open inaugral
 
-    capture file to add to based on existence of any and if latest is
-    big enough
+	   capture file to add to based on existence of any and if latest is
+	   big enough
 
-    if need to create one
-        do so
-        update index as to its existence
+	   if need to create one
+	       do so
+	       update index as to its existence
 
-    append message to chosen file
-    update index
-    */
+	   append message to chosen file
+	   update index
+	*/
 	return -1, nil
 }
 

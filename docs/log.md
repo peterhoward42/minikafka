@@ -10,8 +10,10 @@ o  Persistent using filesystem
             *  find a way to isolate tests
             o  have a go at the Store virgin test pass
                 o  digress to unit test index independently
-                    o  start with creation programmatically and save to given
+                    *  start with creation programmatically and save to given
                        file
+                    o  what about mutexing in test and in whole package?
+                    o  move on to deserialise index test
     o  this test suite mo - not much good cos doesn't tell you where the
                problem is.
     o  augment test for with tests that close and repopen the store
