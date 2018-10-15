@@ -30,6 +30,6 @@ type BackingStore interface {
 	Poll(topic string, readFrom int) (messages []toykafka.Message,
 		newReadFrom int, err error)
 
-    // DeleteContents empties the store of all its contents.
-	DeleteContents()
+	// DeleteContents empties the store of all its contents.
+	DeleteContents() error
 }

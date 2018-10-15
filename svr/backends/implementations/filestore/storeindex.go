@@ -8,8 +8,8 @@ import (
 )
 
 //-----------------------------------------------------------------------
-// The types from which the index is (hierarchically) composed are defined
-// here bottom-up. These export their fields to enable automatic
+// The types from which the store index is (hierarchically) composed are
+// defined here bottom-up. These export their fields to enable automatic
 // serialization by gob.
 //-----------------------------------------------------------------------
 
@@ -27,13 +27,13 @@ type FileMeta struct {
 	NewestMsg MsgMeta
 }
 
-// TopicMessages holds information about the set of files that
+// TopicFiles holds information about the set of files that
 // contain a topic's messages.
-type TopicMessages []FileMeta // Ordered by file creation sequence.
+type TopicFiles []FileMeta // Ordered by file creation sequence.
 
 // StoreIndex provides an index over the entire store by providing a map
-// of topic names to their corresponding TopicMessages object.
-type StoreIndex map[string]TopicMessages
+// of topic names to their corresponding TopicFiles object.
+type StoreIndex map[string]TopicFiles
 
 //-----------------------------------------------------------------------
 // API methods
@@ -54,7 +54,7 @@ func (index *StoreIndex) Save(path string) error {
 	return nil
 }
 
-// LoadStoreIndex deserializes a StoreIndex from disck and returns it.
+// LoadStoreIndex deserializes a StoreIndex from disk and returns it.
 func LoadStoreIndex(fileName string) (*StoreIndex, error) {
 	file, err := os.Open(fileName)
 	if err != nil {
@@ -68,4 +68,18 @@ func LoadStoreIndex(fileName string) (*StoreIndex, error) {
 		return nil, fmt.Errorf("decoder.Decode: %v", err)
 	}
 	return &index, nil
+}
+
+func (index StoreIndex) nextMessageNumberFor(topic string) uint32 {
+	topicFiles, ok := index[topic]
+	if ok == false { // Haven't heard of this topic before.
+		return 1
+	}
+	nTopicFiles := len(topicFiles) // No files ever created for this topic.
+	if nTopicFiles == 0 {
+		return 1
+	}
+	// Consult the meta data for the newest file.
+	newestFileMeta := topicFiles[nTopicFiles-1]
+	return newestFileMeta.NewestMsg.MsgNum + 1
 }

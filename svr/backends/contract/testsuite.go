@@ -49,7 +49,8 @@ func testMessageNumberAllocatedPerTopic(t *testing.T, store BackingStore) {
 	msgNum, _ := store.Store("topicA", []byte("foo"))
 	msgNum, _ = store.Store("topicA", []byte("bar"))
 	msgNum, _ = store.Store("topicB", []byte("baz"))
-	assert.Equal(t, 1, msgNum)
+	//assert.Equal(t, 1, msgNum)
+	assert.Equal(t, 99, msgNum)
 }
 
 func testRemoveMsgOperatesAcrossTopics(t *testing.T, store BackingStore) {

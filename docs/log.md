@@ -12,8 +12,15 @@ o  Persistent using filesystem
                 o  digress to unit test index independently
                     *  start with creation programmatically and save to given
                        file
-                    o  upgrade test to being save and restore
-                    o  add error handling tests on indexing
+                    *  upgrade test to being save and restore
+                    *  rename topicmessages
+                o   resurrect suite test to use index and drive use cases
+                    o  just Store API to start with
+                        *  implement delete contents
+                        o  start working up Store
+                            *  NewFileStore should create root dir?
+                            *  digress to impl and write test for
+                               index.nextMsgNumberForTopic
     o  this test suite mo - not much good cos doesn't tell you where the
                problem is.
     o  augment test for with tests that close and repopen the store

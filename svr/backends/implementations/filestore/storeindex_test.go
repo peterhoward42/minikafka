@@ -6,6 +6,8 @@ import (
 	"path"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // TestSaveAndRestoreIndex creates an index programmatically and then
@@ -39,6 +41,18 @@ func TestSaveAndRestoreIndex(t *testing.T) {
 	if string(origJSON) != string(restoredJSON) {
 		t.Fatalf("Restored index differs from the one saved.")
 	}
+}
+
+func TestNextMsgNumForTopic(t *testing.T) {
+	index := makeIndexProgrammatically()
+
+	// Should be 1 for virgin topic.
+	nextNum := index.nextMessageNumberFor("nosuchtopic")
+	assert.Equal(t, 1, nextNum)
+
+	// Should be 21 in a prepared case.
+	nextNum = index.nextMessageNumberFor("foo_topic")
+	assert.Equal(t, 21, nextNum)
 }
 
 //--------------------------------------------------------------------------------
