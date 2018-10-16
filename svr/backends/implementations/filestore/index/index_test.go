@@ -1,4 +1,4 @@
-package filestore
+package index
 
 import (
 	"encoding/json"
@@ -15,18 +15,16 @@ import (
 // index by de-serializing from that disk file, and checks the restored index
 // has the expected contents.
 func TestSaveAndRestoreIndex(t *testing.T) {
-	index := makeIndexProgrammatically()
+	index := makeReferenceIndex()
 	fileName := path.Join(os.TempDir(), "saveandrestoreindex")
 	err := index.Save(fileName)
 	if err != nil {
 		t.Fatalf("index.Save: %v", err)
 	}
-	restoredIndex, err := LoadStoreIndex(fileName)
+	restoredIndex := NewIndex()
+	err = restoredIndex.PopulateFromDisk(fileName)
 	if err != nil {
-		t.Fatalf("NewStoreIndex: %v", err)
-	}
-	if restoredIndex == nil {
-		t.Fatalf("Restored index is nil.")
+		t.Fatalf("PopulateFromDisk: %v", err)
 	}
 	// The restored and original index objects can be compared for
 	// equality via their conversion to json.
@@ -44,46 +42,62 @@ func TestSaveAndRestoreIndex(t *testing.T) {
 }
 
 func TestNextMsgNumForTopic(t *testing.T) {
-	index := makeIndexProgrammatically()
+	index := makeReferenceIndex()
 
-	// Should be 1 for virgin topic.
-	nextNum := index.nextMessageNumberFor("nosuchtopic")
-	assert.Equal(t, 1, nextNum)
+	// Should be 1 for unknown topic.
+	nextNum := index.NextMessageNumberFor("nosuchtopic")
+	expected := int32(1)
+	assert.Equal(t, expected, nextNum)
+
+	// Should be 1 for known topic with no message files.
+	nextNum = index.NextMessageNumberFor("baz_topic")
+	expected = int32(1)
+	assert.Equal(t, expected, nextNum)
 
 	// Should be 21 in a prepared case.
-	nextNum = index.nextMessageNumberFor("foo_topic")
-	assert.Equal(t, 21, nextNum)
+	nextNum = index.NextMessageNumberFor("foo_topic")
+	expected = int32(21)
+	assert.Equal(t, expected, nextNum)
 }
 
 //--------------------------------------------------------------------------------
 // Auxilliary code.
 //--------------------------------------------------------------------------------
 
-func makeIndexProgrammatically() *StoreIndex {
+func makeReferenceIndex() *Index {
 
-	idx := StoreIndex{}
+	idx := NewIndex()
 
-	idx["foo_topic"] = []FileMeta{}
-	foo1Meta := FileMeta{
+	// Make some entries for the "foo_topic".
+	msgFileList := []FileMeta{}
+	fileMeta := FileMeta{
 		"foo1",
 		MsgMeta{1, time.Now().Add(-9 * 24 * time.Hour)},
 		MsgMeta{10, time.Now().Add(-8 * 24 * time.Hour)},
 	}
-	foo2Meta := FileMeta{
+	msgFileList = append(msgFileList, fileMeta)
+
+	fileMeta = FileMeta{
 		"foo2",
 		MsgMeta{11, time.Now().Add(-7 * 24 * time.Hour)},
 		MsgMeta{20, time.Now().Add(-6 * 24 * time.Hour)},
 	}
-	idx["foo_topic"] = append(idx["foo_topic"], foo1Meta)
-	idx["foo_topic"] = append(idx["foo_topic"], foo2Meta)
+	msgFileList = append(msgFileList, fileMeta)
+	idx.MessageFileLists["foo_topic"] = msgFileList
 
-	idx["bar_topic"] = []FileMeta{}
-	bar1Meta := FileMeta{
+	// Make some entries for the "bar_topic".
+	msgFileList = []FileMeta{}
+	fileMeta = FileMeta{
 		"bar1",
-		MsgMeta{1, time.Now().Add(-5 * 24 * time.Hour)},
-		MsgMeta{10, time.Now().Add(-4 * 24 * time.Hour)},
+		MsgMeta{21, time.Now().Add(-5 * 24 * time.Hour)},
+		MsgMeta{30, time.Now().Add(-4 * 24 * time.Hour)},
 	}
-	idx["bar_topic"] = append(idx["bar_topic"], bar1Meta)
+	msgFileList = append(msgFileList, fileMeta)
+	idx.MessageFileLists["bar_topic"] = msgFileList
 
-	return &idx
+	// Introduce "baz_topic", but record no message files for it.
+	msgFileList = []FileMeta{}
+	idx.MessageFileLists["baz_topic"] = msgFileList
+
+	return idx
 }

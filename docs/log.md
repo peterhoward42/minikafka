@@ -19,7 +19,7 @@ o  Persistent using filesystem
                         *  implement delete contents
                         o  start working up Store
                             *  NewFileStore should create root dir?
-                            *  digress to impl and write test for
+                            o  digress to impl and write test for
                                index.nextMsgNumberForTopic
     o  this test suite mo - not much good cos doesn't tell you where the
                problem is.

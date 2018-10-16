@@ -21,7 +21,16 @@ type FileStore struct {
 	rootDir string
 }
 
-// NewFileStore instantiates, initializes and returns a FileStore.
+actually not so sure i don't like it the way it is
+call this open not new file stored
+
+have separate create
+
+require index etc to be less tolerant with differing methods similarly
+
+// NewFileStore provides a FileStore based on the the storage files present in
+// the root directory provided. If the directory does not exist, it will create
+// it and form a new FileStore there.
 func NewFileStore(rootDir string) (*FileStore, error) {
 	// Make the root directory if it does not exist already.
 	// That is all that is needed to be a viable empty store.
@@ -63,6 +72,8 @@ func (s FileStore) Store(topic string, message toykafka.Message) (
 	mutex.Lock()
 	defer mutex.Unlock()
 
+	push implementation into private functions
+
 	index, err := s.retrieveIndexFromDisk()
 	if err != nil {
 		return -1, fmt.Errorf("RetrieveIndexFromDisk(): %v", err)
@@ -77,6 +88,7 @@ func (s FileStore) Store(topic string, message toykafka.Message) (
 	msgToStore := s.makeMsgToStore(message, msgNumber)
 	msgSize := len(msgToStore)
 	var fileToUse string
+	this must return the file to use or need to use new
 	if s.needNewFileForTopic(topic, msgSize, index) {
 		fileToUse, err = s.setupNewFileForTopic(topic, index)
 		if err != nil {
@@ -114,6 +126,7 @@ func (s FileStore) Poll(topic string, readFrom int) (
 func (s FileStore) retrieveIndexFromDisk() (*StoreIndex, error) {
 	const indexFileName = "index"
 	indexPath := path.Join(s.rootDir, indexFileName)
+	say loadindexfile and save
 	index, err := LoadStoreIndex(indexPath)
 	if err != nil {
 		return nil, fmt.Errorf("LoadStoreIndex(): %v", err)
@@ -145,6 +158,22 @@ func (s FileStore) makeMsgToStore(
 	encoder := gob.NewEncoder(&buf)
 	encoder.Encode(msg)
 	return buf.Bytes()
+}
+func (s FileStore) needNewFileForTopic(
+	topic string, msgSize int, index StoreIndex) bool {
+
+	// Does the index know of any files used for this topic?
+	mostRecentFile := index.mostRecentFileFor(topic)
+	if mostRecentFile == "" {
+		return true
+	}
+	// Does that file still exist? (Could have been cleared out).
+	// And does it have enough room?
+	filePath := s.fullPathToStorageFile(topic, mostRecentFile)
+	if s.fileDoesNotExistOrHasInsufficientRoom(filePath) {
+		return true
+	}
+	return false
 }
 
 type storedMessage struct {
