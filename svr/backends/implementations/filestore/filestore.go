@@ -11,6 +11,7 @@ import (
 	"time"
 
 	toykafka "github.com/peterhoward42/toy-kafka"
+	"github.com/peterhoward42/toy-kafka/svr/backends/implementations/filestore/index"
 )
 
 var mutex = &sync.Mutex{} // Guards concurrent access of the FileStore.
@@ -21,25 +22,9 @@ type FileStore struct {
 	rootDir string
 }
 
-actually not so sure i don't like it the way it is
-call this open not new file stored
-
-have separate create
-
-require index etc to be less tolerant with differing methods similarly
-
-// NewFileStore provides a FileStore based on the the storage files present in
-// the root directory provided. If the directory does not exist, it will create
-// it and form a new FileStore there.
-func NewFileStore(rootDir string) (*FileStore, error) {
-	// Make the root directory if it does not exist already.
-	// That is all that is needed to be a viable empty store.
-	err := os.MkdirAll(rootDir, 0777)
-	// Tolerate already-exists error, but non others.
-	if err != nil && os.IsExist(err) == false {
-		return nil, fmt.Errorf("os.MkdirAll(): %v", err)
-	}
-	return &FileStore{rootDir: rootDir}, nil
+// NewFileStore creates and initializes a FileStore.
+func NewFileStore(rootDir string) *FileStore {
+	return &FileStore{rootDir}
 }
 
 // ------------------------------------------------------------------------
@@ -49,19 +34,8 @@ func NewFileStore(rootDir string) (*FileStore, error) {
 // DeleteContents removes all contents from the store.
 func (s FileStore) DeleteContents() error {
 	mutex.Lock()
+	return s.deleteContents()
 	defer mutex.Unlock()
-	dir, err := ioutil.ReadDir(s.rootDir)
-	if err != nil {
-		return fmt.Errorf("ioutil.ReadDir(): %v", err)
-	}
-	for _, entry := range dir {
-		fullpath := path.Join(s.rootDir, entry.Name())
-		err = os.RemoveAll(fullpath)
-		if err != nil {
-			return fmt.Errorf("os.RemoveAll(): %v", err)
-		}
-	}
-	return nil
 }
 
 // Store is defined by, and documented in the backends/contract/BackingStore
@@ -70,37 +44,8 @@ func (s FileStore) Store(topic string, message toykafka.Message) (
 	messageNumber int, err error) {
 
 	mutex.Lock()
+	return s.store(topic, message)
 	defer mutex.Unlock()
-
-	push implementation into private functions
-
-	index, err := s.retrieveIndexFromDisk()
-	if err != nil {
-		return -1, fmt.Errorf("RetrieveIndexFromDisk(): %v", err)
-	}
-
-	err = s.createTopicDirIfNotExists(topic)
-	if err != nil {
-		return -1, fmt.Errorf("createTopicDirIfNotExists: %v", err)
-	}
-
-	msgNumber := index.nextMessageNumberFor(topic)
-	msgToStore := s.makeMsgToStore(message, msgNumber)
-	msgSize := len(msgToStore)
-	var fileToUse string
-	this must return the file to use or need to use new
-	if s.needNewFileForTopic(topic, msgSize, index) {
-		fileToUse, err = s.setupNewFileForTopic(topic, index)
-		if err != nil {
-			return fmt.Errorf("setupNewFileForTopic: %v", err)
-		}
-	}
-	err = s.saveAndRegisterMessage(fileToUse, msgToStore, msgNumber, index)
-	if err != nil {
-		return fmt.Errorf("saveAndRegisterMessage: %v", err)
-	}
-	err = index.Save()
-	return msgNumber, nil
 }
 
 // RemoveOldMessages is defined by, and documented in the
@@ -123,10 +68,57 @@ func (s FileStore) Poll(topic string, readFrom int) (
 // Helper functions.
 // ------------------------------------------------------------------------
 
+func (s FileStore) deleteContents() error {
+	dir, err := ioutil.ReadDir(s.rootDir)
+	if err != nil {
+		return fmt.Errorf("ioutil.ReadDir(): %v", err)
+	}
+	for _, entry := range dir {
+		fullpath := path.Join(s.rootDir, entry.Name())
+		err = os.RemoveAll(fullpath)
+		if err != nil {
+			return fmt.Errorf("os.RemoveAll(): %v", err)
+		}
+	}
+	return nil
+}
+
+func (s FileStore) store(topic string, message toykafka.Message) (
+	messageNumber int, err error) {
+
+	index, err := s.retrieveIndexFromDisk()
+	if err != nil {
+		return -1, fmt.Errorf("RetrieveIndexFromDisk(): %v", err)
+	}
+
+	err = s.createTopicDirIfNotExists(topic)
+	if err != nil {
+		return -1, fmt.Errorf("createTopicDirIfNotExists: %v", err)
+	}
+
+	msgNumber := index.nextMessageNumberFor(topic)
+	msgToStore := s.makeMsgToStore(message, msgNumber)
+	msgSize := len(msgToStore)
+	var fileBaseNameToUse string
+
+	fileBaseNameToUse, needNewOne := s.selectFileBasenameForTopic(topic, msgSize, index)
+	if needNewOne {
+		fileBaseNameToUse, err = s.setupNewFileForTopic(topic, index)
+		if err != nil {
+			return -1, fmt.Errorf("setupNewFileForTopic: %v", err)
+		}
+	}
+	err = s.saveAndRegisterMessage(fileBaseNameToUse, msgToStore, 
+		msgNumber, index)
+	if err != nil {
+		return fmt.Errorf("saveAndRegisterMessage: %v", err)
+	}
+	err = index.Save()
+	return msgNumber, nil
+}
+
 func (s FileStore) retrieveIndexFromDisk() (*StoreIndex, error) {
-	const indexFileName = "index"
 	indexPath := path.Join(s.rootDir, indexFileName)
-	say loadindexfile and save
 	index, err := LoadStoreIndex(indexPath)
 	if err != nil {
 		return nil, fmt.Errorf("LoadStoreIndex(): %v", err)
@@ -147,6 +139,18 @@ func (s FileStore) createTopicDirIfNotExists(topic string) error {
 	return fmt.Errorf("os.Mkdir(): %v", err)
 }
 
+func (s FileStore) setupNewFileForTopic(topic string, index index.Index) (
+	fileBaseNameToUse string, err error) {
+	fileBaseName := fmt.Sprintf("%d", time.Now().UnixNano()/1000)
+	filePath := path.Join(s.directoryForTopic(topic), fileBaseName)
+	err = ioutil.WriteFile(filePath, []byte{}, "0777")
+	if err != nil {
+		return nil, fmt.Errorf("ioutil.WriteFile(): %v", err)
+	}
+	index.RegisterNewFile(topic, fileBaseName)
+	return fileBaseName, nil
+}
+
 func (s FileStore) directoryForTopic(topic string) string {
 	return path.Join(s.rootDir, topic)
 }
@@ -159,22 +163,31 @@ func (s FileStore) makeMsgToStore(
 	encoder.Encode(msg)
 	return buf.Bytes()
 }
-func (s FileStore) needNewFileForTopic(
-	topic string, msgSize int, index StoreIndex) bool {
+func (s FileStore) selectFileBasenameForTopic(
+	topic string, msgSize int, index StoreIndex) (
+	fileBasenameToUse string, needNewOne bool) {
 
 	// Does the index know of any files used for this topic?
-	mostRecentFile := index.mostRecentFileFor(topic)
+	mostRecentFileBaseName := index.mostRecentFileFor(topic)
 	if mostRecentFile == "" {
-		return true
+		return nil, true
 	}
 	// Does that file still exist? (Could have been cleared out).
 	// And does it have enough room?
 	filePath := s.fullPathToStorageFile(topic, mostRecentFile)
 	if s.fileDoesNotExistOrHasInsufficientRoom(filePath) {
-		return true
+		return nil, true
 	}
-	return false
+	return "", mostRecentFile
 }
+
+func (*s FileStore) saveAndRegisterMessage(fileToUse string, 
+	topic string, msgToStore []byte, msgNumber int32, index index.Index) error { 
+	filePath := s.fullPathToStorageFile(topic, fileToUse)
+		// evaluate file full path
+		// append write to it
+		// mandate index to ack done incl updating next msg for topic
+	}
 
 type storedMessage struct {
 	message       toykafka.Message

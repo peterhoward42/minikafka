@@ -1,19 +1,19 @@
+// Package index keeps track of which message file names have been used for each
+// topic, and for each, which range of message numbers and creation times they
+// hold. It deals only in file basenames, and has no awareness of actual storage
+// locations, nor involvement in IO. However it does to offer to serialize
+// itself to and from a Reader/Writer, so that clients can persist it.
 package index
 
 import (
 	"encoding/gob"
 	"fmt"
-	"os"
+	"io"
 	"time"
 )
 
-//-----------------------------------------------------------------------
-// The types in here form collectively the in-memory index into the files that
-// messages are stored in. Every FileStore API method, is expected to
-// de-hydrate the index from disk in order to do its job, and then to update and
-// re-save the index accordingly before returning.
-//
-// The types' fields are exported only so that they can be gob-encoded.
+// The types' fields are exported only so that they can easily be gob-encoded.
+
 //-----------------------------------------------------------------------
 
 // MsgMeta holds the message number and creation time for one stored message.
@@ -22,57 +22,89 @@ type MsgMeta struct {
 	Created time.Time
 }
 
-// FileMeta holds information about the oldest and newest message in
-// one file.
-type FileMeta struct {
-	FileName  string
-	OldestMsg MsgMeta
-	NewestMsg MsgMeta
+// Set .
+func (mm *MsgMeta) Set(msgNum int32, created time.Time) {
+	mm.MsgNum = msgNum
+	mm.Created = created
 }
+
+//-----------------------------------------------------------------------
+
+// FileMeta holds information about the oldest and newest message in
+// one message file.
+type FileMeta struct {
+	Oldest MsgMeta
+	Newest MsgMeta
+}
+
+// NewFileMeta .
+func NewFileMeta() *FileMeta {
+	return &FileMeta{
+		MsgMeta{},
+		MsgMeta{},
+	}
+}
+
+//-----------------------------------------------------------------------
 
 // MessageFileList holds information about the set of files that
 // contain one topic's messages.
-type MessageFileList []FileMeta // Ordered by file creation sequence.
-
-// Index is the top level index object for the file store.
-type Index struct {
-	MessageFileLists map[string]MessageFileList
+type MessageFileList struct {
+	Names []string
+	Meta  map[string]*FileMeta
 }
 
-//-----------------------------------------------------------------------
-// API methods
-//-----------------------------------------------------------------------
-
-// NewIndex provides a zero-value Index instance.
-func NewIndex() *Index {
-	return &Index{map[string]MessageFileList{}}
-}
-
-// Save writes a representation of the Index to disk.
-func (index *Index) Save(path string) error {
-	file, err := os.Create(path)
-	if err != nil {
-		return fmt.Errorf("os.Create(): %v", err)
+// NewMessageFileList creates and initializes a MessageFileList.
+func NewMessageFileList() *MessageFileList {
+	return &MessageFileList{
+		[]string{},
+		map[string]*FileMeta{},
 	}
-	defer file.Close()
-	encoder := gob.NewEncoder(file)
-	err = encoder.Encode(index)
+}
+
+// RegisterFile .
+func (lst *MessageFileList) RegisterFile(filename string) {
+	lst.Names = append(lst.Names, filename)
+	lst.Meta[filename] = NewFileMeta()
+}
+
+//-----------------------------------------------------------------------
+
+// Index is the top level index object.
+type Index struct {
+	MessageFileLists map[string]*MessageFileList
+}
+
+// NewIndex creates and initialized an Index.
+func NewIndex() *Index {
+	return &Index{map[string]*MessageFileList{}}
+}
+
+// RegisterTopic .
+func (index *Index) RegisterTopic(topic string) *MessageFileList {
+	_, ok := index.MessageFileLists[topic]
+	if ok != true {
+		index.MessageFileLists[topic] = NewMessageFileList()
+	}
+	return index.MessageFileLists[topic]
+}
+
+// Encode is a serializer. It encodes the index into a byte stream and writes
+// them to the output writer provided. See also the Decode sister method.
+func (index *Index) Encode(writer io.Writer) error {
+	encoder := gob.NewEncoder(writer)
+	err := encoder.Encode(index)
 	if err != nil {
 		return fmt.Errorf("encoder.Encode(): %v", err)
 	}
 	return nil
 }
 
-// PopulateFromDisk de-serializes the contents of a Index from disk,
-// and populates the instance accordingly.
-func (index *Index) PopulateFromDisk(fileName string) error {
-	file, err := os.Open(fileName)
-	if err != nil {
-		return fmt.Errorf("os.Open(): %v", err)
-	}
-	defer file.Close()
-	decoder := gob.NewDecoder(file)
-	err = decoder.Decode(index)
+// Decode is a de-serializer. It populates the index by decoding the bytes
+// read from the input reader provided. See also the Encode sister method.
+func (index *Index) Decode(reader io.Reader) error {
+	decoder := gob.NewDecoder(reader)
+	err := decoder.Decode(index)
 	if err != nil {
 		return fmt.Errorf("decoder.Decode: %v", err)
 	}
@@ -87,11 +119,15 @@ func (index Index) NextMessageNumberFor(topic string) int32 {
 	if ok == false {
 		return 1
 	}
-	nTopicFiles := len(messageFileList)
+	nTopicFiles := len(messageFileList.Names)
 	if nTopicFiles == 0 {
 		return 1
 	}
 	// Consult the meta data for the newest file.
-	newestFileMeta := messageFileList[nTopicFiles-1]
-	return newestFileMeta.NewestMsg.MsgNum + 1
+	newestName := messageFileList.Names[nTopicFiles-1]
+	newestFileMeta := messageFileList.Meta[newestName]
+	return newestFileMeta.Newest.MsgNum + 1
 }
+
+//-----------------------------------------------------------------------
+//-----------------------------------------------------------------------

@@ -19,8 +19,15 @@ o  Persistent using filesystem
                         *  implement delete contents
                         o  start working up Store
                             *  NewFileStore should create root dir?
-                            o  digress to impl and write test for
+                            *  digress to impl and write test for
                                index.nextMsgNumberForTopic
+                            o  made life needlessly difficult working in basenames
+                               and index not knowing about directories
+                                o  change index
+                                    o  switching to register methods
+                                        o  seperate types into blocks
+                                o  fix index tests
+                                o  change filestore
     o  this test suite mo - not much good cos doesn't tell you where the
                problem is.
     o  augment test for with tests that close and repopen the store
