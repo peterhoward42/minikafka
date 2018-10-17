@@ -9,10 +9,46 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+//--------------------------------------------------------------------------
+// API
+//--------------------------------------------------------------------------
+
+// MakeReferenceIndexForTesting provides a useful, repeatable Index for
+// testing purposes.
+func MakeReferenceIndexForTesting() *Index {
+
+	idx := NewIndex()
+
+	msgNum := int32(0)
+	minutes := 1
+	for _, topic := range []string{"topicA", "topicB"} {
+		msgFileList := idx.GetMessageFileListFor(topic)
+		for _, fileName := range []string{"file1", "file2"} {
+			msgFileList.RegisterNewFile(fileName)
+
+			fileMeta := msgFileList.Meta[fileName]
+
+			fileMeta.Oldest.MsgNum = msgNum + 1
+			fileMeta.Oldest.Created = nowMinusNMinutes(minutes)
+
+			fileMeta.Newest.MsgNum = msgNum + 5
+			fileMeta.Newest.Created = nowMinusNMinutes(minutes + 5)
+
+			msgNum += 10
+			minutes += 15
+		}
+	}
+	return idx
+}
+
+//--------------------------------------------------------------------------
+// API
+//--------------------------------------------------------------------------
+
 // TestSerialization tests the serialization methods for the index.
 func TestSerialization(t *testing.T) {
 	// Create an index programmatically.
-	index := makeReferenceIndex()
+	index := MakeReferenceIndexForTesting()
 
 	// Serialize it into a buffer.
 	var buf bytes.Buffer
@@ -50,7 +86,7 @@ func TestSerialization(t *testing.T) {
 }
 
 func TestNextMsgNumForTopic(t *testing.T) {
-	index := makeReferenceIndex()
+	index := MakeReferenceIndexForTesting()
 
 	// Should be 1 for unknown topic.
 	nextNum := index.NextMessageNumberFor("nosuchtopic")
@@ -64,7 +100,7 @@ func TestNextMsgNumForTopic(t *testing.T) {
 }
 
 func TestCurrentMsgFileNameFor(t *testing.T) {
-	index := makeReferenceIndex()
+	index := MakeReferenceIndexForTesting()
     // Check correct when topic is known and has files registered.
     currentName := index.CurrentMsgFileNameFor("topicA")
     expected := "file2"
@@ -75,35 +111,26 @@ func TestCurrentMsgFileNameFor(t *testing.T) {
     assert.Equal(t, expected, currentName)
 }
 
+func TestHasNameBeenUsedForTopic(t *testing.T) {
+	index := MakeReferenceIndexForTesting()
+    // When should say yes.
+    used := index.HasNameBeenUsedForTopic("file1", "topicA")
+    expected := true
+    assert.Equal(t, expected, used)
+    // When should say no because names exist but not this one. 
+    used = index.HasNameBeenUsedForTopic("unknownname", "topicA")
+    expected = false
+    assert.Equal(t, expected, used)
+    // When should say no because no names exist.
+    used = index.HasNameBeenUsedForTopic("file1", "unknowntopic")
+    expected = false
+    assert.Equal(t, expected, used)
+}
+
 //--------------------------------------------------------------------------------
 // Auxilliary code.
 //--------------------------------------------------------------------------------
 
-func makeReferenceIndex() *Index {
-
-	idx := NewIndex()
-
-	msgNum := int32(0)
-	minutes := 1
-	for _, topic := range []string{"topicA", "topicB"} {
-		msgFileList := idx.GetMessageFileListFor(topic)
-		for _, fileName := range []string{"file1", "file2"} {
-			msgFileList.RegisterNewFile(fileName)
-
-			fileMeta := msgFileList.Meta[fileName]
-
-			fileMeta.Oldest.MsgNum = msgNum + 1
-			fileMeta.Oldest.Created = nowMinusNMinutes(minutes)
-
-			fileMeta.Newest.MsgNum = msgNum + 5
-			fileMeta.Newest.Created = nowMinusNMinutes(minutes + 5)
-
-			msgNum += 10
-			minutes += 15
-		}
-	}
-	return idx
-}
 
 func nowMinusNMinutes(minutes int) time.Time {
 	now := time.Now()

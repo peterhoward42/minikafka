@@ -27,8 +27,13 @@ o  Persistent using filesystem
                                 o  change filestore
                                     o  focus on store
                                         *  bring up a name resolver
-                                        o  impl and test index.CurrentMsgFileNameFor
-                                        o  bring in a ioutils package
+                                        *  impl and test index.CurrentMsgFileNameFor
+                                        o  newmsgfilename
+                                            o  need test
+                                                *  expose reference index
+                                                *  implement and test HasBeenUsedForTopic
+                                    o  bring in a ioutils package
+                                    o  bring in index persister
                     o  should mutex and code per dir?
     o  this test suite mo - not much good cos doesn't tell you where the
                problem is.

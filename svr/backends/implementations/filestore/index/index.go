@@ -129,5 +129,22 @@ func (index Index) CurrentMsgFileNameFor(topic string) string {
     return msgFileList.Names[n-1]
 }
 
+func (index Index) HasNameBeenUsedForTopic(name, topic string) bool {
+    // duplicated code here.
+    msgFileList, ok :=  index.MessageFileLists[topic]
+    if ok == false {
+        return false
+    }
+    if len(msgFileList.Names) == 0 {
+        return false
+    }
+    for _, existingName := range msgFileList.Names {
+        if existingName == name {
+            return true
+        }
+    }
+    return false
+}
+
 
 //-----------------------------------------------------------------------

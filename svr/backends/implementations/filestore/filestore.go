@@ -120,11 +120,11 @@ func (s FileStore) store(topic string, message toykafka.Message) (
 	if err != nil {
 		return -1, fmt.Errorf("saveAndRegisterMessage(): %v", err)
 	}
-	err = index.Save()
+	err = s.saveIndex(index)
 	if err != nil {
-		return -1, fmt.Errorf("index.Save(): %v", err)
+		return -1, fmt.Errorf("saveIndex(): %v", err)
 	}
-	return msgNumber, nil
+	return int(msgNumber), nil
 }
 
 func (s FileStore) retrieveIndexFromDisk() (*index.Index, error) {
@@ -140,6 +140,20 @@ func (s FileStore) retrieveIndexFromDisk() (*index.Index, error) {
         return nil, fmt.Errorf("index.Decode(): %v", err)
     }
     return index, nil
+}
+
+func (s *FileStore) saveIndex(index *index.Index) error {
+    indexPath := filenamer.IndexFile(s.rootDir)
+    file, err := os.Open(indexPath)
+    if err != nil {
+        return fmt.Errorf("os.Open(): %v", err)
+    }
+    defer file.Close()
+    err = index.Encode(file)
+    if err != nil {
+        return fmt.Errorf("index.Encode(): %v", err)
+    }
+    return nil
 }
 
 func (s FileStore) makeMsgToStore(
@@ -164,7 +178,7 @@ func (s FileStore) createTopicDirIfNotExists(topic string) error {
 }
 
 func (s FileStore) fileHasInsufficentRoom(
-    msgFileName string, topic string, msgSize int) (bool, err) {
+    msgFileName string, topic string, msgSize int) (bool, error) {
     filepath := filenamer.MessageFilePath(msgFileName, topic, s.rootDir)
     file, err := os.Open(filepath)
     if err != nil {
@@ -176,12 +190,12 @@ func (s FileStore) fileHasInsufficentRoom(
         return false, fmt.Errorf("file.Stat(): %v", err)
     }
     size := fileInfo.Size()
-    insufficient := size + msgSize > maximumFileSize
+    insufficient := size + int64(msgSize) > maximumFileSize
     return insufficient, nil
 }
 
 func (s FileStore) setupNewFileForTopic(
-    topic string, index Index.index) (msgFileName string, err error) {
+    topic string, index *index.Index) (msgFileName string, err error) {
     fileName := filenamer.NewMsgFilenameFor(topic, index)
     filepath := filenamer.MessageFilePath(fileName, topic, s.rootDir)
     file, err := os.Create(filepath)
@@ -196,7 +210,7 @@ func (s FileStore) setupNewFileForTopic(
 
 func (s FileStore) saveAndRegisterMessage(
     msgFileName string, topic string, msgToStore []byte, 
-    msgNumber int32, index index.Index) err {
+    msgNumber int32, index *index.Index) err {
     filepath := filenamer.MessageFilePath(msgFileName, topic, s.rootDir)
     file, err := os.OpenFile(filePath, os.O_APPEND, 0666)
     if err != nil {
