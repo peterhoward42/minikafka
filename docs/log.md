@@ -23,11 +23,13 @@ o  Persistent using filesystem
                                index.nextMsgNumberForTopic
                             o  made life needlessly difficult working in basenames
                                and index not knowing about directories
-                                o  change index
-                                    o  switching to register methods
-                                        o  seperate types into blocks
-                                o  fix index tests
+                                *  change index
                                 o  change filestore
+                                    o  focus on store
+                                        *  bring up a name resolver
+                                        o  impl and test index.CurrentMsgFileNameFor
+                                        o  bring in a ioutils package
+                    o  should mutex and code per dir?
     o  this test suite mo - not much good cos doesn't tell you where the
                problem is.
     o  augment test for with tests that close and repopen the store

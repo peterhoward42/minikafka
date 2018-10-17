@@ -30,6 +30,10 @@ func TestSerialization(t *testing.T) {
 
 	// The restored and original index objects can be compared for
 	// equality via their conversion to json.
+
+	// This could break in the future due to how gob serialization will
+	// serialize an empty slice as simply a nil value, or because iteration
+	// over maps does not guarantee repeatable ordering over keys. TODO.
 	origJSON, err := json.Marshal(index)
 	if err != nil {
 		t.Fatalf("json.Marshal(): %v", err)
@@ -53,15 +57,22 @@ func TestNextMsgNumForTopic(t *testing.T) {
 	expected := int32(1)
 	assert.Equal(t, expected, nextNum)
 
-	// Should be 1 for known topic with no message files.
-	nextNum = index.NextMessageNumberFor("baz_topic")
-	expected = int32(1)
+	// Should be 36 in a prepared case.
+	nextNum = index.NextMessageNumberFor("topicB")
+	expected = int32(36)
 	assert.Equal(t, expected, nextNum)
+}
 
-	// Should be 21 in a prepared case.
-	nextNum = index.NextMessageNumberFor("foo_topic")
-	expected = int32(21)
-	assert.Equal(t, expected, nextNum)
+func TestCurrentMsgFileNameFor(t *testing.T) {
+	index := makeReferenceIndex()
+    // Check correct when topic is known and has files registered.
+    currentName := index.CurrentMsgFileNameFor("topicA")
+    expected := "file2"
+    assert.Equal(t, expected, currentName)
+    // Check correct when topic is unknown.
+    currentName = index.CurrentMsgFileNameFor("nosuchtopic")
+    expected = ""
+    assert.Equal(t, expected, currentName)
 }
 
 //--------------------------------------------------------------------------------
@@ -72,21 +83,23 @@ func makeReferenceIndex() *Index {
 
 	idx := NewIndex()
 
-	msgNum := int32(1)
-	minutesAgo := 1
+	msgNum := int32(0)
+	minutes := 1
 	for _, topic := range []string{"topicA", "topicB"} {
-		msgFileList := idx.RegisterTopic(topic)
+		msgFileList := idx.GetMessageFileListFor(topic)
 		for _, fileName := range []string{"file1", "file2"} {
-			msgFileList.RegisterFile(fileName)
+			msgFileList.RegisterNewFile(fileName)
+
 			fileMeta := msgFileList.Meta[fileName]
 
-			oldestMeta := fileMeta.Oldest
-			oldestMeta.Set(msgNum, nowMinusNMinutes(minutesAgo))
-			newestMeta := fileMeta.Newest
-			newestMeta.Set(msgNum+5, nowMinusNMinutes(minutesAgo+2))
+			fileMeta.Oldest.MsgNum = msgNum + 1
+			fileMeta.Oldest.Created = nowMinusNMinutes(minutes)
+
+			fileMeta.Newest.MsgNum = msgNum + 5
+			fileMeta.Newest.Created = nowMinusNMinutes(minutes + 5)
 
 			msgNum += 10
-			minutesAgo += 15
+			minutes += 15
 		}
 	}
 	return idx

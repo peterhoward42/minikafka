@@ -1,4 +1,4 @@
-// Package index keeps track of which message file names have been used for each
+// Package index keeps track of which message filenames have been used for each
 // topic, and for each, which range of message numbers and creation times they
 // hold. It deals only in file basenames, and has no awareness of actual storage
 // locations, nor involvement in IO. However it does to offer to serialize
@@ -22,12 +22,6 @@ type MsgMeta struct {
 	Created time.Time
 }
 
-// Set .
-func (mm *MsgMeta) Set(msgNum int32, created time.Time) {
-	mm.MsgNum = msgNum
-	mm.Created = created
-}
-
 //-----------------------------------------------------------------------
 
 // FileMeta holds information about the oldest and newest message in
@@ -35,14 +29,6 @@ func (mm *MsgMeta) Set(msgNum int32, created time.Time) {
 type FileMeta struct {
 	Oldest MsgMeta
 	Newest MsgMeta
-}
-
-// NewFileMeta .
-func NewFileMeta() *FileMeta {
-	return &FileMeta{
-		MsgMeta{},
-		MsgMeta{},
-	}
 }
 
 //-----------------------------------------------------------------------
@@ -62,10 +48,10 @@ func NewMessageFileList() *MessageFileList {
 	}
 }
 
-// RegisterFile .
-func (lst *MessageFileList) RegisterFile(filename string) {
+// RegisterNewFile .
+func (lst *MessageFileList) RegisterNewFile(filename string) {
 	lst.Names = append(lst.Names, filename)
-	lst.Meta[filename] = NewFileMeta()
+	lst.Meta[filename] = &FileMeta{}
 }
 
 //-----------------------------------------------------------------------
@@ -80,8 +66,9 @@ func NewIndex() *Index {
 	return &Index{map[string]*MessageFileList{}}
 }
 
-// RegisterTopic .
-func (index *Index) RegisterTopic(topic string) *MessageFileList {
+// GetMessageFileListFor provides access to the MesageFileList for the
+// given topic. Copes with the topic being hithertoo unknown.
+func (index *Index) GetMessageFileListFor(topic string) *MessageFileList {
 	_, ok := index.MessageFileLists[topic]
 	if ok != true {
 		index.MessageFileLists[topic] = NewMessageFileList()
@@ -129,5 +116,18 @@ func (index Index) NextMessageNumberFor(topic string) int32 {
 	return newestFileMeta.Newest.MsgNum + 1
 }
 
-//-----------------------------------------------------------------------
+// CurrentMsgFileNameFor .
+func (index Index) CurrentMsgFileNameFor(topic string) string {
+    msgFileList, ok :=  index.MessageFileLists[topic]
+    if ok == false {
+        return ""
+    }
+    if len(msgFileList.Names) == 0 {
+        return ""
+    }
+    n := len(msgFileList.Names)
+    return msgFileList.Names[n-1]
+}
+
+
 //-----------------------------------------------------------------------

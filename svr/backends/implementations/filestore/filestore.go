@@ -1,3 +1,5 @@
+// Package filestore provides a message storage system based on mounted file
+// system. It implements the backingstore.contract.BackingStore interface.
 package filestore
 
 import (
@@ -12,19 +14,16 @@ import (
 
 	toykafka "github.com/peterhoward42/toy-kafka"
 	"github.com/peterhoward42/toy-kafka/svr/backends/implementations/filestore/index"
+	"github.com/peterhoward42/toy-kafka/svr/backends/implementations/filestore/filenamer"
 )
+
+const maximumFileSize = 1048576 // 1 MiB
 
 var mutex = &sync.Mutex{} // Guards concurrent access of the FileStore.
 
-// FileStore implements the svr/backends/contract/BackingStore interface using
-// files on disk.
+// FileStore encapsulates the store.
 type FileStore struct {
-	rootDir string
-}
-
-// NewFileStore creates and initializes a FileStore.
-func NewFileStore(rootDir string) *FileStore {
-	return &FileStore{rootDir}
+    rootDir string
 }
 
 // ------------------------------------------------------------------------
@@ -34,8 +33,8 @@ func NewFileStore(rootDir string) *FileStore {
 // DeleteContents removes all contents from the store.
 func (s FileStore) DeleteContents() error {
 	mutex.Lock()
-	return s.deleteContents()
 	defer mutex.Unlock()
+	return s.deleteContents()
 }
 
 // Store is defined by, and documented in the backends/contract/BackingStore
@@ -44,8 +43,8 @@ func (s FileStore) Store(topic string, message toykafka.Message) (
 	messageNumber int, err error) {
 
 	mutex.Lock()
-	return s.store(topic, message)
 	defer mutex.Unlock()
+	return s.store(topic, message)
 }
 
 // RemoveOldMessages is defined by, and documented in the
@@ -90,45 +89,70 @@ func (s FileStore) store(topic string, message toykafka.Message) (
 	if err != nil {
 		return -1, fmt.Errorf("RetrieveIndexFromDisk(): %v", err)
 	}
-
 	err = s.createTopicDirIfNotExists(topic)
 	if err != nil {
 		return -1, fmt.Errorf("createTopicDirIfNotExists: %v", err)
 	}
-
-	msgNumber := index.nextMessageNumberFor(topic)
+	msgNumber := index.NextMessageNumberFor(topic)
 	msgToStore := s.makeMsgToStore(message, msgNumber)
 	msgSize := len(msgToStore)
-	var fileBaseNameToUse string
 
-	fileBaseNameToUse, needNewOne := s.selectFileBasenameForTopic(topic, msgSize, index)
-	if needNewOne {
-		fileBaseNameToUse, err = s.setupNewFileForTopic(topic, index)
-		if err != nil {
-			return -1, fmt.Errorf("setupNewFileForTopic: %v", err)
-		}
-	}
-	err = s.saveAndRegisterMessage(fileBaseNameToUse, msgToStore, 
-		msgNumber, index)
+    var msgFileName string
+    msgFileName = index.CurrentMsgFileNameFor(topic)
+    var needNewFile = false
+    if msgFileName == "" {
+        needNewFile = true
+    } else {
+        needNewFile, err = s.fileHasInsufficentRoom(
+            msgFileName, topic, msgSize)
+        if err != nil {
+            return -1, fmt.Errorf("fileHasInsufficietRoom(): %v", err)
+        }
+    }
+    if needNewFile {
+        msgFileName, err = s.setupNewFileForTopic(topic, index)
+        if err != nil {
+            return -1, fmt.Errorf("setupNewFileForTopic(): %v", err)
+        }
+    }
+	err = s.saveAndRegisterMessage(
+            msgFileName, topic, msgToStore, msgNumber, index)
 	if err != nil {
-		return fmt.Errorf("saveAndRegisterMessage: %v", err)
+		return -1, fmt.Errorf("saveAndRegisterMessage(): %v", err)
 	}
 	err = index.Save()
+	if err != nil {
+		return -1, fmt.Errorf("index.Save(): %v", err)
+	}
 	return msgNumber, nil
 }
 
-func (s FileStore) retrieveIndexFromDisk() (*StoreIndex, error) {
-	indexPath := path.Join(s.rootDir, indexFileName)
-	index, err := LoadStoreIndex(indexPath)
-	if err != nil {
-		return nil, fmt.Errorf("LoadStoreIndex(): %v", err)
-	}
-	return index, nil
+func (s FileStore) retrieveIndexFromDisk() (*index.Index, error) {
+    indexPath := filenamer.IndexFile(s.rootDir)
+    file, err := os.Open(indexPath)
+    if err != nil {
+        return nil, fmt.Errorf("os.Open(): %v", err)
+    }
+    defer file.Close()
+    index := index.NewIndex()
+    err = index.Decode(file)
+    if err != nil {
+        return nil, fmt.Errorf("index.Decode(): %v", err)
+    }
+    return index, nil
+}
 
+func (s FileStore) makeMsgToStore(
+	message toykafka.Message, msgNumber int32) []byte {
+	msg := storedMessage{message, time.Now(), msgNumber}
+	var buf bytes.Buffer
+	encoder := gob.NewEncoder(&buf)
+	encoder.Encode(msg)
+	return buf.Bytes()
 }
 
 func (s FileStore) createTopicDirIfNotExists(topic string) error {
-	dirPath := s.directoryForTopic(topic)
+	dirPath := filenamer.DirectoryForTopic(topic, s.rootDir)
 	err := os.Mkdir(dirPath, 0777) // Todo what should permissions be?
 	if err == nil {
 		return nil
@@ -139,58 +163,64 @@ func (s FileStore) createTopicDirIfNotExists(topic string) error {
 	return fmt.Errorf("os.Mkdir(): %v", err)
 }
 
-func (s FileStore) setupNewFileForTopic(topic string, index index.Index) (
-	fileBaseNameToUse string, err error) {
-	fileBaseName := fmt.Sprintf("%d", time.Now().UnixNano()/1000)
-	filePath := path.Join(s.directoryForTopic(topic), fileBaseName)
-	err = ioutil.WriteFile(filePath, []byte{}, "0777")
-	if err != nil {
-		return nil, fmt.Errorf("ioutil.WriteFile(): %v", err)
-	}
-	index.RegisterNewFile(topic, fileBaseName)
-	return fileBaseName, nil
+func (s FileStore) fileHasInsufficentRoom(
+    msgFileName string, topic string, msgSize int) (bool, err) {
+    filepath := filenamer.MessageFilePath(msgFileName, topic, s.rootDir)
+    file, err := os.Open(filepath)
+    if err != nil {
+        return false, fmt.Errorf("os.Open(): %v", err)
+    }
+    defer file.Close()
+    fileInfo, err := file.Stat()
+    if err != nil {
+        return false, fmt.Errorf("file.Stat(): %v", err)
+    }
+    size := fileInfo.Size()
+    insufficient := size + msgSize > maximumFileSize
+    return insufficient, nil
 }
 
-func (s FileStore) directoryForTopic(topic string) string {
-	return path.Join(s.rootDir, topic)
+func (s FileStore) setupNewFileForTopic(
+    topic string, index Index.index) (msgFileName string, err error) {
+    fileName := filenamer.NewMsgFilenameFor(topic, index)
+    filepath := filenamer.MessageFilePath(fileName, topic, s.rootDir)
+    file, err := os.Create(filepath)
+    if err != nil {
+        return false, fmt.Errorf("os.Create(): %v", err)
+    }
+    defer file.Close()
+    msgFileList := index.GetMessageFileListFor(topic)
+    msgFileList.RegisterNewFile(fileName) 
+    return fileName, nil
 }
 
-func (s FileStore) makeMsgToStore(
-	message toykafka.Message, msgNumber uint32) []byte {
-	msg := storedMessage{message, time.Now(), msgNumber}
-	var buf bytes.Buffer
-	encoder := gob.NewEncoder(&buf)
-	encoder.Encode(msg)
-	return buf.Bytes()
-}
-func (s FileStore) selectFileBasenameForTopic(
-	topic string, msgSize int, index StoreIndex) (
-	fileBasenameToUse string, needNewOne bool) {
+func (s FileStore) saveAndRegisterMessage(
+    msgFileName string, topic string, msgToStore []byte, 
+    msgNumber int32, index index.Index) err {
+    filepath := filenamer.MessageFilePath(msgFileName, topic, s.rootDir)
+    file, err := os.OpenFile(filePath, os.O_APPEND, 0666)
+    if err != nil {
+        return fmt.Errorf("os.OpenFile(): %v", err)
+    }
+    defer file.Close()
+    something, err := file.Write(msgToStore)
+    if err != nil {
+        return fmt.Errorf("file.Write(): %v", err)
+    }
+    creationTime := time.Now()
+    msgFileList := index.GetMessageFileListFor(topic)
+    fileMeta := msgFileList.Meta[msgFileName]
+    fileMeta.RegisterNewMessage(msgNumber, creationTime)
+    return nil
+    }
 
-	// Does the index know of any files used for this topic?
-	mostRecentFileBaseName := index.mostRecentFileFor(topic)
-	if mostRecentFile == "" {
-		return nil, true
-	}
-	// Does that file still exist? (Could have been cleared out).
-	// And does it have enough room?
-	filePath := s.fullPathToStorageFile(topic, mostRecentFile)
-	if s.fileDoesNotExistOrHasInsufficientRoom(filePath) {
-		return nil, true
-	}
-	return "", mostRecentFile
-}
 
-func (*s FileStore) saveAndRegisterMessage(fileToUse string, 
-	topic string, msgToStore []byte, msgNumber int32, index index.Index) error { 
-	filePath := s.fullPathToStorageFile(topic, fileToUse)
-		// evaluate file full path
-		// append write to it
-		// mandate index to ack done incl updating next msg for topic
-	}
+// ------------------------------------------------------------------------
+// Auxilliary types.
+// ------------------------------------------------------------------------
 
 type storedMessage struct {
 	message       toykafka.Message
 	creationTime  time.Time
-	messageNumber uint32
+	messageNumber int32
 }
