@@ -3,50 +3,58 @@
 package filenamer
 
 import (
-    "path"
-    "math/random"
-    "time"
+	"math/rand"
+	"path"
+	"time"
 )
 
 const indexName = "index"
 
-// Index File .
+// IndexFile .
 func IndexFile(rootDir string) string {
-    return path.Join(rootDir, indexName)
+	return path.Join(rootDir, indexName)
 }
 
+// DirectoryForTopic .
 func DirectoryForTopic(topic, rootDir string) string {
-    // Let invalid resultant directory names fail at the point of use,
-    // rather than check them now.
-    return path.Join(rootDir, topic)
+	// Let invalid resultant directory names fail at the point of use,
+	// rather than check them now.
+	return path.Join(rootDir, topic)
 }
+
+// MessageFilePath .
 func MessageFilePath(msgFileName, topic, rootDir string) string {
-    return path.Join(DirectoryForTopic(topic, rootDir), msgFileName)
+	return path.Join(DirectoryForTopic(topic, rootDir), msgFileName)
 }
 
 // NewMsgFilenameFor provides a name that can be used as a message
 // file name for the given topic. It ensures that the name appears
-// random (no semantics) but does not clash with one that has been used
-// before for this topic.
-func NewMsgFilenameFor(topic string, index index.Index) string {
-    rand.Seed(time.Now().UnixNano())
-    // Deliberate avoidance of mixed case. (Windows file names)
-    const pickFrom = []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
-    const length = 8
-    for {
-        runes := make([]rune, length)
-        for i = 0; i < length; i++ {
-            rune := runes[rand.Intn(len(pickFrom))]
-            runes[i] = rune
-        }
-        name := string(runes)
-        // Make sure the index hasn't used this one for this topic.
-        if index.HasNameBeenUsedForTopic(name, topic) == false {
-            return name
-        }
-    }
+// random (no semantics) and also satisfies the NameChecker (interface) passed
+// in.
+func NewMsgFilenameFor(topic string, nameChecker NameChecker) string {
+	// Deliberate avoidance of mixed case. (Windows file names)
+	pickFrom := []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+	nChoices := len(pickFrom)
+	const requiredLength = 8
+	rand.Seed(time.Now().UnixNano())
+	for {
+		runes := make([]rune, requiredLength)
+		for i := 0; i < requiredLength; i++ {
+			randomIndex := rand.Intn(nChoices - 1)
+			randomRune := pickFrom[randomIndex]
+			runes[i] = randomRune
+		}
+		name := string(runes)
+		// Is the name checker ok with this name?
+		if nameChecker.IsFilenameOk(name, topic) == true {
+			return name
+		}
+		// If not keep trying.
+	}
 }
 
-
-
-
+// NameChecker is a thing that will check whether a filename is ok from
+// its perspective in the given context.
+type NameChecker interface {
+	IsFilenameOk(name string, context string) bool
+}

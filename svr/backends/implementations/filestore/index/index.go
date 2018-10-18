@@ -118,33 +118,33 @@ func (index Index) NextMessageNumberFor(topic string) int32 {
 
 // CurrentMsgFileNameFor .
 func (index Index) CurrentMsgFileNameFor(topic string) string {
-    msgFileList, ok :=  index.MessageFileLists[topic]
-    if ok == false {
-        return ""
-    }
-    if len(msgFileList.Names) == 0 {
-        return ""
-    }
-    n := len(msgFileList.Names)
-    return msgFileList.Names[n-1]
+	msgFileList, ok := index.MessageFileLists[topic]
+	if ok == false {
+		return ""
+	}
+	if len(msgFileList.Names) == 0 {
+		return ""
+	}
+	n := len(msgFileList.Names)
+	return msgFileList.Names[n-1]
 }
 
-func (index Index) HasNameBeenUsedForTopic(name, topic string) bool {
-    // duplicated code here.
-    msgFileList, ok :=  index.MessageFileLists[topic]
-    if ok == false {
-        return false
-    }
-    if len(msgFileList.Names) == 0 {
-        return false
-    }
-    for _, existingName := range msgFileList.Names {
-        if existingName == name {
-            return true
-        }
-    }
-    return false
+// IsFilenameOk makes sure that the suggested filename is legal to use for
+// the given topic.
+func (index Index) IsFilenameOk(filename, topic string) bool {
+	msgFileList, ok := index.MessageFileLists[topic]
+	if ok == false {
+		return false
+	}
+	if len(msgFileList.Names) == 0 {
+		return false
+	}
+	for _, existingName := range msgFileList.Names {
+		if existingName == filename {
+			return true
+		}
+	}
+	return false
 }
-
 
 //-----------------------------------------------------------------------
