@@ -1,6 +1,10 @@
 o  Persistent using filesystem
     *  bring in filenamer
-    o  bring in a ioutils package
+    *  bring in a ioutils package
+    *  index saver / loader
+    o  make index serializer be separate?
+    o  make msg to store and its type
+    o  bring out need new file into fn
     o  resume testing at store method in suite test
     o  bring in index persister
     o  this test suite mo - not much good cos doesn't tell you where the
@@ -9,6 +13,7 @@ o  Persistent using filesystem
 
 
 
+o  could hierarchy be flatter?
 o  switch to doc.go
 o  don't call it toy anything
 o  say host should be host but can be just port

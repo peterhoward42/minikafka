@@ -13,8 +13,8 @@ import (
 	"time"
 
 	toykafka "github.com/peterhoward42/toy-kafka"
-	"github.com/peterhoward42/toy-kafka/svr/backends/implementations/filestore/index"
 	"github.com/peterhoward42/toy-kafka/svr/backends/implementations/filestore/filenamer"
+	"github.com/peterhoward42/toy-kafka/svr/backends/implementations/filestore/index"
 )
 
 const maximumFileSize = 1048576 // 1 MiB
@@ -23,7 +23,7 @@ var mutex = &sync.Mutex{} // Guards concurrent access of the FileStore.
 
 // FileStore encapsulates the store.
 type FileStore struct {
-    rootDir string
+	rootDir string
 }
 
 // ------------------------------------------------------------------------
@@ -68,24 +68,17 @@ func (s FileStore) Poll(topic string, readFrom int) (
 // ------------------------------------------------------------------------
 
 func (s FileStore) deleteContents() error {
-	dir, err := ioutil.ReadDir(s.rootDir)
+    err := ioutils.DeleteDirectoryContents(s.rootDir)
 	if err != nil {
-		return fmt.Errorf("ioutil.ReadDir(): %v", err)
+		return fmt.Errorf("ioutils.DeleteDirectoryContents(): %v", err)
 	}
-	for _, entry := range dir {
-		fullpath := path.Join(s.rootDir, entry.Name())
-		err = os.RemoveAll(fullpath)
-		if err != nil {
-			return fmt.Errorf("os.RemoveAll(): %v", err)
-		}
-	}
-	return nil
+    return nil
 }
 
 func (s FileStore) store(topic string, message toykafka.Message) (
 	messageNumber int, err error) {
 
-	index, err := s.retrieveIndexFromDisk()
+	index, err := persist.RetrieveIndexFromDisk(filenamer.IndexFile(s.rootDir))
 	if err != nil {
 		return -1, fmt.Errorf("RetrieveIndexFromDisk(): %v", err)
 	}
@@ -97,63 +90,33 @@ func (s FileStore) store(topic string, message toykafka.Message) (
 	msgToStore := s.makeMsgToStore(message, msgNumber)
 	msgSize := len(msgToStore)
 
-    var msgFileName string
-    msgFileName = index.CurrentMsgFileNameFor(topic)
-    var needNewFile = false
-    if msgFileName == "" {
-        needNewFile = true
-    } else {
-        needNewFile, err = s.fileHasInsufficentRoom(
-            msgFileName, topic, msgSize)
-        if err != nil {
-            return -1, fmt.Errorf("fileHasInsufficietRoom(): %v", err)
-        }
-    }
-    if needNewFile {
-        msgFileName, err = s.setupNewFileForTopic(topic, index)
-        if err != nil {
-            return -1, fmt.Errorf("setupNewFileForTopic(): %v", err)
-        }
-    }
+	var msgFileName string
+	msgFileName = index.CurrentMsgFileNameFor(topic)
+	var needNewFile = false
+	if msgFileName == "" {
+		needNewFile = true
+	} else {
+		needNewFile, err = s.fileHasInsufficentRoom(msgFileName, topic, msgSize)
+		if err != nil {
+			return -1, fmt.Errorf("fileHasInsufficietRoom(): %v", err)
+		}
+	}
+	if needNewFile {
+		msgFileName, err = s.setupNewFileForTopic(topic, index)
+		if err != nil {
+			return -1, fmt.Errorf("setupNewFileForTopic(): %v", err)
+		}
+	}
 	err = s.saveAndRegisterMessage(
-            msgFileName, topic, msgToStore, msgNumber, index)
+		msgFileName, topic, msgToStore, msgNumber, index)
 	if err != nil {
 		return -1, fmt.Errorf("saveAndRegisterMessage(): %v", err)
 	}
-	err = s.saveIndex(index)
+	err = persist.SaveIndex(index, filenamer.IndexFile(s.rootDir))
 	if err != nil {
-		return -1, fmt.Errorf("saveIndex(): %v", err)
+		return -1, fmt.Errorf("SaveIndex(): %v", err)
 	}
 	return int(msgNumber), nil
-}
-
-func (s FileStore) retrieveIndexFromDisk() (*index.Index, error) {
-    indexPath := filenamer.IndexFile(s.rootDir)
-    file, err := os.Open(indexPath)
-    if err != nil {
-        return nil, fmt.Errorf("os.Open(): %v", err)
-    }
-    defer file.Close()
-    index := index.NewIndex()
-    err = index.Decode(file)
-    if err != nil {
-        return nil, fmt.Errorf("index.Decode(): %v", err)
-    }
-    return index, nil
-}
-
-func (s *FileStore) saveIndex(index *index.Index) error {
-    indexPath := filenamer.IndexFile(s.rootDir)
-    file, err := os.Open(indexPath)
-    if err != nil {
-        return fmt.Errorf("os.Open(): %v", err)
-    }
-    defer file.Close()
-    err = index.Encode(file)
-    if err != nil {
-        return fmt.Errorf("index.Encode(): %v", err)
-    }
-    return nil
 }
 
 func (s FileStore) makeMsgToStore(
@@ -167,67 +130,52 @@ func (s FileStore) makeMsgToStore(
 
 func (s FileStore) createTopicDirIfNotExists(topic string) error {
 	dirPath := filenamer.DirectoryForTopic(topic, s.rootDir)
-	err := os.Mkdir(dirPath, 0777) // Todo what should permissions be?
-	if err == nil {
-		return nil
-	}
-	if os.IsExist(err) {
-		return nil
-	}
-	return fmt.Errorf("os.Mkdir(): %v", err)
+	err := ioutils.CreateDirIfDoesntExist(dirPath)
+	if err != nil {
+        return fmt.Errorf("os.Mkdir(): %v", err)
+    }
 }
 
 func (s FileStore) fileHasInsufficentRoom(
-    msgFileName string, topic string, msgSize int) (bool, error) {
-    filepath := filenamer.MessageFilePath(msgFileName, topic, s.rootDir)
-    file, err := os.Open(filepath)
-    if err != nil {
-        return false, fmt.Errorf("os.Open(): %v", err)
+	msgFileName string, topic string, msgSize int) (bool, error) {
+    size, err := ioutils.FileSize(msgFileName)
+	if err != nil {
+        return  false, fmt.Errorf("ioutils.FileSize(): %v", err)
     }
-    defer file.Close()
-    fileInfo, err := file.Stat()
-    if err != nil {
-        return false, fmt.Errorf("file.Stat(): %v", err)
-    }
-    size := fileInfo.Size()
-    insufficient := size + int64(msgSize) > maximumFileSize
-    return insufficient, nil
+	insufficient := size+int64(msgSize) > maximumFileSize
+	return insufficient, nil
 }
 
 func (s FileStore) setupNewFileForTopic(
-    topic string, index *index.Index) (msgFileName string, err error) {
-    fileName := filenamer.NewMsgFilenameFor(topic, index)
-    filepath := filenamer.MessageFilePath(fileName, topic, s.rootDir)
-    file, err := os.Create(filepath)
-    if err != nil {
-        return false, fmt.Errorf("os.Create(): %v", err)
-    }
-    defer file.Close()
-    msgFileList := index.GetMessageFileListFor(topic)
-    msgFileList.RegisterNewFile(fileName) 
-    return fileName, nil
+	topic string, index *index.Index) (msgFileName string, err error) {
+	fileName := filenamer.NewMsgFilenameFor(topic, index)
+	filepath := filenamer.MessageFilePath(fileName, topic, s.rootDir)
+
+	file, err := os.Create(filepath)
+	if err != nil {
+		return false, fmt.Errorf("os.Create(): %v", err)
+	}
+	defer file.Close()
+
+	msgFileList := index.GetMessageFileListFor(topic)
+	msgFileList.RegisterNewFile(fileName)
+	return fileName, nil
 }
 
 func (s FileStore) saveAndRegisterMessage(
-    msgFileName string, topic string, msgToStore []byte, 
-    msgNumber int32, index *index.Index) err {
-    filepath := filenamer.MessageFilePath(msgFileName, topic, s.rootDir)
-    file, err := os.OpenFile(filePath, os.O_APPEND, 0666)
-    if err != nil {
-        return fmt.Errorf("os.OpenFile(): %v", err)
-    }
-    defer file.Close()
-    something, err := file.Write(msgToStore)
-    if err != nil {
-        return fmt.Errorf("file.Write(): %v", err)
-    }
-    creationTime := time.Now()
-    msgFileList := index.GetMessageFileListFor(topic)
-    fileMeta := msgFileList.Meta[msgFileName]
-    fileMeta.RegisterNewMessage(msgNumber, creationTime)
-    return nil
-    }
-
+	msgFileName string, topic string, msgToStore []byte,
+	msgNumber int32, index *index.Index) err {
+	filepath := filenamer.MessageFilePath(msgFileName, topic, s.rootDir)
+    err = ioutils.AppendToFile(filepath, msgToStore)
+	if err != nil {
+		return fmt.Errorf("ioutils.AppendToFile(): %v", err)
+	}
+	creationTime := time.Now()
+	msgFileList := index.GetMessageFileListFor(topic)
+	fileMeta := msgFileList.Meta[msgFileName]
+	fileMeta.RegisterNewMessage(msgNumber, creationTime)
+	return nil
+}
 
 // ------------------------------------------------------------------------
 // Auxilliary types.

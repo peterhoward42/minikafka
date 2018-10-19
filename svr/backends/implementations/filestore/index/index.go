@@ -1,60 +1,18 @@
-// Package index keeps track of which message filenames have been used for each
+// Package index is centred around its Index type, which is an in-memory data
+// structure that keeps track of which message filenames have been used for each
 // topic, and for each, which range of message numbers and creation times they
-// hold. It deals only in file basenames, and has no awareness of actual storage
-// locations, nor involvement in IO. However it does to offer to serialize
-// itself to and from a Reader/Writer, so that clients can persist it.
+// hold. The Index type also provides methods whereby an instance can be
+// gob-serialized and deserialized, and then an additional pair of methods to
+// save and retrieve this serialized representation to disk. The Index holds
+// message file names as file basenames and has no knowledge about where these
+// files are.
 package index
 
 import (
-	"encoding/gob"
-	"fmt"
-	"io"
-	"time"
 )
 
-// The types' fields are exported only so that they can easily be gob-encoded.
-
-//-----------------------------------------------------------------------
-
-// MsgMeta holds the message number and creation time for one stored message.
-type MsgMeta struct {
-	MsgNum  int32
-	Created time.Time
-}
-
-//-----------------------------------------------------------------------
-
-// FileMeta holds information about the oldest and newest message in
-// one message file.
-type FileMeta struct {
-	Oldest MsgMeta
-	Newest MsgMeta
-}
-
-//-----------------------------------------------------------------------
-
-// MessageFileList holds information about the set of files that
-// contain one topic's messages.
-type MessageFileList struct {
-	Names []string
-	Meta  map[string]*FileMeta
-}
-
-// NewMessageFileList creates and initializes a MessageFileList.
-func NewMessageFileList() *MessageFileList {
-	return &MessageFileList{
-		[]string{},
-		map[string]*FileMeta{},
-	}
-}
-
-// RegisterNewFile .
-func (lst *MessageFileList) RegisterNewFile(filename string) {
-	lst.Names = append(lst.Names, filename)
-	lst.Meta[filename] = &FileMeta{}
-}
-
-//-----------------------------------------------------------------------
+// The types' fields are exported so they can be automatically gob-encoded
+// without bothering with structure tags.
 
 // Index is the top level index object.
 type Index struct {
@@ -74,28 +32,6 @@ func (index *Index) GetMessageFileListFor(topic string) *MessageFileList {
 		index.MessageFileLists[topic] = NewMessageFileList()
 	}
 	return index.MessageFileLists[topic]
-}
-
-// Encode is a serializer. It encodes the index into a byte stream and writes
-// them to the output writer provided. See also the Decode sister method.
-func (index *Index) Encode(writer io.Writer) error {
-	encoder := gob.NewEncoder(writer)
-	err := encoder.Encode(index)
-	if err != nil {
-		return fmt.Errorf("encoder.Encode(): %v", err)
-	}
-	return nil
-}
-
-// Decode is a de-serializer. It populates the index by decoding the bytes
-// read from the input reader provided. See also the Encode sister method.
-func (index *Index) Decode(reader io.Reader) error {
-	decoder := gob.NewDecoder(reader)
-	err := decoder.Decode(index)
-	if err != nil {
-		return fmt.Errorf("decoder.Decode: %v", err)
-	}
-	return nil
 }
 
 // NextMessageNumberFor provides the next-available message number for a topic.

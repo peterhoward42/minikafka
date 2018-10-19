@@ -31,6 +31,7 @@ func TestBackingStoreConformance(t *testing.T) {
 
 // makeTempDirOrExit makes a temporary directory and returns its name.
 // It responds to errors with log.Fatalf().
+todo don't this or sister is used
 func makeTempDirOrFatal() string {
 	dir, err := ioutil.TempDir("", "file_store")
 	if err != nil {
