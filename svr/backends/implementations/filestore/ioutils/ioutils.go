@@ -1,16 +1,20 @@
 package ioutils
 
 import (
+	"fmt"
+	"io/ioutil"
+	"os"
+	"path"
 )
 
 // DeleteDirectoryContents removes everything from the given directory,
 // retaining the directory itself.
 func DeleteDirectoryContents(dir string) error {
-	dir, err := ioutil.ReadDir(dir)
+	dirInfo, err := ioutil.ReadDir(dir)
 	if err != nil {
 		return fmt.Errorf("ioutil.ReadDir(): %v", err)
 	}
-	for _, entry := range dir {
+	for _, entry := range dirInfo {
 		fullpath := path.Join(dir, entry.Name())
 		err = os.RemoveAll(fullpath)
 		if err != nil {
@@ -20,9 +24,9 @@ func DeleteDirectoryContents(dir string) error {
 	return nil
 }
 
-// CreateDirIfDoesntExist 
-func CreateDirIfDoesntExist(pathname) error {
-	err := os.Mkdir(pathname, 0777)
+// CreateDirIfDoesntExist
+func CreateDirIfDoesntExist(path string) error {
+	err := os.Mkdir(path, 0777)
 	if err == nil {
 		return nil
 	}
@@ -32,7 +36,7 @@ func CreateDirIfDoesntExist(pathname) error {
 	return fmt.Errorf("os.Mkdir(): %v", err)
 }
 
-func FileSize(pathname string) (int64, error) {
+func FileSize(filepath string) (int64, error) {
 	file, err := os.Open(filepath)
 	if err != nil {
 		return -1, fmt.Errorf("os.Open(): %v", err)
@@ -45,16 +49,15 @@ func FileSize(pathname string) (int64, error) {
 	return fileInfo.Size(), nil
 }
 
-func AppendToFile(filepath string, someData []bytes) error {
-	file, err := os.OpenFile(filePath, os.O_APPEND, 0666)
+func AppendToFile(filepath string, someData []byte) error {
+	file, err := os.OpenFile(filepath, os.O_APPEND, 0666)
 	if err != nil {
 		return fmt.Errorf("os.OpenFile(): %v", err)
 	}
 	defer file.Close()
-    what is something?
-	_, err := file.Write(someData)
+	_, err = file.Write(someData)
 	if err != nil {
 		return fmt.Errorf("file.Write(): %v", err)
 	}
-    return nil
+	return nil
 }

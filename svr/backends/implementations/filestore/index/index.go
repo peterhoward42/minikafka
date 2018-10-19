@@ -8,13 +8,11 @@
 // files are.
 package index
 
-import (
-)
-
 // The types' fields are exported so they can be automatically gob-encoded
 // without bothering with structure tags.
 
-// Index is the top level index object.
+// Index is the top level index object which organises the information it holds
+// by topic.
 type Index struct {
 	MessageFileLists map[string]*MessageFileList
 }
@@ -25,18 +23,18 @@ func NewIndex() *Index {
 }
 
 // GetMessageFileListFor provides access to the MesageFileList for the
-// given topic. Copes with the topic being hithertoo unknown.
+// given topic. It copes gracefully with the topic being hithertoo unknown.
 func (index *Index) GetMessageFileListFor(topic string) *MessageFileList {
 	_, ok := index.MessageFileLists[topic]
-	if ok != true {
+	if ok == false {
 		index.MessageFileLists[topic] = NewMessageFileList()
 	}
 	return index.MessageFileLists[topic]
 }
 
 // NextMessageNumberFor provides the next-available message number for a topic.
-// It copes with the special cases of the index having no record of that topic,
-// or it having never yet contained any messages.
+// It copes gracefully with the two special cases of the index having no
+// record of that topic, or it having never yet contained any messages.
 func (index Index) NextMessageNumberFor(topic string) int32 {
 	messageFileList, ok := index.MessageFileLists[topic]
 	if ok == false {
@@ -52,7 +50,9 @@ func (index Index) NextMessageNumberFor(topic string) int32 {
 	return newestFileMeta.Newest.MsgNum + 1
 }
 
-// CurrentMsgFileNameFor .
+// CurrentMsgFileNameFor provides the name of the file that is currently being
+// used to store incoming messages for a topic. It copes gracefully with there
+// not being one - by returning an empty string.
 func (index Index) CurrentMsgFileNameFor(topic string) string {
 	msgFileList, ok := index.MessageFileLists[topic]
 	if ok == false {
@@ -65,9 +65,9 @@ func (index Index) CurrentMsgFileNameFor(topic string) string {
 	return msgFileList.Names[n-1]
 }
 
-// IsFilenameOk makes sure that the suggested filename is legal to use for
-// the given topic.
-func (index Index) IsFilenameOk(filename, topic string) bool {
+// PreviouslyUsed indicates if the given file base name has been used at any
+// time previously as a message file for the given topic.
+func (index Index) PreviouslyUsed(name string, topic string) bool {
 	msgFileList, ok := index.MessageFileLists[topic]
 	if ok == false {
 		return false
@@ -76,7 +76,7 @@ func (index Index) IsFilenameOk(filename, topic string) bool {
 		return false
 	}
 	for _, existingName := range msgFileList.Names {
-		if existingName == filename {
+		if existingName == name {
 			return true
 		}
 	}

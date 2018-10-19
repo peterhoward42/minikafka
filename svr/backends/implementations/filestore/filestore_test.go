@@ -25,24 +25,3 @@ func TestBackingStoreConformance(t *testing.T) {
 	contract.RunBackingStoreTests(t, *filestore)
 }
 
-//--------------------------------------------------------------------------------
-// Auxilliary code.
-//--------------------------------------------------------------------------------
-
-// makeTempDirOrExit makes a temporary directory and returns its name.
-// It responds to errors with log.Fatalf().
-todo don't this or sister is used
-func makeTempDirOrFatal() string {
-	dir, err := ioutil.TempDir("", "file_store")
-	if err != nil {
-		log.Fatalf("ioutil.TempDir(): %v", err)
-	}
-	return dir
-}
-
-func clearTempDirOrFatal(dir string) {
-	err := os.RemoveAll(dir)
-	if err != nil {
-		log.Fatalf("os.RemoveAll(): %v", err)
-	}
-}

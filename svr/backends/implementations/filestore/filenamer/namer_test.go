@@ -9,25 +9,26 @@ import (
 )
 
 //-----------------------------------------------------------------------
-// Mock NameChecker implementations.
+// Mock PreviouslyUsed implementations.
 //-----------------------------------------------------------------------
-type AcceptAnyName struct{}
+type AlwaysFalse struct{}
 
-func (a AcceptAnyName) IsFilenameOk(name, context string) bool {
-	return true
+func (checker AlwaysFalse) PreviouslyUsed(name, context string) bool {
+	return false
 }
 
-type AcceptSomeNames struct{}
+type SayNamesWithNumbersPreviouslyUsed struct{}
 
-func (a AcceptSomeNames) IsFilenameOk(name, context string) bool {
+func (checker SayNamesWithNumbersPreviouslyUsed) PreviouslyUsed(
+    name, context string) bool {
     disallow := []rune("0123456789")
     for  _, c := range disallow {
         cAsString := string(c)
         if strings.Contains(name, cAsString) {
-            return false
+            return true
         }
     }
-    return true
+    return false
 }
 
 //-----------------------------------------------------------------------
@@ -35,19 +36,19 @@ func (a AcceptSomeNames) IsFilenameOk(name, context string) bool {
 //-----------------------------------------------------------------------
 
 func TestNamesRightShape(t *testing.T) {
-	fileNameChecker := AcceptAnyName{}
-	name := NewMsgFilenameFor("topicA", fileNameChecker)
+	previouslyUsedChecker := AlwaysFalse{}
+	name := NewMsgFilenameFor("topicA", previouslyUsedChecker)
 	expected := 8
 	assert.Equal(t, expected, len(name))
 }
 
 func TestRejectionCallbackWorking(t *testing.T) {
-	fileNameChecker := AcceptSomeNames{}
+	previouslyUsedChecker := SayNamesWithNumbersPreviouslyUsed{}
     // Ask for many names in sequence, making sure none offered contains our
     // disallowed runes.
     disallowed := []rune("0123456789")
     for i := 0; i < 1000; i++ {
-        name := NewMsgFilenameFor("topicA", fileNameChecker)
+        name := NewMsgFilenameFor("topicA", previouslyUsedChecker)
         for  _, c := range disallowed {
             cAsString := string(c)
             if strings.Contains(name, cAsString) {

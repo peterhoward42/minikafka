@@ -37,18 +37,18 @@ func TestCurrentMsgFileNameFor(t *testing.T) {
 	assert.Equal(t, expected, currentName)
 }
 
-func TestIsFilenameOk(t *testing.T) {
+func TestPreviouslyUsed(t *testing.T) {
 	index := makeReferenceIndexForTesting()
 	// When should say yes.
-	used := index.IsFilenameOk("file1", "topicA")
+	used := index.PreviouslyUsed("file1", "topicA")
 	expected := true
 	assert.Equal(t, expected, used)
 	// When should say no because names exist but not this one.
-	used = index.IsFilenameOk("unknownname", "topicA")
+	used = index.PreviouslyUsed("unknownname", "topicA")
 	expected = false
 	assert.Equal(t, expected, used)
 	// When should say no because no names exist.
-	used = index.IsFilenameOk("file1", "unknowntopic")
+	used = index.PreviouslyUsed("file1", "unknowntopic")
 	expected = false
 	assert.Equal(t, expected, used)
 }
