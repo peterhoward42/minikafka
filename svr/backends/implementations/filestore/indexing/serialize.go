@@ -1,4 +1,4 @@
-package index
+package indexing
 
 import (
 	"encoding/gob"

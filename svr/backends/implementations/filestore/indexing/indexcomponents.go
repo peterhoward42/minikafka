@@ -1,4 +1,4 @@
-package index
+package indexing
 
 import (
 	"time"
@@ -22,6 +22,16 @@ type MsgMeta struct {
 type FileMeta struct {
 	Oldest MsgMeta
 	Newest MsgMeta
+}
+
+func (fm *FileMeta) RegisterNewMessage(
+    msgNumber int32, creationTime time.Time) {
+    // Special case; set the Oldest field if this is the first 
+    // message to arrive.
+    if fm.Oldest.MsgNum == int32(0) {
+        fm.Oldest = MsgMeta{msgNumber, creationTime}
+    }
+    fm.Newest = MsgMeta{msgNumber, creationTime}
 }
 
 //-----------------------------------------------------------------------

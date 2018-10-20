@@ -1,4 +1,4 @@
-// Package index is centred around its Index type, which is an in-memory data
+// package indexing is centred around its Index type, which is an in-memory data
 // structure that keeps track of which message filenames have been used for each
 // topic, and for each, which range of message numbers and creation times they
 // hold. The Index type also provides methods whereby an instance can be
@@ -6,7 +6,7 @@
 // save and retrieve this serialized representation to disk. The Index holds
 // message file names as file basenames and has no knowledge about where these
 // files are.
-package index
+package indexing
 
 // The types' fields are exported so they can be automatically gob-encoded
 // without bothering with structure tags.

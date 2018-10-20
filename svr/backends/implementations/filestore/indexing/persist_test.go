@@ -1,4 +1,4 @@
-package index
+package indexing
 
 import (
 	"testing"
@@ -25,12 +25,13 @@ func TestSaveAndRetrieve(t *testing.T) {
     defer os.Remove(filepath)
 
 	index := makeReferenceIndexForTesting()
-    err = SaveIndex(index, filepath)
+    err = index.Save(filepath)
     if err != nil {
         msg := fmt.Sprintf("SaveIndex(): %v", err)
         assert.FailNow(t, msg)
     }
-    newIndex, err := RetrieveIndexFromDisk(filepath)
+    newIndex := NewIndex()
+    err = newIndex.PopulateFromDisk(filepath)
     if err != nil {
         msg := fmt.Sprintf("index.RetrieveIndexFromDisk(): %v", err)
         assert.FailNow(t, msg)

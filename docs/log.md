@@ -9,8 +9,11 @@ o  Persistent using filesystem
     o  resume testing at store method in suite test
         o  work thru towards getting call to suite to work, with only store
            enabled in the suite
-            o  confusion in filestore between index the object and index the
-               package - wha tto do?
+            *  call the package indexing
+            *  move most indexer functions into being methods
+            *  get to build
+            o  does index components need test?
+        o  vet package names to be short single words
         o  filestore.go is too darned big, as are some methods.
         o  imports horribly deeply nested
         o  msgmeta reused inside stored message?

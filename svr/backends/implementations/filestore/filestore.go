@@ -12,7 +12,7 @@ import (
 
 	toykafka "github.com/peterhoward42/toy-kafka"
 	"github.com/peterhoward42/toy-kafka/svr/backends/implementations/filestore/filenamer"
-	"github.com/peterhoward42/toy-kafka/svr/backends/implementations/filestore/index"
+	"github.com/peterhoward42/toy-kafka/svr/backends/implementations/filestore/indexing"
 	"github.com/peterhoward42/toy-kafka/svr/backends/implementations/filestore/ioutils"
 )
 
@@ -77,8 +77,8 @@ func (s FileStore) deleteContents() error {
 func (s FileStore) store(topic string, message toykafka.Message) (
 	messageNumber int, err error) {
 
-	currentIndex, err := index.RetrieveIndexFromDisk(
-		filenamer.IndexFile(s.rootDir))
+    index := indexing.NewIndex()
+    err = index.PopulateFromDisk(filenamer.IndexFile(s.rootDir))
 	if err != nil {
 		return -1, fmt.Errorf("RetrieveIndexFromDisk(): %v", err)
 	}
@@ -86,12 +86,12 @@ func (s FileStore) store(topic string, message toykafka.Message) (
 	if err != nil {
 		return -1, fmt.Errorf("createTopicDirIfNotExists: %v", err)
 	}
-	msgNumber := storeIndex.NextMessageNumberFor(topic)
+	msgNumber := index.NextMessageNumberFor(topic)
 	msgToStore := s.makeMsgToStore(message, msgNumber)
 	msgSize := len(msgToStore)
 
 	var msgFileName string
-	msgFileName = storeIndex.CurrentMsgFileNameFor(topic)
+	msgFileName = index.CurrentMsgFileNameFor(topic)
 	var needNewFile = false
 	if msgFileName == "" {
 		needNewFile = true
@@ -112,7 +112,7 @@ func (s FileStore) store(topic string, message toykafka.Message) (
 	if err != nil {
 		return -1, fmt.Errorf("saveAndRegisterMessage(): %v", err)
 	}
-	err = index.SaveIndex(index, filenamer.IndexFile(s.rootDir))
+	err = index.Save(filenamer.IndexFile(s.rootDir))
 	if err != nil {
 		return -1, fmt.Errorf("SaveIndex(): %v", err)
 	}
@@ -134,6 +134,7 @@ func (s FileStore) createTopicDirIfNotExists(topic string) error {
 	if err != nil {
 		return fmt.Errorf("os.Mkdir(): %v", err)
 	}
+    return nil
 }
 
 func (s FileStore) fileHasInsufficentRoom(
@@ -147,13 +148,13 @@ func (s FileStore) fileHasInsufficentRoom(
 }
 
 func (s FileStore) setupNewFileForTopic(
-	topic string, index *index.Index) (msgFileName string, err error) {
+	topic string, index *indexing.Index) (msgFileName string, err error) {
 	fileName := filenamer.NewMsgFilenameFor(topic, index)
 	filepath := filenamer.MessageFilePath(fileName, topic, s.rootDir)
 
 	file, err := os.Create(filepath)
 	if err != nil {
-		return false, fmt.Errorf("os.Create(): %v", err)
+		return "", fmt.Errorf("os.Create(): %v", err)
 	}
 	defer file.Close()
 
@@ -164,9 +165,9 @@ func (s FileStore) setupNewFileForTopic(
 
 func (s FileStore) saveAndRegisterMessage(
 	msgFileName string, topic string, msgToStore []byte,
-	msgNumber int32, index *index.Index) err {
+	msgNumber int32, index *indexing.Index) error {
 	filepath := filenamer.MessageFilePath(msgFileName, topic, s.rootDir)
-	err = ioutils.AppendToFile(filepath, msgToStore)
+	err := ioutils.AppendToFile(filepath, msgToStore)
 	if err != nil {
 		return fmt.Errorf("ioutils.AppendToFile(): %v", err)
 	}
