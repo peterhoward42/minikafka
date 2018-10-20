@@ -49,8 +49,9 @@ func FileSize(filepath string) (int64, error) {
 	return fileInfo.Size(), nil
 }
 
+// AppendToFile appends some bytes to the specified file, and re-closes it.
 func AppendToFile(filepath string, someData []byte) error {
-	file, err := os.OpenFile(filepath, os.O_APPEND, 0666)
+	file, err := os.OpenFile(filepath, os.O_APPEND|os.O_WRONLY, os.ModeAppend)
 	if err != nil {
 		return fmt.Errorf("os.OpenFile(): %v", err)
 	}

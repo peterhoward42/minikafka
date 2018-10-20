@@ -12,9 +12,24 @@ o  Persistent using filesystem
             *  call the package indexing
             *  move most indexer functions into being methods
             *  get to build
-            o  does index components need test?
+            *  does index components need test?
+            o  filestore.go is still too darned big
+                o  move unexported store into own module
+                o  get it to build
+                o  consider isolated tests for the store module
+                    o  adopt actions model with a StoreAction which has access
+                       to a store and an index. Each action updates the index,
+                       but the caller saves it.
+                        *  get storeaction to build
+                        o  write storeaction tests
+                            *  consider what to test (bottom)
+                            *  make reference store public and package of own
+                            o  design and write/pass tests
+                        o  move encode/decode of stored.message into stored module
+                           and do round trip test plus read of creation time
+                        o  get them to pass
+                o  revert to getting file store to build
         o  vet package names to be short single words
-        o  filestore.go is too darned big, as are some methods.
         o  imports horribly deeply nested
         o  msgmeta reused inside stored message?
         o  consider ditching mem store and / or making test suite more lucid
@@ -45,5 +60,13 @@ o  Orchestration / Hosted
 o  Video / pitch?
 
 ----------------------------------------------------------------
-FileStore design
+store action - what to test?
 ----------------------------------------------------------------
+
+o  works when has to create dir
+o  splills to new file when wont fit
+o  works when has to create msg file for first time
+o  works when has to reuse existing msg file
+o  does append the payload to the file (gets bigger)
+o  index is properly updated
+o  stored message gets now creation time

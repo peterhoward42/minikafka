@@ -24,7 +24,7 @@ func TestSaveAndRetrieve(t *testing.T) {
     file.Close()
     defer os.Remove(filepath)
 
-	index := makeReferenceIndexForTesting()
+	index := MakeReferenceIndex()
     err = index.Save(filepath)
     if err != nil {
         msg := fmt.Sprintf("SaveIndex(): %v", err)

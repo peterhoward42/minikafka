@@ -1,4 +1,4 @@
-// package indexing is centred around its Index type, which is an in-memory data
+// Package indexing is centred around its Index type, which is an in-memory data
 // structure that keeps track of which message filenames have been used for each
 // topic, and for each, which range of message numbers and creation times they
 // hold. The Index type also provides methods whereby an instance can be

@@ -11,7 +11,7 @@ import (
 
 // MsgMeta holds the message number and creation time for one stored message.
 type MsgMeta struct {
-	MsgNum  int32
+	MsgNum  int32 // Zero value of 0 used to signify uninitialised.
 	Created time.Time
 }
 
@@ -24,14 +24,16 @@ type FileMeta struct {
 	Newest MsgMeta
 }
 
+// RegisterNewMessage updates the FileMeta object according to this new
+// message arriving in the store.
 func (fm *FileMeta) RegisterNewMessage(
-    msgNumber int32, creationTime time.Time) {
-    // Special case; set the Oldest field if this is the first 
-    // message to arrive.
-    if fm.Oldest.MsgNum == int32(0) {
-        fm.Oldest = MsgMeta{msgNumber, creationTime}
-    }
-    fm.Newest = MsgMeta{msgNumber, creationTime}
+	msgNumber int32, creationTime time.Time) {
+	// Special case; set the Oldest field if this is the first
+	// message to arrive.
+	if fm.Oldest.MsgNum == int32(0) {
+		fm.Oldest = MsgMeta{msgNumber, creationTime}
+	}
+	fm.Newest = MsgMeta{msgNumber, creationTime}
 }
 
 //-----------------------------------------------------------------------

@@ -2,7 +2,6 @@ package indexing
 
 import (
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -12,7 +11,7 @@ import (
 //--------------------------------------------------------------------------
 
 func TestNextMsgNumForTopic(t *testing.T) {
-	index := makeReferenceIndexForTesting()
+	index := MakeReferenceIndex()
 
 	// Should be 1 for unknown topic.
 	nextNum := index.NextMessageNumberFor("nosuchtopic")
@@ -26,7 +25,7 @@ func TestNextMsgNumForTopic(t *testing.T) {
 }
 
 func TestCurrentMsgFileNameFor(t *testing.T) {
-	index := makeReferenceIndexForTesting()
+	index := MakeReferenceIndex()
 	// Check correct when topic is known and has files registered.
 	currentName := index.CurrentMsgFileNameFor("topicA")
 	expected := "file2"
@@ -38,7 +37,7 @@ func TestCurrentMsgFileNameFor(t *testing.T) {
 }
 
 func TestPreviouslyUsed(t *testing.T) {
-	index := makeReferenceIndexForTesting()
+	index := MakeReferenceIndex()
 	// When should say yes.
 	used := index.PreviouslyUsed("file1", "topicA")
 	expected := true
@@ -51,42 +50,4 @@ func TestPreviouslyUsed(t *testing.T) {
 	used = index.PreviouslyUsed("file1", "unknowntopic")
 	expected = false
 	assert.Equal(t, expected, used)
-}
-
-//--------------------------------------------------------------------------------
-// Auxilliary code.
-//--------------------------------------------------------------------------------
-
-func nowMinusNMinutes(minutes int) time.Time {
-	now := time.Now()
-	duration := time.Duration(minutes) * time.Minute
-	return now.Add(-duration)
-}
-
-// makeReferenceIndexForTesting provides a useful, repeatable Index for
-// testing purposes.
-func makeReferenceIndexForTesting() *Index {
-
-	idx := NewIndex()
-
-	msgNum := int32(0)
-	minutes := 1
-	for _, topic := range []string{"topicA", "topicB"} {
-		msgFileList := idx.GetMessageFileListFor(topic)
-		for _, fileName := range []string{"file1", "file2"} {
-			msgFileList.RegisterNewFile(fileName)
-
-			fileMeta := msgFileList.Meta[fileName]
-
-			fileMeta.Oldest.MsgNum = msgNum + 1
-			fileMeta.Oldest.Created = nowMinusNMinutes(minutes)
-
-			fileMeta.Newest.MsgNum = msgNum + 5
-			fileMeta.Newest.Created = nowMinusNMinutes(minutes + 5)
-
-			msgNum += 10
-			minutes += 15
-		}
-	}
-	return idx
 }

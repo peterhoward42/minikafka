@@ -9,7 +9,7 @@ import (
 // TestSerialization tests the serialization methods for the index.
 func TestSerialization(t *testing.T) {
 	// Create an index programmatically.
-	index := makeReferenceIndexForTesting()
+	index := MakeReferenceIndex()
 
 	// Serialize it into a buffer.
 	var buf bytes.Buffer
