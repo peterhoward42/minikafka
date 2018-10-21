@@ -36,19 +36,6 @@ func CreateDirIfDoesntExist(path string) error {
 	return fmt.Errorf("os.Mkdir(): %v", err)
 }
 
-func FileSize(filepath string) (int64, error) {
-	file, err := os.Open(filepath)
-	if err != nil {
-		return -1, fmt.Errorf("os.Open(): %v", err)
-	}
-	defer file.Close()
-	fileInfo, err := file.Stat()
-	if err != nil {
-		return -1, fmt.Errorf("file.Stat(): %v", err)
-	}
-	return fileInfo.Size(), nil
-}
-
 // AppendToFile appends some bytes to the specified file, and re-closes it.
 func AppendToFile(filepath string, someData []byte) error {
 	file, err := os.OpenFile(filepath, os.O_APPEND|os.O_WRONLY, os.ModeAppend)

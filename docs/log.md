@@ -1,4 +1,4 @@
-o  Persistent using filesystem
+o  Persistence using filesystem
     *  bring in filenamer
     *  bring in a ioutils package
     *  index saver / loader
@@ -12,48 +12,40 @@ o  Persistent using filesystem
             *  call the package indexing
             *  move most indexer functions into being methods
             *  get to build
-            *  does index components need test?
+            *  does index components package need test?
             o  filestore.go is still too darned big
-                o  move unexported store into own module
-                o  get it to build
-                o  consider isolated tests for the store module
-                    o  adopt actions model with a StoreAction which has access
-                       to a store and an index. Each action updates the index,
-                       but the caller saves it.
-                        *  get storeaction to build
-                        o  write storeaction tests
-                            *  consider what to test (bottom)
-                            *  make reference store public and package of own
-                            o  design and write/pass tests
-                        o  move encode/decode of stored.message into stored module
-                           and do round trip test plus read of creation time
-                        o  get them to pass
+                *  move unexported store implementation into a new actions 
+                   package, anticipating actions.poll etc.
+                *  get it to build
+                *  consider isolated tests for the store module
+                o  isolate encode/decode factory for storedmessage with tests.
                 o  revert to getting file store to build
-        o  vet package names to be short single words
-        o  imports horribly deeply nested
-        o  msgmeta reused inside stored message?
+        o  incrementally un-comment the tests in the BackingStore test suite,
+           and get filestore to satisfy them.
+            o  for each suite failure case, first add filestore specific 
+               unit tests and get them to pass. Then suite tests should work.
+        o  imports horribly deeply nested ?
+        o  msgmeta duplication inside stored message?
         o  consider ditching mem store and / or making test suite more lucid
+    o  get the whole system to build and decide where to leave things in head
+       for scrutiny, maybe add dev log to readme
     o  this test suite mo - not much good cos doesn't tell you where the
                problem is.
     o  augment test for with tests that close and repopen the store
 
 
 
-o  could hierarchy be flatter?
+o  could / should hierarchy be flatter?
 o  switch to doc.go
-o  don't call it toy anything
+o  don't call it toy anything, maybe micro?
 o  say host should be host but can be just port
 o  test docco in godoc
 o  Tidy and make consistent all log messages
-o  Test
-    o  Consider which code usefully and pracical to test
-    o  For resilience, and exemplars
 o  should docco show install and run cli?
 o  should docco explain about other language clients?
 o  should docco show code examples
 o  Update doc strings in API to sufficient quality for go doc being useful.
-o  Add TLS / and or JWT auth
-o  Package level doc.go
+o  Add TLS / and or JWT auth?
 o  Containerisation
     o  Maybe seperate repo?
 o  Orchestration / Hosted
@@ -62,11 +54,3 @@ o  Video / pitch?
 ----------------------------------------------------------------
 store action - what to test?
 ----------------------------------------------------------------
-
-o  works when has to create dir
-o  splills to new file when wont fit
-o  works when has to create msg file for first time
-o  works when has to reuse existing msg file
-o  does append the payload to the file (gets bigger)
-o  index is properly updated
-o  stored message gets now creation time

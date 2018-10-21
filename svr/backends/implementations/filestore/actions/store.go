@@ -30,12 +30,13 @@ type StoreAction struct {
 // filestore. Its responsibility to perform the storage operation and to update
 // the in-memory index. It is not responsible for mutex protection, nor re-saving
 // the index afterwards. These are the responsibility of the caller.
-func (action StoreAction) Store() (messageNumber int, err error) {
+func (action StoreAction) Store() (
+    messageNumber int, msgFileUsed string, err error) {
 
 	// Special case when the store has never encountered this topic before.
 	err = action.createTopicDirIfNotExists()
 	if err != nil {
-		return -1, fmt.Errorf("createTopicDirIfNotExists: %v", err)
+		return -1, "", fmt.Errorf("createTopicDirIfNotExists: %v", err)
 	}
 	// Prepare the payload that will get stored, now, so we can measure how big
 	// it is, to inform the decisions about whether we should spill over to a new
@@ -52,24 +53,21 @@ func (action StoreAction) Store() (messageNumber int, err error) {
 	if msgFileName == "" {
 		needNewFile = true
 	} else {
-		needNewFile, err = action.fileHasInsufficentRoom(msgFileName, msgSize)
-		if err != nil {
-			return -1, fmt.Errorf("fileHasInsufficietRoom(): %v", err)
-		}
+		needNewFile = action.fileHasInsufficentRoom(msgFileName, msgSize)
 	}
 	if needNewFile {
 		msgFileName, err = action.setupNewFileForTopic()
 		if err != nil {
-			return -1, fmt.Errorf("setupNewFileForTopic(): %v", err)
+			return -1, "", fmt.Errorf("setupNewFileForTopic(): %v", err)
 		}
 	}
 	// Append the message object to the storage file, and mandate the
 	// index to update itself with this new info.
 	err = action.saveAndRegisterMessage(msgFileName, msgToStore, msgNumber)
 	if err != nil {
-		return -1, fmt.Errorf("saveAndRegisterMessage(): %v", err)
+		return -1, "", fmt.Errorf("saveAndRegisterMessage(): %v", err)
 	}
-	return int(msgNumber), nil
+	return int(msgNumber), msgFileName, nil
 }
 
 // makeMsgToStore builds a storedMessage structure to represent the
@@ -95,17 +93,10 @@ func (action *StoreAction) createTopicDirIfNotExists() error {
 	return nil
 }
 
-// fileHasInsufficientRoom works out if the message storage file that is
-// being used for a particular topic, has enough room to accomodate the
-// incoming message without breaking the maximum file size limit.
 func (action *StoreAction) fileHasInsufficentRoom(
-	msgFileName string, msgSize int) (bool, error) {
-	size, err := ioutils.FileSize(msgFileName)
-	if err != nil {
-		return false, fmt.Errorf("ioutils.FileSize(): %v", err)
-	}
-	insufficient := size+int64(msgSize) > maximumFileSize
-	return insufficient, nil
+	msgFileName string, msgSize int) bool {
+    msgFileList := action.index.MessageFileLists[action.topic]
+    return msgFileList.Meta[msgFileName].Size + msgSize > maximumFileSize
 }
 
 // setupNewFileForTopic works out what the new file should be called, creates it,
@@ -141,6 +132,6 @@ func (action *StoreAction) saveAndRegisterMessage(
 	creationTime := time.Now()
 	msgFileList := action.index.GetMessageFileListFor(action.topic)
 	fileMeta := msgFileList.Meta[msgFileName]
-	fileMeta.RegisterNewMessage(msgNumber, creationTime)
+	fileMeta.RegisterNewMessage(msgNumber, creationTime, len(msgToStore))
 	return nil
 }
