@@ -59,9 +59,11 @@ go install ./...
 
 ## To run the server from the command line
 
+```
 export MINIKAFKA_HOST=":9999"
 export MINIKAFKA_RETENTIONTIME="3s"
 server
+```
 
 ## To run the produce client from the command line
 
