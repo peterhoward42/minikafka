@@ -9,7 +9,6 @@ o  Persistence using filesystem
             *  do all the repo tests pass now?
             *  scan the repo - is it respectable from 10,000 feet?
             *  check all docs
-            o  ditch the use of the word toy from everything
             o  complete go lint sweep
             o  complete go fmt sweep
             o  make sure clis work today

@@ -1,7 +1,7 @@
 package indexing
 
 import (
-    "time"
+	"time"
 )
 
 // MakeReferenceIndex provides a repeatable Index for testing purposes.

@@ -1,9 +1,9 @@
 package filenamer
 
 import (
+	"fmt"
+	"strings"
 	"testing"
-    "strings"
-    "fmt"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -20,15 +20,15 @@ func (checker AlwaysFalse) PreviouslyUsed(name, context string) bool {
 type SayNamesWithNumbersPreviouslyUsed struct{}
 
 func (checker SayNamesWithNumbersPreviouslyUsed) PreviouslyUsed(
-    name, context string) bool {
-    disallow := []rune("0123456789")
-    for  _, c := range disallow {
-        cAsString := string(c)
-        if strings.Contains(name, cAsString) {
-            return true
-        }
-    }
-    return false
+	name, context string) bool {
+	disallow := []rune("0123456789")
+	for _, c := range disallow {
+		cAsString := string(c)
+		if strings.Contains(name, cAsString) {
+			return true
+		}
+	}
+	return false
 }
 
 //-----------------------------------------------------------------------
@@ -44,17 +44,17 @@ func TestNamesRightShape(t *testing.T) {
 
 func TestRejectionCallbackWorking(t *testing.T) {
 	previouslyUsedChecker := SayNamesWithNumbersPreviouslyUsed{}
-    // Ask for many names in sequence, making sure none offered contains our
-    // disallowed runes.
-    disallowed := []rune("0123456789")
-    for i := 0; i < 1000; i++ {
-        name := NewMsgFilenameFor("topicA", previouslyUsedChecker)
-        for  _, c := range disallowed {
-            cAsString := string(c)
-            if strings.Contains(name, cAsString) {
-                msg := fmt.Sprintf("Name %s contains %s", name, cAsString)
-                assert.FailNow(t, msg)
-            }
-        }
-    }
+	// Ask for many names in sequence, making sure none offered contains our
+	// disallowed runes.
+	disallowed := []rune("0123456789")
+	for i := 0; i < 1000; i++ {
+		name := NewMsgFilenameFor("topicA", previouslyUsedChecker)
+		for _, c := range disallowed {
+			cAsString := string(c)
+			if strings.Contains(name, cAsString) {
+				msg := fmt.Sprintf("Name %s contains %s", name, cAsString)
+				assert.FailNow(t, msg)
+			}
+		}
+	}
 }

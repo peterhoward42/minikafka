@@ -2,8 +2,8 @@ package indexing
 
 import (
 	"bytes"
-    "testing"
 	"encoding/json"
+	"testing"
 )
 
 // TestSerialization tests the serialization methods for the index.

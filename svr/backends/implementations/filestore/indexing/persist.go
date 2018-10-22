@@ -1,11 +1,11 @@
 package indexing
 
 import (
-    "os"
-    "fmt"
+	"fmt"
+	"os"
 )
 
-// Save serializes the index into a byte stream representation, and saves this 
+// Save serializes the index into a byte stream representation, and saves this
 // as a binary file.
 func (index *Index) Save(filepath string) error {
 	file, err := os.Create(filepath)

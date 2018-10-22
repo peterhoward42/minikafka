@@ -22,7 +22,7 @@ type MsgMeta struct {
 type FileMeta struct {
 	Oldest MsgMeta
 	Newest MsgMeta
-    Size    int
+	Size   int
 }
 
 // RegisterNewMessage updates the FileMeta object according to this new
@@ -35,7 +35,7 @@ func (fm *FileMeta) RegisterNewMessage(
 		fm.Oldest = MsgMeta{msgNumber, creationTime}
 	}
 	fm.Newest = MsgMeta{msgNumber, creationTime}
-    fm.Size += messageSize
+	fm.Size += messageSize
 }
 
 //-----------------------------------------------------------------------
