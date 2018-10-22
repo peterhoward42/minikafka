@@ -49,3 +49,10 @@ func AppendToFile(filepath string, someData []byte) error {
 	}
 	return nil
 }
+
+// Exists evaluates whether there is an entity in the file system at the
+// given path. Note it does not guarantee that this is a file.
+func Exists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
+}

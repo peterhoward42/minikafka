@@ -9,7 +9,7 @@ conceptually as Kafka.
 - Multiple clients may consume the streams of messages independently at their 
   own rate.
 - A client's consumption of a message does not remove it from the server's store.
-- The server does evict messages once they reach a prescribed age.
+- The server does however, evict messages once they reach a prescribed age.
 - Clients post messages using a *produce* API.
 - Clients recevie messages using the *consume* API.
 
@@ -24,12 +24,15 @@ custom TCP protocol.
 
 The server is implemented as a Go type, with a *Serve* method. A command line
 program is also provided to instantiate and run it - aspiring to 12-factor design
-principles whereby runtime configuration choices (such as which IP address and
+principles whereby runtime configuration choices (such as which 
 port to serve on, and the maximum retention time for messages), are read from
 environment variables.
 
 The server delegates the storage CRUD operations to a backend component - coupled
-only by a contractual Go interface.
+only by a contractual Go interface. There are two backend implementations in 
+the code. The first is complete, and is a volatile in-memory store created to 
+test the client/server and cli parts. The second (real) storage backend uses a
+mounted file system - and is a work in progress.
 
 There are two distinct client libraries; one a *produce* client (for sending
 messages), and the other a *consume* client for receiving them. These too expose
@@ -67,10 +70,9 @@ topic.
 
 Each consumer client holds internally a current read-from position in the
 stream; (the message number to read next). Then, when it calls the API *poll*
-method, it will receive all messages in the store with message numbers
-greater than or equal to its current read-from position. The poll operation
-automatically then advances the consumer client's read-from position
-accordingly.
+method, it will receive all messages from the store that are more recent than 
+this. The poll operation automatically then advances the consumer client's 
+read-from position accordingly.
 
 The idea of *consumption* is a concept that exists only on the client-side. I.e.
 any one client fetches new messages from a stream and "consumes" them as it

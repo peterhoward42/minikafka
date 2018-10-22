@@ -1,6 +1,6 @@
-# Brief for Golang Refresh Exercise
+# Brief for Golang Experience Deepener Exercise
 
-A toy service inspired by Kafka.
+A mini service inspired by Kafka.
 
 # Overview
 A Kafka-like server.
@@ -10,7 +10,7 @@ Only granularity is topic.
 No partitions and thus segments.
 No clustering.
 Start with in-memory (volatile) backing store.
-Switch later to Redit backing store.
-Simple discard time.
+Switch later to mounted file system based store.
+Simple discard message expiry time.
 Multiple concurrent clients.
-Protocol simplified to minimum viable to make *something*.
+gRPC comms protocol.

@@ -21,7 +21,8 @@
 
 - The parent directory contains an index file that enumerates, for each topic,
   the filename sequence, and for each: it's lowest and highest message 
-  number, and oldest and newest message age.
+  number, the oldest and newest message age, and the seek offset for each
+  message number.
 
 # What's in a message storage file?
 
@@ -33,8 +34,9 @@
 
 # Rationale
 
-- Avoids the need for seeking inside any of the  message files for any of the 
-  produce, consume or old-message eviction operations.
+- Avoids the need for seeking inside any of the  message files for the 
+  produce, or old-message eviction operations. Reduces the number of seek
+  operations needed for a poll operation to one.
 - Makes it possible to determine which message files are relavent to each of the
   operations without looking inside any of them.
 - Moderates the size of message files, so that when one must be re-written, 

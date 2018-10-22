@@ -25,26 +25,27 @@ type MemStore struct {
 
 // NewMemStore instantiates, initializes and returns a MemStore.
 func NewMemStore() *MemStore {
-    return &MemStore{
-        messagesPerTopic : map[string][]storedMessage{},
-        newestMessageNumber : map[string]int{},
-    }
+	return &MemStore{
+		messagesPerTopic:    map[string][]storedMessage{},
+		newestMessageNumber: map[string]int{},
+	}
 }
-
 
 // ------------------------------------------------------------------------
 // METHODS TO SATISFY THE BackingStore INTERFACE.
 // ------------------------------------------------------------------------
 
-func (m MemStore) DeleteContents() {
+// DeleteContents is defined in the BackingStore interface.
+func (m MemStore) DeleteContents() error {
 	mutex.Lock()
 	defer mutex.Unlock()
-    for k := range m.messagesPerTopic {
-        delete(m.messagesPerTopic, k)
-    }
-    for k := range m.newestMessageNumber {
-        delete(m.newestMessageNumber, k)
-    }
+	for k := range m.messagesPerTopic {
+		delete(m.messagesPerTopic, k)
+	}
+	for k := range m.newestMessageNumber {
+		delete(m.newestMessageNumber, k)
+	}
+	return nil
 }
 
 // Store is defined by, and documented in the backends/contract/BackingStore
