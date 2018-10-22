@@ -32,8 +32,8 @@ func main() {
 // It treats their absence as a fatal error.
 func readEnvironmentVariables() (host string, retentionTime time.Duration) {
 
-	const hostEnvVar string = "TOYKAFKA_HOST"
-	const retentionEnvVar string = "TOYKAFKA_RETENTIONTIME"
+	const hostEnvVar string = "MINIKAFKA_HOST"
+	const retentionEnvVar string = "MINIKAFKA_RETENTIONTIME"
 
 	host = os.Getenv(hostEnvVar)
 	rt := os.Getenv(retentionEnvVar)
