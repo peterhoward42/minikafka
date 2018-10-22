@@ -10,12 +10,12 @@ import (
 	pb "github.com/peterhoward42/minikafka/protocol"
 )
 
-// Producer is a ToyKafkaClient client object dedicated to sending *produce*
+// Producer is a MiniKafkaClient client object dedicated to sending *produce*
 // messages to the server.
 type Producer struct {
 	topic       string
 	timeout     time.Duration
-	clientProxy pb.ToyKafkaClient
+	clientProxy pb.MiniKafkaClient
 }
 
 // NewProducer provides a new Producer instance that is bound to a given
@@ -33,7 +33,7 @@ func NewProducer(topic string, timeout time.Duration, host string) (
 	if err != nil {
 		return nil, fmt.Errorf("grpc.Dial: %v", err)
 	}
-	p.clientProxy = pb.NewToyKafkaClient(conn)
+	p.clientProxy = pb.NewMiniKafkaClient(conn)
 	return p, nil
 }
 

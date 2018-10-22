@@ -10,7 +10,7 @@ import (
 
 const defaultRetentionTime = "5m"
 
-// This commmand-line program instantiates a Toy-Kafka server and
+// This commmand-line program instantiates a MiniKafka server and
 // mandates it to start serving.
 func main() {
 

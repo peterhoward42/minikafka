@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package protocol;
 
-service ToyKafka {
+service MiniKafka {
   // Produce returns the message number assigned to the stored message.
   rpc Produce(ProduceRequest) returns (MsgNumber){}
   rpc Poll(PollRequest) returns (PollResponse){}

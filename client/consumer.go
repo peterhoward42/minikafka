@@ -10,13 +10,13 @@ import (
 	pb "github.com/peterhoward42/minikafka/protocol"
 )
 
-// Consumer is a ToyKafka client object dedicated to sending *poll* messages to
+// Consumer is a MiniKafka client object dedicated to sending *poll* messages to
 // the server using gRPC.
 type Consumer struct {
 	topic       string
 	readFrom    int // Message number.
 	timeout     time.Duration
-	clientProxy pb.ToyKafkaClient // gRPC component.
+	clientProxy pb.MiniKafkaClient // gRPC component.
 }
 
 // NewConsumer provides a new Consumer client instance that is bound to a given
@@ -32,7 +32,7 @@ func NewConsumer(topic string, readFrom int, timeout time.Duration,
 	if err != nil {
 		return nil, fmt.Errorf("grpc.Dial: %v", err)
 	}
-	p.clientProxy = pb.NewToyKafkaClient(conn)
+	p.clientProxy = pb.NewMiniKafkaClient(conn)
 	return p, nil
 }
 

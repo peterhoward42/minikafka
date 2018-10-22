@@ -8,7 +8,7 @@ import (
 	clientlib "github.com/peterhoward42/minikafka/client"
 )
 
-// This command line program contains a Toy-Kafka consumer client.
+// This command line program contains a MiniKafka consumer client.
 // You provide a topic for it to subscribe to with the -topic flag. It will then
 // consume (and report on), both the existing messages in this topic, and newly
 // arriving ones, by polling the server every 3 seconds.
