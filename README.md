@@ -41,11 +41,48 @@ the underlying gRPC communications. Users of the client libraries will normally
 embed a producer client or a consumer client object in their own client apps, and
 configure that object programmatically.
 
+# Demonstration using the command line tools
+
 To make it possible to play with with the server and clients straight out of the
 box, (and to support development), the code also provides a pair of very simple 
 command line client apps. One wraps the produce client and lets you type in
 strings that it then sends using the produce API. The other wraps the consume
 client and shows you messages as it receives them.
+
+## Build and Installation
+
+```
+go get github.com/peterhoward42/minikafka
+cd $GOPATH/github.com/peterhoward42/minikafka
+go install ./...
+```
+
+## To run the server from the command line
+
+export MINIKAFKA_HOST=":9999"
+export MINIKAFKA_RETENTIONTIME="3s"
+server
+
+## To run the produce client from the command line
+
+In a different terminal...
+
+```
+produce -host localhost:999 -topic "demo topic"
+```
+
+## To run the consume client from the command line
+
+In a different terminal...
+
+```
+consume -host localhost:999 -topic "demo topic"
+```
+
+
+
+
+
 
 
 # Service Definition (Conceptual)

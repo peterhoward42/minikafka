@@ -9,11 +9,12 @@ o  Persistence using filesystem
             *  do all the repo tests pass now?
             *  scan the repo - is it respectable from 10,000 feet?
             *  check all docs
-            o  complete go lint sweep
-            o  complete go fmt sweep
-            o  make sure clis work today
+            *  complete go fmt sweep
+            *  complete go vet sweep
+            *  make sure clis work today
             o  review update the README
                 o  include tree?
+                o  update instructions
             o  commit to main
         o  add example of how to run svr and cli locally
         o  now incrementally re-enable and satisfy the other suite methods
