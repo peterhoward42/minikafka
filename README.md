@@ -1,4 +1,4 @@
-# Toy Kafka: Project Overview
+# MiniKafka: Project Overview
 
 This code implements a client-server message queue system, along the same lines
 conceptually as Kafka.

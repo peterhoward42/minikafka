@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	toykafka "github.com/peterhoward42/minikafka"
+	minikafka "github.com/peterhoward42/minikafka"
 )
 
 var mutex = &sync.Mutex{} // Guards concurrent access of the MemStore.
@@ -50,7 +50,7 @@ func (m MemStore) DeleteContents() error {
 
 // Store is defined by, and documented in the backends/contract/BackingStore
 // interface.
-func (m MemStore) Store(topic string, message toykafka.Message) (
+func (m MemStore) Store(topic string, message minikafka.Message) (
 	messageNumber int, err error) {
 
 	mutex.Lock()
@@ -94,7 +94,7 @@ func (m MemStore) RemoveOldMessages(maxAge time.Time) (
 // Poll is defined by, and documented in the backends/contract/BackingStore
 // interface.
 func (m MemStore) Poll(topic string, readFrom int) (
-	foundMessages []toykafka.Message, newReadFrom int, err error) {
+	foundMessages []minikafka.Message, newReadFrom int, err error) {
 
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -107,7 +107,7 @@ func (m MemStore) Poll(topic string, readFrom int) (
 		return storedMessages[i].messageNumber >= readFrom
 	})
 
-	foundMessages = []toykafka.Message{}
+	foundMessages = []minikafka.Message{}
 	var highest int
 	for _, msg := range storedMessages[serveFromIndex:] {
 		foundMessages = append(foundMessages, msg.message)
@@ -163,7 +163,7 @@ func (m MemStore) removeOldMessagesFromTopic(
 // time, and message number.
 
 type storedMessage struct {
-	message       toykafka.Message
+	message       minikafka.Message
 	creationTime  time.Time
 	messageNumber int
 }

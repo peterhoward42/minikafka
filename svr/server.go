@@ -14,7 +14,7 @@ import (
 	"github.com/peterhoward42/minikafka/svr/backends/implementations/memstore"
 )
 
-// Server *is* the toy kafka server.
+// Server *is* the minikafka server.
 type Server struct {
 	// The coupling between the server and its storage backend is governed
 	// by the BackingStore interface.
@@ -118,7 +118,7 @@ func (s *Server) startGrpcServer(
 		errc <- fmt.Errorf("net.Listen: %v", err)
 		return
 	}
-	pb.RegisterToyKafkaServer(grpcServer, s)
+	pb.RegisterMiniKafkaServer(grpcServer, s)
 
 	err = grpcServer.Serve(lis) // Runs forever, or error encountered.
 	if err != nil {

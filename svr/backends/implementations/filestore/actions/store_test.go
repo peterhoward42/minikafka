@@ -9,7 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	toykafka "github.com/peterhoward42/minikafka"
+	minikafka "github.com/peterhoward42/minikafka"
 	"github.com/peterhoward42/minikafka/svr/backends/implementations/filestore/indexing"
 )
 
@@ -34,7 +34,7 @@ func TestWhenHasToMakeDirectory(t *testing.T) {
 	index := indexing.MakeReferenceIndex()
 
 	// Create a store-action that cites a topic that is unknown to the index.
-	msg := toykafka.Message("some message")
+	msg := minikafka.Message("some message")
 	storeAction := StoreAction{
 		Topic:   "neverheardof",
 		Message: msg,
@@ -66,7 +66,7 @@ func TestVirginState(t *testing.T) {
 	index := indexing.MakeReferenceIndex()
 
 	// Create a store-action with a small payload that we can use twice.
-	msg := toykafka.Message("some message")
+	msg := minikafka.Message("some message")
 	storeAction := StoreAction{
 		Topic:   "neverheardof",
 		Message: msg,
@@ -101,7 +101,7 @@ func TestStorageFileReuse(t *testing.T) {
 	index := indexing.MakeReferenceIndex()
 
 	// Create a store-action with a small payload that we can use twice.
-	msg := toykafka.Message("some message")
+	msg := minikafka.Message("some message")
 	storeAction := StoreAction{
 		Topic:   "neverheardof",
 		Message: msg,
@@ -176,7 +176,7 @@ func TestIndexIsUpdated(t *testing.T) {
 
 	// Create a store-action with a small payload that we can use twice.
 	topic := "justforthistest"
-	msg := toykafka.Message("some message")
+	msg := minikafka.Message("some message")
 	storeAction := StoreAction{
 		Topic:   topic,
 		Message: msg,

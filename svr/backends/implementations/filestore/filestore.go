@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	toykafka "github.com/peterhoward42/minikafka"
+	minikafka "github.com/peterhoward42/minikafka"
 	"github.com/peterhoward42/minikafka/svr/backends/implementations/filestore/actions"
 	"github.com/peterhoward42/minikafka/svr/backends/implementations/filestore/filenamer"
 	"github.com/peterhoward42/minikafka/svr/backends/implementations/filestore/indexing"
@@ -37,7 +37,7 @@ func (s FileStore) DeleteContents() error {
 
 // Store is defined by, and documented in the backends/contract/BackingStore
 // interface.
-func (s FileStore) Store(topic string, message toykafka.Message) (
+func (s FileStore) Store(topic string, message minikafka.Message) (
 	messageNumber int, err error) {
 
 	mutex.Lock()
@@ -78,9 +78,9 @@ func (s FileStore) RemoveOldMessages(maxAge time.Time) (
 // Poll is defined by, and documented in the backends/contract/BackingStore
 // interface.
 func (s FileStore) Poll(topic string, readFrom int) (
-	foundMessages []toykafka.Message, newReadFrom int, err error) {
+	foundMessages []minikafka.Message, newReadFrom int, err error) {
 
-	foundMessages = []toykafka.Message{}
+	foundMessages = []minikafka.Message{}
 	return foundMessages, 11, nil
 }
 

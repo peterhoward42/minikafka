@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	toykafka "github.com/peterhoward42/minikafka"
+	minikafka "github.com/peterhoward42/minikafka"
 	"github.com/peterhoward42/minikafka/svr/backends/implementations/filestore/filenamer"
 	"github.com/peterhoward42/minikafka/svr/backends/implementations/filestore/indexing"
 	"github.com/peterhoward42/minikafka/svr/backends/implementations/filestore/ioutils"
@@ -19,7 +19,7 @@ const maximumFileSize = 1048576 // 1 MiB
 // StoreAction encapsulates a single execution of the store (message) command.
 type StoreAction struct {
 	Topic   string
-	Message toykafka.Message
+	Message minikafka.Message
 	Index   *indexing.Index
 	RootDir string
 }

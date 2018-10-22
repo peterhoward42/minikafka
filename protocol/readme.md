@@ -1,4 +1,4 @@
-To compile toykafka.proto into toykafka.pb.go use the embedded *go generate* 
+To compile minikafka.proto into minikafka.pb.go use the embedded *go generate* 
 directive in generate.go.
 
 I.e.
