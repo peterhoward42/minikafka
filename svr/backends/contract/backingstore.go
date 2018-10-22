@@ -6,7 +6,7 @@ package contract
 import (
 	"time"
 
-	toykafka "github.com/peterhoward42/toy-kafka"
+	toykafka "github.com/peterhoward42/minikafka"
 )
 
 // BackingStore is an interface that offers a core set of CRUD methods

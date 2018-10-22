@@ -3,7 +3,7 @@ package memstore
 import (
 	"testing"
 
-	"github.com/peterhoward42/toy-kafka/svr/backends/contract"
+	"github.com/peterhoward42/minikafka/svr/backends/contract"
 )
 
 // TestMemStore ensures that implementations.MemStore passes all the tests

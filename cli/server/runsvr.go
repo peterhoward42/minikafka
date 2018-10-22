@@ -5,7 +5,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/peterhoward42/toy-kafka/svr"
+	"github.com/peterhoward42/minikafka/svr"
 )
 
 const defaultRetentionTime = "5m"

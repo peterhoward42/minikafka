@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	toykafka "github.com/peterhoward42/toy-kafka"
+	toykafka "github.com/peterhoward42/minikafka"
 )
 
 var mutex = &sync.Mutex{} // Guards concurrent access of the MemStore.

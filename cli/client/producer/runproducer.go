@@ -7,8 +7,8 @@ import (
 	"os"
 	"time"
 
-	clientcli "github.com/peterhoward42/toy-kafka/cli/client"
-	clientlib "github.com/peterhoward42/toy-kafka/client"
+	clientcli "github.com/peterhoward42/minikafka/cli/client"
+	clientlib "github.com/peterhoward42/minikafka/client"
 )
 
 // This is a command line program that encapsulates a Toy-Kafka

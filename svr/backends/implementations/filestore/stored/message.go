@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	toykafka "github.com/peterhoward42/toy-kafka"
+	toykafka "github.com/peterhoward42/minikafka"
 )
 
 // Message is the structure that is serialized, and appended to the

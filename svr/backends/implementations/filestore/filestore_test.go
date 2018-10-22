@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/peterhoward42/toy-kafka/svr/backends/contract"
+	"github.com/peterhoward42/minikafka/svr/backends/contract"
 	"github.com/stretchr/testify/assert"
 )
 

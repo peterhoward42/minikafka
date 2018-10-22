@@ -4,8 +4,8 @@ import (
 	"log"
 	"time"
 
-	clientcli "github.com/peterhoward42/toy-kafka/cli/client"
-	clientlib "github.com/peterhoward42/toy-kafka/client"
+	clientcli "github.com/peterhoward42/minikafka/cli/client"
+	clientlib "github.com/peterhoward42/minikafka/client"
 )
 
 // This command line program contains a Toy-Kafka consumer client.

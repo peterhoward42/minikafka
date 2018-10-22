@@ -7,11 +7,11 @@ import (
 	"os"
 	"time"
 
-	toykafka "github.com/peterhoward42/toy-kafka"
-	"github.com/peterhoward42/toy-kafka/svr/backends/implementations/filestore/filenamer"
-	"github.com/peterhoward42/toy-kafka/svr/backends/implementations/filestore/indexing"
-	"github.com/peterhoward42/toy-kafka/svr/backends/implementations/filestore/ioutils"
-	"github.com/peterhoward42/toy-kafka/svr/backends/implementations/filestore/stored"
+	toykafka "github.com/peterhoward42/minikafka"
+	"github.com/peterhoward42/minikafka/svr/backends/implementations/filestore/filenamer"
+	"github.com/peterhoward42/minikafka/svr/backends/implementations/filestore/indexing"
+	"github.com/peterhoward42/minikafka/svr/backends/implementations/filestore/ioutils"
+	"github.com/peterhoward42/minikafka/svr/backends/implementations/filestore/stored"
 )
 
 const maximumFileSize = 1048576 // 1 MiB

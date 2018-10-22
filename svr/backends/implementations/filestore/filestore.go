@@ -7,11 +7,11 @@ import (
 	"sync"
 	"time"
 
-	toykafka "github.com/peterhoward42/toy-kafka"
-	"github.com/peterhoward42/toy-kafka/svr/backends/implementations/filestore/actions"
-	"github.com/peterhoward42/toy-kafka/svr/backends/implementations/filestore/filenamer"
-	"github.com/peterhoward42/toy-kafka/svr/backends/implementations/filestore/indexing"
-	"github.com/peterhoward42/toy-kafka/svr/backends/implementations/filestore/ioutils"
+	toykafka "github.com/peterhoward42/minikafka"
+	"github.com/peterhoward42/minikafka/svr/backends/implementations/filestore/actions"
+	"github.com/peterhoward42/minikafka/svr/backends/implementations/filestore/filenamer"
+	"github.com/peterhoward42/minikafka/svr/backends/implementations/filestore/indexing"
+	"github.com/peterhoward42/minikafka/svr/backends/implementations/filestore/ioutils"
 )
 
 var mutex = &sync.Mutex{} // Guards concurrent access of the FileStore.

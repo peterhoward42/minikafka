@@ -7,7 +7,7 @@ import (
 
 	"google.golang.org/grpc"
 
-	pb "github.com/peterhoward42/toy-kafka/protocol"
+	pb "github.com/peterhoward42/minikafka/protocol"
 )
 
 // Consumer is a ToyKafka client object dedicated to sending *poll* messages to

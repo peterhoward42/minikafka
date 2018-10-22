@@ -7,7 +7,7 @@ import (
 
 	"google.golang.org/grpc"
 
-	pb "github.com/peterhoward42/toy-kafka/protocol"
+	pb "github.com/peterhoward42/minikafka/protocol"
 )
 
 // Producer is a ToyKafkaClient client object dedicated to sending *produce*

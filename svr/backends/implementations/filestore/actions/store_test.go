@@ -9,8 +9,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	toykafka "github.com/peterhoward42/toy-kafka"
-	"github.com/peterhoward42/toy-kafka/svr/backends/implementations/filestore/indexing"
+	toykafka "github.com/peterhoward42/minikafka"
+	"github.com/peterhoward42/minikafka/svr/backends/implementations/filestore/indexing"
 )
 
 //--------------------------------------------------------------------------

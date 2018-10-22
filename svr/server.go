@@ -9,9 +9,9 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
-	pb "github.com/peterhoward42/toy-kafka/protocol"
-	"github.com/peterhoward42/toy-kafka/svr/backends/contract"
-	"github.com/peterhoward42/toy-kafka/svr/backends/implementations/memstore"
+	pb "github.com/peterhoward42/minikafka/protocol"
+	"github.com/peterhoward42/minikafka/svr/backends/contract"
+	"github.com/peterhoward42/minikafka/svr/backends/implementations/memstore"
 )
 
 // Server *is* the toy kafka server.
