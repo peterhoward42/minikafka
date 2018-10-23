@@ -4,7 +4,7 @@ o  Persistence using filesystem
        test suite.
         *  start by disabling all the tests in the suite except for
            doing some storage in a virgin store.
-        o  freeze in respectable state
+        *  freeze in respectable state
             *  sarch for todo etc words
             *  do all the repo tests pass now?
             *  scan the repo - is it respectable from 10,000 feet?
@@ -12,17 +12,20 @@ o  Persistence using filesystem
             *  complete go fmt sweep
             *  complete go vet sweep
             *  make sure clis work today
-            o  review update the README
-                o  include tree?
-                o  update instructions
-            o  commit to main
-        o  add example of how to run svr and cli locally
+            *  review update the README
+            *  commit to main
         o  now incrementally re-enable and satisfy the other suite methods
+            o  decide which and make a feature branch for this
+                *  all remaining *store* tests, and all *remove* tests.
+                *  call it just dev
     o  What tests are appropriate for the filestore that are not covered by
        the interface conformity tests?
 
 
 TODO
+o  add example of how to run svr and cli locally
+    o  postponed because Google have broken the way gRPC is structured, such
+       that it can't be fetched as a *go get* dependency.
 o  move ioutils up out of filestore
 o  imports horribly deeply nested ?
 o  msgmeta duplication inside stored message?
