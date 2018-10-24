@@ -15,14 +15,33 @@ o  Persistence using filesystem
             *  review update the README
             *  commit to main
         o  now incrementally re-enable and satisfy the other suite methods
-            o  decide which and make a feature branch for this
+            *  decide which and make a feature branch for this
                 *  all remaining *store* tests, and all *remove* tests.
                 *  call it just dev
+            o  uncomment these tests and fix up one at a time...
+                o  Work on RemoveOldMessages: implementation and unit tests
+                    *  Express design intent by coding the construction and
+                       use of the action.
+                    *  Write implementation
+                    *  Consider implmentation for what unit tests are needed,
+                       and how better it can be decoupled for testing.
+                    o  Spin off new features required in other packages and
+                       unit test them.
+                        o  msgFileList.SpentFiles()
+                        o  msgFileList.ForgetFiles()
+                        o  ioutils.RemoveFile()
+                    o  Revert to RemoveOldMessages tdd.
+
+                o  Remove duplicated code to get index at start of Action 
+                   methods
     o  What tests are appropriate for the filestore that are not covered by
        the interface conformity tests?
 
 
 TODO
+o  find better way of writing backing store test suite
+    o  failures should say which method you're in
+    o  avoid repetition of set up code
 o  add example of how to run svr and cli locally
     o  postponed because Google have broken the way gRPC is structured, such
        that it can't be fetched as a *go get* dependency.

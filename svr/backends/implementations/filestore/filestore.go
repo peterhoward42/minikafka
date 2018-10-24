@@ -72,7 +72,33 @@ func (s FileStore) Store(topic string, message minikafka.Message) (
 // backends/contract/BackingStore interface.
 func (s FileStore) RemoveOldMessages(maxAge time.Time) (
 	nRemoved int, err error) {
-	return -1, nil
+
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	// Establish the index, - either virgin, or deserialised from disk.
+	index := indexing.NewIndex()
+	indexPath := filenamer.IndexFile(s.RootDir)
+	if ioutils.Exists(indexPath) {
+		err = index.PopulateFromDisk(filenamer.IndexFile(s.RootDir))
+		if err != nil {
+			return -1, fmt.Errorf("index.PopulateFromDisk(): %v", err)
+		}
+	}
+
+	// Delegate to a RemoveOldMessagesAction instance.
+	rmOldAction := actions.RemoveOldMessagesAction{
+		maxAge: time.Time, Index: index, RootDir: s.RootDir}
+	nRemoved, err = rmOldAction.RemoveOldMessages()
+
+	// Finish up by mandating the index to re-save itself to disk, ready
+	// for the next API operation to pick up.
+	err = index.Save(filenamer.IndexFile(s.RootDir))
+	if err != nil {
+		return -1, fmt.Errorf("SaveIndex(): %v", err)
+	}
+
+	return nRemoved, nil
 }
 
 // Poll is defined by, and documented in the backends/contract/BackingStore
