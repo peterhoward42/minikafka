@@ -24,7 +24,8 @@ func DeleteDirectoryContents(dir string) error {
 	return nil
 }
 
-// CreateDirIfDoesntExist
+// CreateDirIfDoesntExist creates a directory with the given path,
+// if one is not there already.
 func CreateDirIfDoesntExist(path string) error {
 	err := os.Mkdir(path, 0777)
 	if err == nil {
@@ -55,4 +56,13 @@ func AppendToFile(filepath string, someData []byte) error {
 func Exists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
+}
+
+// CountEntitiesInDir provides the number of entities in the given directory.
+func CountEntitiesInDir(dir string) (int, error) {
+	entities, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return -1, fmt.Errorf("ioutil.ReadDir(): %v", err)
+	}
+	return len(entities), nil
 }

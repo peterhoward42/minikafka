@@ -13,10 +13,6 @@ import (
 	"github.com/peterhoward42/minikafka/svr/backends/implementations/filestore/indexing"
 )
 
-//--------------------------------------------------------------------------
-// API
-//--------------------------------------------------------------------------
-
 // Operate the StoreAction in a context where it is obliged to make a new
 // topic directory, and by implication also the inaugural message file for that
 // topic, and make sure it doesn't crash, or report errors.

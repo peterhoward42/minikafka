@@ -4,36 +4,14 @@ o  Persistence using filesystem
        test suite.
         *  start by disabling all the tests in the suite except for
            doing some storage in a virgin store.
-        *  freeze in respectable state
-            *  sarch for todo etc words
-            *  do all the repo tests pass now?
-            *  scan the repo - is it respectable from 10,000 feet?
-            *  check all docs
-            *  complete go fmt sweep
-            *  complete go vet sweep
-            *  make sure clis work today
-            *  review update the README
-            *  commit to main
         o  now incrementally re-enable and satisfy the other suite methods
-            *  decide which and make a feature branch for this
-                *  all remaining *store* tests, and all *remove* tests.
-                *  call it just dev
             o  uncomment these tests and fix up one at a time...
-                o  Work on RemoveOldMessages: implementation and unit tests
-                    *  Express design intent by coding the construction and
-                       use of the action.
-                    *  Write implementation
-                    *  Consider implmentation for what unit tests are needed,
-                       and how better it can be decoupled for testing.
-                    o  Spin off new features required in other packages and
-                       unit test them.
-                        o  msgFileList.SpentFiles()
-                        o  msgFileList.ForgetFiles()
-                        o  ioutils.RemoveFile()
-                    o  Revert to RemoveOldMessages tdd.
-
-                o  Remove duplicated code to get index at start of Action 
-                   methods
+                o  Currently failing on testRemoveWhenOnlySomeOldEnough
+                    o  Suspect this is because the test assumes all the
+                       targeted messages should have been deleted, whereas
+                       the file store waits until whole file is too old.
+        o  Remove duplicated code to get index at start of Action 
+           methods
     o  What tests are appropriate for the filestore that are not covered by
        the interface conformity tests?
 

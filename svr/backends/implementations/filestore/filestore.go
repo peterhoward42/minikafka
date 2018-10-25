@@ -71,7 +71,7 @@ func (s FileStore) Store(topic string, message minikafka.Message) (
 // RemoveOldMessages is defined by, and documented in the
 // backends/contract/BackingStore interface.
 func (s FileStore) RemoveOldMessages(maxAge time.Time) (
-	nRemoved int, err error) {
+	nMessagesRemoved int, err error) {
 
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -88,8 +88,8 @@ func (s FileStore) RemoveOldMessages(maxAge time.Time) (
 
 	// Delegate to a RemoveOldMessagesAction instance.
 	rmOldAction := actions.RemoveOldMessagesAction{
-		maxAge: time.Time, Index: index, RootDir: s.RootDir}
-	nRemoved, err = rmOldAction.RemoveOldMessages()
+		MaxAge: maxAge, Index: index, RootDir: s.RootDir}
+	_, nMessagesRemoved, err = rmOldAction.RemoveOldMessages()
 
 	// Finish up by mandating the index to re-save itself to disk, ready
 	// for the next API operation to pick up.
@@ -98,7 +98,7 @@ func (s FileStore) RemoveOldMessages(maxAge time.Time) (
 		return -1, fmt.Errorf("SaveIndex(): %v", err)
 	}
 
-	return nRemoved, nil
+	return nMessagesRemoved, nil
 }
 
 // Poll is defined by, and documented in the backends/contract/BackingStore
