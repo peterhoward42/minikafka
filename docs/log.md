@@ -8,6 +8,14 @@ o  Persistence using filesystem
             o  uncomment these tests and fix up one at a time...
                 *  Currently failing on testRemoveWhenOnlySomeOldEnough
                 o  Move on to poll functionality
+                    *  dispand indexcomponents in favour of a module per
+                       component
+                        *  MsgMeta and fix tests
+                        *  FileMeta and fix tests
+                        *  MessageFileList and fix tests
+                        *  ditch components module and fix tests
+                        *  check comments
+                    o  add file seek offset to file meta and test
         o  Remove duplicated code to get index at start of Action 
            methods
     o  What tests are appropriate for the filestore that are not covered by
