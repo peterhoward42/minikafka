@@ -19,9 +19,11 @@ type BackingStore interface {
 	Store(topic string, message minikafka.Message) (
 		messageNumber int, err error)
 
-	// RemoveOldMessages removes any messages in the store that were stored
-	// before the time specified.
-	RemoveOldMessages(maxAge time.Time) (nRemoved int, err error)
+	// RemoveOldMessages invites the store to remove any messages in the 
+    // store that were stored before the time specified. The store is allowed to
+    // deploy some internal optimisation to **not** remove these messages at
+    // this time.
+	RemoveOldMessages(maxAge time.Time) error
 
 	// Provide a list of all the messages held for this topic, whose message
 	// number is greater than or equal to the specified read-from message

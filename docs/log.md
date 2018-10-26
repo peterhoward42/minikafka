@@ -6,10 +6,7 @@ o  Persistence using filesystem
            doing some storage in a virgin store.
         o  now incrementally re-enable and satisfy the other suite methods
             o  uncomment these tests and fix up one at a time...
-                o  Currently failing on testRemoveWhenOnlySomeOldEnough
-                    o  Suspect this is because the test assumes all the
-                       targeted messages should have been deleted, whereas
-                       the file store waits until whole file is too old.
+                *  Currently failing on testRemoveWhenOnlySomeOldEnough
         o  Remove duplicated code to get index at start of Action 
            methods
     o  What tests are appropriate for the filestore that are not covered by

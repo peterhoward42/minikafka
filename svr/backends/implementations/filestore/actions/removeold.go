@@ -19,9 +19,10 @@ type RemoveOldMessagesAction struct {
 	RootDir string
 }
 
-// RemoveOldMessages works out which message files can be viewed as spent
-// because they hold only messages  older than the threshold specified,
-// physically removes these files and updates the index accordingly.
+// RemoveOldMessages contains an optimisation as allowed by the interface,
+// whereby it does not neccesarily remove all of the messages it is invited to.
+// The optimisation is to only remove whole message files that are eligible 
+// rather than crack any of them open. 
 func (action RemoveOldMessagesAction) RemoveOldMessages() (
 	filesRemoved []string, nMessagesRemoved int, err error) {
 	filesRemoved = []string{}

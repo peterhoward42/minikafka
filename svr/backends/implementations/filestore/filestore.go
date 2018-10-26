@@ -70,8 +70,7 @@ func (s FileStore) Store(topic string, message minikafka.Message) (
 
 // RemoveOldMessages is defined by, and documented in the
 // backends/contract/BackingStore interface.
-func (s FileStore) RemoveOldMessages(maxAge time.Time) (
-	nMessagesRemoved int, err error) {
+func (s FileStore) RemoveOldMessages(maxAge time.Time) error {
 
 	mutex.Lock()
 	defer mutex.Unlock()
@@ -80,25 +79,25 @@ func (s FileStore) RemoveOldMessages(maxAge time.Time) (
 	index := indexing.NewIndex()
 	indexPath := filenamer.IndexFile(s.RootDir)
 	if ioutils.Exists(indexPath) {
-		err = index.PopulateFromDisk(filenamer.IndexFile(s.RootDir))
+		err := index.PopulateFromDisk(filenamer.IndexFile(s.RootDir))
 		if err != nil {
-			return -1, fmt.Errorf("index.PopulateFromDisk(): %v", err)
+			return fmt.Errorf("index.PopulateFromDisk(): %v", err)
 		}
 	}
 
 	// Delegate to a RemoveOldMessagesAction instance.
 	rmOldAction := actions.RemoveOldMessagesAction{
 		MaxAge: maxAge, Index: index, RootDir: s.RootDir}
-	_, nMessagesRemoved, err = rmOldAction.RemoveOldMessages()
+	_, _, err := rmOldAction.RemoveOldMessages()
 
 	// Finish up by mandating the index to re-save itself to disk, ready
 	// for the next API operation to pick up.
 	err = index.Save(filenamer.IndexFile(s.RootDir))
 	if err != nil {
-		return -1, fmt.Errorf("SaveIndex(): %v", err)
+		return fmt.Errorf("SaveIndex(): %v", err)
 	}
 
-	return nMessagesRemoved, nil
+	return nil
 }
 
 // Poll is defined by, and documented in the backends/contract/BackingStore

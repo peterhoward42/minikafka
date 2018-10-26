@@ -150,13 +150,11 @@ func (s *Server) startCullingService(
 		// unary-minus on the *retentionTime* time.Duration struct.
 		maxAge := time.Now().Add(-retentionTime)
 		// Delegate to the backing store implementation.
-		nRemoved, err := s.store.RemoveOldMessages(maxAge)
+		err := s.store.RemoveOldMessages(maxAge)
 		if err != nil {
 			errc <- fmt.Errorf("store.RemoveOldMessages: %v", err)
 			return
 		}
-		if nRemoved != 0 {
-			log.Printf("Removed %d expired messages", nRemoved)
-		}
+        log.Printf("Removed expired messages.")
 	}
 }
