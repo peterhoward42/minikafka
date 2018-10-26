@@ -7,6 +7,7 @@ o  Persistence using filesystem
         o  now incrementally re-enable and satisfy the other suite methods
             o  uncomment these tests and fix up one at a time...
                 *  Currently failing on testRemoveWhenOnlySomeOldEnough
+                o  Move on to poll functionality
         o  Remove duplicated code to get index at start of Action 
            methods
     o  What tests are appropriate for the filestore that are not covered by
