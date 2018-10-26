@@ -15,7 +15,11 @@ o  Persistence using filesystem
                         *  MessageFileList and fix tests
                         *  ditch components module and fix tests
                         *  check comments
-                    o  add file seek offset to file meta and test
+                *  Attempt to write the poll action to drive out what meta
+                   data is needed to make it efficient.
+                    o  List the generated new function demands.
+                    o  Write and test them.
+                    o  Rever to testing the poll action.
         o  Remove duplicated code to get index at start of Action 
            methods
     o  What tests are appropriate for the filestore that are not covered by

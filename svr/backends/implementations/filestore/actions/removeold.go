@@ -19,10 +19,14 @@ type RemoveOldMessagesAction struct {
 	RootDir string
 }
 
-// RemoveOldMessages contains an optimisation as allowed by the interface,
-// whereby it does not neccesarily remove all of the messages it is invited to.
-// The optimisation is to only remove whole message files that are eligible 
-// rather than crack any of them open. 
+// RemoveOldMessages is the internal entry point function to remove expired
+// messages from the filestore. Its responsibility to perform the removal
+// operation and to update the in-memory index. It is not responsible for mutex
+// protection, nor re-saving the index afterwards. These are the responsibility
+// of the caller.  The function contains an optimisation as allowed by the
+// interface, whereby it does not neccesarily remove all of the messages it is
+// invited to.  The optimisation is to only remove whole message files that are
+// eligible rather than crack any of them open. 
 func (action RemoveOldMessagesAction) RemoveOldMessages() (
 	filesRemoved []string, nMessagesRemoved int, err error) {
 	filesRemoved = []string{}

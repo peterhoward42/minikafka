@@ -114,7 +114,7 @@ func (action *StoreAction) setupNewFileForTopic() (msgFileName string, err error
 
 // saveAndRegisteMessage appends the message to the specified file and updates
 // the index with this new info. Note this is the point at which the
-// message creation time is evauated and associated with the message.
+// message creation time is evaluated and associated with the message.
 func (action *StoreAction) saveAndRegisterMessage(
 	msgFileName string, msgToStore []byte, msgNumber int32) error {
 	filepath := filenamer.MessageFilePath(

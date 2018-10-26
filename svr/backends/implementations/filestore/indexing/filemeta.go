@@ -10,7 +10,8 @@ import (
 //-----------------------------------------------------------------------
 
 // FileMeta holds information about the oldest and newest message in
-// one message file, and its current size.
+// one message file, its current size, and the file-seek-offsets at which each
+// message starts.
 type FileMeta struct {
 	Oldest MsgMeta
 	Newest MsgMeta
