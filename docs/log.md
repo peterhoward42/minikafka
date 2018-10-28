@@ -15,27 +15,10 @@ o  Persistence using filesystem
                     *  Code (mostly) action.AddMessagesFromFile
                     *  Rename SerializeToBytes encode and make both byte slice
                        and file desc versions of both, and unit tests
-                    o  Create and test the generated new function demands.
+                    *  Create and test the generated new function demands.
                         *  msgFileList.FilesContainingThisMessageAndNewer(
-                        o  fileMeta.SeekOffsetForMessageNumber
-                            *  first need all instantiantions of FileMeta to
-                               use a New method
-                            *  code it
-                            *  how test it?
-                                *  update store action test for index being
-                                   properly updated to include seek offset.
-                                    *  obliges actions package to compile
-                                    *  regression test of store action works?
-                                    *  change the existing xxx action tests to
-                                       use an empty index where possible
-                                    *  should any of the index tests mroe properly
-                                       be messagefilelist tests?
-                                    *  new features in test of store action works?
-                               empty index instead of the reference index?
-                            o  why does register new message need a msg number,
-                               when it can deduce it?
-                                *  get all to build and test to find usages
-                    o  Rever to testing the poll action.
+                        *  fileMeta.SeekOffsetForMessageNumber
+                    o  Revert to testing the poll action.
         o  Remove duplicated code to get index at start of Action 
            methods
     o  What tests are appropriate for the filestore that are not covered by

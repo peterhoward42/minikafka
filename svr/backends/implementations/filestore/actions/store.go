@@ -72,7 +72,7 @@ func (action StoreAction) Store() (
 	}
 	// Append the message object to the storage file, and mandate the
 	// index to update itself with this new info.
-	err = action.saveAndRegisterMessage(msgFileName, bytesToStore, msgNumber)
+	err = action.saveAndRegisterMessage(msgNumber, msgFileName, bytesToStore)
 	if err != nil {
 		return -1, "", fmt.Errorf("saveAndRegisterMessage(): %v", err)
 	}
@@ -120,7 +120,7 @@ func (action *StoreAction) setupNewFileForTopic() (msgFileName string, err error
 // the index with this new info. Note this is the point at which the
 // message creation time is evaluated and associated with the message.
 func (action *StoreAction) saveAndRegisterMessage(
-	msgFileName string, msgToStore []byte, msgNumber int) error {
+	msgNumber int, msgFileName string, msgToStore []byte) error {
 	filepath := filenamer.MessageFilePath(
 		msgFileName, action.Topic, action.RootDir)
 	err := ioutils.AppendToFile(filepath, msgToStore)
@@ -130,7 +130,6 @@ func (action *StoreAction) saveAndRegisterMessage(
 	creationTime := time.Now()
 	msgFileList := action.Index.GetMessageFileListFor(action.Topic)
 	fileMeta := msgFileList.Meta[msgFileName]
-	fileMeta.RegisterNewMessage(
-		msgNumber, creationTime, int64(len(msgToStore)))
+	fileMeta.RegisterNewMessage(msgNumber, creationTime, int64(len(msgToStore)))
 	return nil
 }

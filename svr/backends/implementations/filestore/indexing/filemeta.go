@@ -29,9 +29,10 @@ func NewFileMeta() *FileMeta {
 func (fm *FileMeta) RegisterNewMessage(
 	msgNumber int, creationTime time.Time, messageSize int64) {
 
-	// Capture the seek offset for the incoming message before we mutate
-	// the data structure.
+	// Capture some values prior to mutating the structure.
 	fm.SeekOffsetForMessageNumber[int32(msgNumber)] = fm.Size
+
+	// Now we mutate.
 	fm.Size += messageSize
 
 	// Special case, when this is the first message to arrive for the file.
