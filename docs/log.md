@@ -10,15 +10,14 @@ o  Persistence using filesystem
                 o  Move on to poll functionality
                     *  dispand indexcomponents in favour of a module per
                        component
-                        *  MsgMeta and fix tests
-                        *  FileMeta and fix tests
-                        *  MessageFileList and fix tests
-                        *  ditch components module and fix tests
-                        *  check comments
                 *  Attempt to write the poll action to drive out what meta
                    data is needed to make it efficient.
-                    o  List the generated new function demands.
-                    o  Write and test them.
+                    *  Code (mostly) action.AddMessagesFromFile
+                    *  Rename SerializeToBytes encode and make both byte slice
+                       and file desc versions of both, and unit tests
+                    o  Create and test the generated new function demands.
+                        *  msgFileList.FilesContainingThisMessageAndNewer(
+                        o  fileMeta.SeekOffsetForMessageNumber
                     o  Rever to testing the poll action.
         o  Remove duplicated code to get index at start of Action 
            methods
@@ -52,3 +51,15 @@ o  Consider putting up the service using K8s in GCP
 
 ----------------------------------------------------------------
 ----------------------------------------------------------------
+each file has
+    oldest.MsgNum
+    newest.MsgNum
+
+    1, 10   11,20   21,30   31,40
+
+    seeking which one contains X, starting with earliest
+
+    X must be between incl the oldest and newest
+
+
+

@@ -31,7 +31,9 @@ func (action PollAction) Poll() (
     }
 
     // Which message storage files must we look in?
-    fileNames := msgFileList.ReadFromFiles(action.ReadFrom)
+    messageNumberToReadFrom := action.ReadFrom
+    fileNames := msgFileList.FilesContainingThisMessageAndNewer(
+        messageNumberToReadFrom)
 
     // If there are none return benign data.
     if len(fileNames) == 0 {
@@ -41,18 +43,17 @@ func (action PollAction) Poll() (
     // For the first file, whereabouts in the file should we start reading?
     firstFile := fileNames[0]
     fileMeta := msgFileList.Meta[firstFile]
-    firstFileSeekIndex := fileMeta.SeekOffsetForMessageNumber[action.ReadFrom]
+    firstFileSeekOffset := fileMeta.SeekOffsetForMessageNumber[action.ReadFrom]
 
     // Harvest the messages from this list of files.
     messages := []minikafka.Message{}
     for _, fileName := range(fileNames) {
-        filepath := filenamer.MessageFilePath(
-            fileName, action.topic, action.RootDir)
-        var seekIndex = 0
-        if fileName == firstFile {
-            seekIndex = firstFileSeekIndex
+        filepath := filenamer.MessageFilePath(fileName)
+        var seekOffset = 0 // General case.
+        if fileName == firstFile { // Special case for first file.
+            seekOffset = firstFileSeekOffset
         }
-        messages, err := action.AddMessagesFromFile(
+        messages, err := action.addMessagesFromFile(
             messages, filepath, seekIndex)
         if err != nil {
             return nil, -1, fmt.Errorf("action.AddMessagesFromFile(): %v", err)
@@ -62,4 +63,29 @@ func (action PollAction) Poll() (
     newReadFrom = action.Index.NextMessageNumberFor(action.topic)
 
     return messages, newReadFrom, nil
+}
+
+// addMessagesFromFile appends all the messages that can be read from the given
+// file to the slice  given and returns it. The caller can pass in a seek offset
+// to cause the function to start reading messages from that offset.  
+func (action PollAction) addMessagesFromFile(
+        addTo []StoredMessage, filepath string, seekOffset int) (
+        []StoreMessage, error) {
+    file, err := os.Open(filepath)
+    if err != nil {
+        return nil, fmt.Errorf("os.Open(): %v", err
+    }
+    defer file.Close()
+    _, err := file.Seek(seekOffset, 0)
+    if err != nil {
+        return nil, fmt.Errorf("file.Seek(): %v", err
+    }
+    for {
+        msg := stored.Message{}
+        err = msg.Decode(file)
+        // Check for EOF vs general error.
+        // Break from loop if EOF
+        // Return err early if other
+    }
+    return stuff
 }

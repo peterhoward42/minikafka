@@ -1,10 +1,10 @@
 package stored
 
 import (
-	"bytes"
 	"encoding/gob"
 	"fmt"
 	"time"
+    "io"
 
 	minikafka "github.com/peterhoward42/minikafka"
 )
@@ -17,14 +17,22 @@ type Message struct {
 	MessageNumber int32
 }
 
-// SerializeToBytes provides a gob-encoded serialization of the Message as a
-// slice of bytes.
-func (m *Message) SerializeToBytes() ([]byte, error) {
-	var buf bytes.Buffer
-	encoder := gob.NewEncoder(&buf)
+// Encode gob-encodes the Message into the writer provided.
+func (m *Message) Encode(w io.Writer) error {
+	encoder := gob.NewEncoder(w)
 	err := encoder.Encode(m)
 	if err != nil {
-		return nil, fmt.Errorf("encoder.Encode(): %v", err)
+		return fmt.Errorf("encoder.Encode(): %v", err)
 	}
-	return buf.Bytes(), nil
+	return nil
+}
+
+// Decode gob-decodes the Message from the reader provided.
+func (m *Message) Decode(r io.Reader) error {
+	decoder := gob.NewDecoder(r)
+	err := decoder.Decode(m)
+	if err != nil {
+		return fmt.Errorf("decoder.Decode: %v", err)
+	}
+	return nil
 }
