@@ -114,20 +114,23 @@ func (s FileStore) Poll(topic string, readFrom int) (
 	if ioutils.Exists(indexPath) {
 		err = index.PopulateFromDisk(filenamer.IndexFile(s.RootDir))
 		if err != nil {
-			return -1, fmt.Errorf("index.PopulateFromDisk(): %v", err)
+			return nil, -1, fmt.Errorf("index.PopulateFromDisk(): %v", err)
 		}
 	}
 
 	// Delegate to a PollAction instance.
 	pollAction := actions.PollAction{
-		Topic: topic, ReadFrom: readFrom, Index: index, RootDir: s.RootDir}
+		Topic:    topic,
+		ReadFrom: int32(readFrom),
+		Index:    index,
+		RootDir:  s.RootDir}
 	foundMessages, newReadFrom, err = pollAction.Poll()
 
 	// Finish up by mandating the index to re-save itself to disk, ready
 	// for the next API operation to pick up.
 	err = index.Save(filenamer.IndexFile(s.RootDir))
 	if err != nil {
-		return -1, fmt.Errorf("SaveIndex(): %v", err)
+		return nil, -1, fmt.Errorf("SaveIndex(): %v", err)
 	}
 
 	return foundMessages, newReadFrom, nil

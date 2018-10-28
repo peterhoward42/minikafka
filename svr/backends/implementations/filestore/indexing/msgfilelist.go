@@ -28,7 +28,7 @@ func NewMessageFileList() *MessageFileList {
 // RegisterNewFile .
 func (lst *MessageFileList) RegisterNewFile(filename string) {
 	lst.Names = append(lst.Names, filename)
-	lst.Meta[filename] = &FileMeta{}
+	lst.Meta[filename] = NewFileMeta()
 }
 
 // SpentFiles provides a list of filenames from the list, for which the

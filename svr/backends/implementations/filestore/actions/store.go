@@ -3,6 +3,7 @@
 package actions
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"time"
@@ -43,12 +44,15 @@ func (action StoreAction) Store() (
 	storedMessage := stored.Message{
 		Message:       action.Message,
 		CreationTime:  time.Now(),
-		MessageNumber: msgNumber}
-	bytesToStore, err := storedMessage.SerializeToBytes()
-	if err != nil {
-		return -1, "", fmt.Errorf("storedMessage.SerializeToBytes(): %v", err)
+		MessageNumber: int32(msgNumber),
 	}
-	msgSize := len(bytesToStore)
+	var buf bytes.Buffer
+	err = storedMessage.Encode(&buf)
+	if err != nil {
+		return -1, "", fmt.Errorf("storedMessage.Encode(): %v", err)
+	}
+	bytesToStore := buf.Bytes()
+	msgSize := int64(len(bytesToStore))
 
 	// Establish which storage file to use - including the case for needing to
 	// start a new one.
@@ -88,7 +92,7 @@ func (action *StoreAction) createTopicDirIfNotExists() error {
 }
 
 func (action *StoreAction) fileHasInsufficentRoom(
-	msgFileName string, msgSize int) bool {
+	msgFileName string, msgSize int64) bool {
 	msgFileList := action.Index.MessageFileLists[action.Topic]
 	return msgFileList.Meta[msgFileName].Size+msgSize > maximumFileSize
 }
@@ -116,7 +120,7 @@ func (action *StoreAction) setupNewFileForTopic() (msgFileName string, err error
 // the index with this new info. Note this is the point at which the
 // message creation time is evaluated and associated with the message.
 func (action *StoreAction) saveAndRegisterMessage(
-	msgFileName string, msgToStore []byte, msgNumber int32) error {
+	msgFileName string, msgToStore []byte, msgNumber int) error {
 	filepath := filenamer.MessageFilePath(
 		msgFileName, action.Topic, action.RootDir)
 	err := ioutils.AppendToFile(filepath, msgToStore)
@@ -126,6 +130,7 @@ func (action *StoreAction) saveAndRegisterMessage(
 	creationTime := time.Now()
 	msgFileList := action.Index.GetMessageFileListFor(action.Topic)
 	fileMeta := msgFileList.Meta[msgFileName]
-	fileMeta.RegisterNewMessage(msgNumber, creationTime, len(msgToStore))
+	fileMeta.RegisterNewMessage(
+		msgNumber, creationTime, int64(len(msgToStore)))
 	return nil
 }

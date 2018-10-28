@@ -35,7 +35,7 @@ func (index *Index) GetMessageFileListFor(topic string) *MessageFileList {
 // NextMessageNumberFor provides the next-available message number for a topic.
 // It copes gracefully with the two special cases of the index having no
 // record of that topic, or it having never yet contained any messages.
-func (index Index) NextMessageNumberFor(topic string) int32 {
+func (index Index) NextMessageNumberFor(topic string) int {
 	messageFileList, ok := index.MessageFileLists[topic]
 	if ok == false {
 		return 1
@@ -47,7 +47,7 @@ func (index Index) NextMessageNumberFor(topic string) int32 {
 	// Consult the meta data for the newest file.
 	newestName := messageFileList.Names[nTopicFiles-1]
 	newestFileMeta := messageFileList.Meta[newestName]
-	return newestFileMeta.Newest.MsgNum + 1
+	return int(newestFileMeta.Newest.MsgNum + 1)
 }
 
 // CurrentMsgFileNameFor provides the name of the file that is currently being

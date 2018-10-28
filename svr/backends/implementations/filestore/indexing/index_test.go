@@ -7,10 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-//--------------------------------------------------------------------------
-// API
-//--------------------------------------------------------------------------
-
 func TestNextMsgNumForTopic(t *testing.T) {
 	index := MakeReferenceIndex()
 

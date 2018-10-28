@@ -9,7 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	minikafka "github.com/peterhoward42/minikafka"
+	"github.com/peterhoward42/minikafka"
 	"github.com/peterhoward42/minikafka/svr/backends/implementations/filestore/indexing"
 )
 
@@ -26,8 +26,7 @@ func TestWhenHasToMakeDirectory(t *testing.T) {
 	}
 	defer os.RemoveAll(rootDir)
 
-	// Use the reference index which has just two well-known topics specified.
-	index := indexing.MakeReferenceIndex()
+	index := indexing.NewIndex()
 
 	// Create a store-action that cites a topic that is unknown to the index.
 	msg := minikafka.Message("some message")
@@ -58,8 +57,7 @@ func TestVirginState(t *testing.T) {
 	}
 	defer os.RemoveAll(rootDir)
 
-	// Use the reference index which has just two well-known topics specified.
-	index := indexing.MakeReferenceIndex()
+	index := indexing.NewIndex()
 
 	// Create a store-action with a small payload that we can use twice.
 	msg := minikafka.Message("some message")
@@ -93,8 +91,7 @@ func TestStorageFileReuse(t *testing.T) {
 	}
 	defer os.RemoveAll(rootDir)
 
-	// Use the reference index which has just two well-known topics specified.
-	index := indexing.MakeReferenceIndex()
+	index := indexing.NewIndex()
 
 	// Create a store-action with a small payload that we can use twice.
 	msg := minikafka.Message("some message")
@@ -130,8 +127,7 @@ func TestTwoLargeMessagesGetPutInDifferentFiles(t *testing.T) {
 	}
 	defer os.RemoveAll(rootDir)
 
-	// Use the reference index which has just two well-known topics specified.
-	index := indexing.MakeReferenceIndex()
+	index := indexing.NewIndex()
 
 	// Create a store-action with a large payload that we can use twice.
 	largeMsg := make([]byte, 0.75*maximumFileSize)
@@ -167,8 +163,7 @@ func TestIndexIsUpdated(t *testing.T) {
 	}
 	defer os.RemoveAll(rootDir)
 
-	// Use the reference index which has just two well-known topics specified.
-	index := indexing.MakeReferenceIndex()
+	index := indexing.NewIndex()
 
 	// Create a store-action with a small payload that we can use twice.
 	topic := "justforthistest"
@@ -194,18 +189,29 @@ func TestIndexIsUpdated(t *testing.T) {
 
 	msgFileList := index.MessageFileLists[topic]
 
-	// Seems these two messages when gob serialised occupy 248 bytes.
-	assert.Equal(t, 248, msgFileList.Meta[msgFileUsed].Size)
+	// Check the index has tracked the sizes of the message files
+	// as they've grown.
+	const gobbedMsgSize int64 = 124
+	assert.Equal(t, 2*gobbedMsgSize, msgFileList.Meta[msgFileUsed].Size)
 
+	// Check has tracked Oldest and Newest message numbers.
 	assert.Equal(t, int32(1), msgFileList.Meta[msgFileUsed].Oldest.MsgNum)
 	assert.Equal(t, int32(2), msgFileList.Meta[msgFileUsed].Newest.MsgNum)
 
+	// Check has tracked creation times.
 	expectedT := time.Now() // approx
-
 	oldestT := msgFileList.Meta[msgFileUsed].Oldest.Created
 	newestT := msgFileList.Meta[msgFileUsed].Newest.Created
 	tolerance := time.Duration(1 * time.Second)
-
 	assert.WithinDuration(t, expectedT, oldestT, tolerance)
 	assert.WithinDuration(t, expectedT, newestT, tolerance)
+
+	// Check has tracked seek indexes.
+	fileMeta := msgFileList.Meta[msgFileUsed]
+	seek := fileMeta.SeekOffsetForMessageNumber[1]
+	expected := int64(0)
+	assert.Equal(t, expected, seek)
+	seek = fileMeta.SeekOffsetForMessageNumber[2]
+	expected = gobbedMsgSize
+	assert.Equal(t, expected, seek)
 }
