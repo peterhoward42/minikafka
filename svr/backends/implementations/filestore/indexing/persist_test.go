@@ -36,6 +36,6 @@ func TestSaveAndRetrieve(t *testing.T) {
 		msg := fmt.Sprintf("index.RetrieveIndexFromDisk(): %v", err)
 		assert.FailNow(t, msg)
 	}
-	expected := int32(16)
+	expected := 16
 	assert.Equal(t, expected, newIndex.NextMessageNumberFor("topicA"))
 }

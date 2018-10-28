@@ -12,12 +12,12 @@ func TestNextMsgNumForTopic(t *testing.T) {
 
 	// Should be 1 for unknown topic.
 	nextNum := index.NextMessageNumberFor("nosuchtopic")
-	expected := int32(1)
+	expected := 1
 	assert.Equal(t, expected, nextNum)
 
 	// Should be 36 in a prepared case.
 	nextNum = index.NextMessageNumberFor("topicB")
-	expected = int32(36)
+	expected = 36
 	assert.Equal(t, expected, nextNum)
 }
 

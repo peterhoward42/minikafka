@@ -34,7 +34,7 @@ o  Persistence using filesystem
                                empty index instead of the reference index?
                             o  why does register new message need a msg number,
                                when it can deduce it?
-                                o  get all to build and test to find usages
+                                *  get all to build and test to find usages
                     o  Rever to testing the poll action.
         o  Remove duplicated code to get index at start of Action 
            methods
