@@ -31,6 +31,7 @@ o  Persistence using filesystem
                                             o  stop and think.
                                             o  read entire file into memory and iteratively slice according to seek offsets,
                                                then don't need to seek in filesystem at all!
+                                               o  start new branch for this
                                     o  smell having to make a new decoder for
                                        each iteraton.
                             o  Add more checks
