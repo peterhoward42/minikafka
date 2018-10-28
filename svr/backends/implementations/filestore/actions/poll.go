@@ -3,18 +3,21 @@
 package actions
 
 import (
+	"encoding/gob"
 	"fmt"
+	"io"
 	"os"
 
-	minikafka "github.com/peterhoward42/minikafka"
+	"github.com/peterhoward42/minikafka"
 	"github.com/peterhoward42/minikafka/svr/backends/implementations/filestore/filenamer"
 	"github.com/peterhoward42/minikafka/svr/backends/implementations/filestore/indexing"
+	"github.com/peterhoward42/minikafka/svr/backends/implementations/filestore/stored"
 )
 
 // PollAction encapsulates a single execution of the Poll command.
 type PollAction struct {
 	Topic    string
-	ReadFrom int32
+	ReadFrom int
 	Index    *indexing.Index
 	RootDir  string
 }
@@ -36,7 +39,7 @@ func (action PollAction) Poll() (
 	fileNames := msgFileList.FilesContainingThisMessageAndNewer(
 		messageNumberToReadFrom)
 
-	// If there are none return benign data.
+	// If there are none, return benign data.
 	if len(fileNames) == 0 {
 		return []minikafka.Message{}, int(action.ReadFrom), nil
 	}
@@ -44,14 +47,15 @@ func (action PollAction) Poll() (
 	// For the first file, whereabouts in the file should we start reading?
 	firstFile := fileNames[0]
 	fileMeta := msgFileList.Meta[firstFile]
-	firstFileSeekOffset := fileMeta.SeekOffsetForMessageNumber[action.ReadFrom]
+	firstFileSeekOffset := fileMeta.SeekOffsetForMessageNumber[int32(action.ReadFrom)]
 
 	// Harvest the messages from this list of files.
 	messages := []minikafka.Message{}
+	var seekOffset int64
 	for _, fileName := range fileNames {
 		filepath := filenamer.MessageFilePath(
 			fileName, action.Topic, action.RootDir)
-		var seekOffset int64       // General case.
+		seekOffset = 0             // The general case.
 		if fileName == firstFile { // Special case for first file.
 			seekOffset = firstFileSeekOffset
 		}
@@ -73,6 +77,8 @@ func (action PollAction) Poll() (
 func (action PollAction) addMessagesFromFile(
 	addTo []minikafka.Message, filepath string, seekOffset int64) (
 	[]minikafka.Message, error) {
+
+	// Open the file specified and seek to the position requested.
 	file, err := os.Open(filepath)
 	if err != nil {
 		return nil, fmt.Errorf("os.Open(): %v", err)
@@ -82,14 +88,22 @@ func (action PollAction) addMessagesFromFile(
 	if err != nil {
 		return nil, fmt.Errorf("file.Seek(): %v", err)
 	}
-	/*
-			for {
-				msg := stored.Message{}
-				err = msg.Decode(file)
-				// Check for EOF vs general error.
-				// Break from loop if EOF
-				// Return err early if other
-		    }
-	*/
-	return nil, nil
+
+	// Repeatedly do a gob.Decode from the file, which will generate a sequence
+	// of stored.Message. Keep going until EOF. In each iteration, harvest the
+	// minikafka.Message inside the stored.Message, accumulating them in the
+	// caller's slice container provided.
+	for {
+		decoder := gob.NewDecoder(file)
+		var storedMessage stored.Message
+		err = decoder.Decode(&storedMessage)
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, fmt.Errorf("gob.Decoder.Decode(): %v", err)
+		}
+		addTo = append(addTo, storedMessage.Message)
+	}
+	return addTo, nil
 }

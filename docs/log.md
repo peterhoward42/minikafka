@@ -19,8 +19,24 @@ o  Persistence using filesystem
                         *  msgFileList.FilesContainingThisMessageAndNewer(
                         *  fileMeta.SeekOffsetForMessageNumber
                     o  Revert to testing the poll action.
+                        *  The message encode/decode are useless layers?
+                        o  Simplest possible test.
+                            o  Get to compile and run
+                                o  says extra data in buffer
+                                    *  someome suggested new decoder for each
+                                    o  second iteration is erroring on EOF
+                                    o  think gonna have to seek after each decode
+                                       to start of next message
+                                        o  but doesn't that undermine architecture?
+                                            o  stop and think.
+                                            o  read entire file into memory and iteratively slice according to seek offsets,
+                                               then don't need to seek in filesystem at all!
+                                    o  smell having to make a new decoder for
+                                       each iteraton.
+                            o  Add more checks
         o  Remove duplicated code to get index at start of Action 
            methods
+        o  Are there some other gob.encode/decode wrappers?
     o  What tests are appropriate for the filestore that are not covered by
        the interface conformity tests?
 
@@ -51,15 +67,3 @@ o  Consider putting up the service using K8s in GCP
 
 ----------------------------------------------------------------
 ----------------------------------------------------------------
-each file has
-    oldest.MsgNum
-    newest.MsgNum
-
-    1, 10   11,20   21,30   31,40
-
-    seeking which one contains X, starting with earliest
-
-    X must be between incl the oldest and newest
-
-
-

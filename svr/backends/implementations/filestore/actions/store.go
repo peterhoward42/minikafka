@@ -4,6 +4,7 @@ package actions
 
 import (
 	"bytes"
+	"encoding/gob"
 	"fmt"
 	"os"
 	"time"
@@ -47,9 +48,9 @@ func (action StoreAction) Store() (
 		MessageNumber: int32(msgNumber),
 	}
 	var buf bytes.Buffer
-	err = storedMessage.Encode(&buf)
+	err = gob.NewEncoder(&buf).Encode(storedMessage)
 	if err != nil {
-		return -1, "", fmt.Errorf("storedMessage.Encode(): %v", err)
+		return -1, "", fmt.Errorf("gob.Encoder.Encode(): %v", err)
 	}
 	bytesToStore := buf.Bytes()
 	msgSize := int64(len(bytesToStore))
