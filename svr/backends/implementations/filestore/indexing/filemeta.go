@@ -26,18 +26,19 @@ func NewFileMeta() *FileMeta {
 
 // RegisterNewMessage updates the FileMeta object according to this new
 // message arriving in the store.
-func (fm *FileMeta) RegisterNewMessage(
-	msgNumber int, creationTime time.Time, messageSize int64) {
+func (fm *FileMeta) RegisterNewMessage(messageSize int64) (msgNumber int32) {
 
-	// Capture some values prior to mutating the structure.
-	fm.SeekOffsetForMessageNumber[int32(msgNumber)] = fm.Size
-
-	// Now we mutate.
+	msgNumber = fm.Newest.MsgNum + 1
+	fm.SeekOffsetForMessageNumber[msgNumber] = fm.Size
 	fm.Size += messageSize
+
+	creationTime := time.Now()
 
 	// Special case, when this is the first message to arrive for the file.
 	if fm.Oldest.MsgNum == int32(0) {
-		fm.Oldest = MsgMeta{int32(msgNumber), creationTime}
+		fm.Oldest.MsgNum = msgNumber
+		fm.Oldest.Created = creationTime
 	}
-	fm.Newest = MsgMeta{int32(msgNumber), creationTime}
+	fm.Newest = MsgMeta{msgNumber, creationTime}
+	return msgNumber
 }

@@ -121,7 +121,7 @@ func (s FileStore) Poll(topic string, readFrom int) (
 	// Delegate to a PollAction instance.
 	pollAction := actions.PollAction{
 		Topic:    topic,
-		ReadFrom: int32(readFrom),
+		ReadFrom: readFrom,
 		Index:    index,
 		RootDir:  s.RootDir}
 	foundMessages, newReadFrom, err = pollAction.Poll()

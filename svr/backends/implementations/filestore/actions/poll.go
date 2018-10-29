@@ -3,15 +3,13 @@
 package actions
 
 import (
-	"encoding/gob"
 	"fmt"
-	"io"
+	"io/ioutil"
 	"os"
 
 	"github.com/peterhoward42/minikafka"
 	"github.com/peterhoward42/minikafka/svr/backends/implementations/filestore/filenamer"
 	"github.com/peterhoward42/minikafka/svr/backends/implementations/filestore/indexing"
-	"github.com/peterhoward42/minikafka/svr/backends/implementations/filestore/stored"
 )
 
 // PollAction encapsulates a single execution of the Poll command.
@@ -44,23 +42,11 @@ func (action PollAction) Poll() (
 		return []minikafka.Message{}, int(action.ReadFrom), nil
 	}
 
-	// For the first file, whereabouts in the file should we start reading?
-	firstFile := fileNames[0]
-	fileMeta := msgFileList.Meta[firstFile]
-	firstFileSeekOffset := fileMeta.SeekOffsetForMessageNumber[int32(action.ReadFrom)]
-
 	// Harvest the messages from this list of files.
 	messages := []minikafka.Message{}
-	var seekOffset int64
 	for _, fileName := range fileNames {
-		filepath := filenamer.MessageFilePath(
-			fileName, action.Topic, action.RootDir)
-		seekOffset = 0             // The general case.
-		if fileName == firstFile { // Special case for first file.
-			seekOffset = firstFileSeekOffset
-		}
 		messages, err = action.addMessagesFromFile(
-			messages, filepath, seekOffset)
+			messages, fileName, int32(messageNumberToReadFrom))
 		if err != nil {
 			return nil, -1, fmt.Errorf("action.AddMessagesFromFile(): %v", err)
 		}
@@ -71,39 +57,41 @@ func (action PollAction) Poll() (
 	return messages, newReadFrom, nil
 }
 
-// addMessagesFromFile appends all the messages that can be read from the given
-// file to the slice  given and returns it. The caller can pass in a seek offset
-// to cause the function to start reading messages from that offset.
+// addMessagesFromFile appends all the messages in the file beyond (incl.)
+// messageNumberToReadFrom, to the addTo slice, and returns it.
 func (action PollAction) addMessagesFromFile(
-	addTo []minikafka.Message, filepath string, seekOffset int64) (
+	addTo []minikafka.Message, fileName string, messageNumberToReadFrom int32) (
 	[]minikafka.Message, error) {
 
-	// Open the file specified and seek to the position requested.
-	file, err := os.Open(filepath)
+	// Read the file contents into memory.
+	filePath := filenamer.MessageFilePath(fileName, action.Topic, action.RootDir)
+	file, err := os.Open(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("os.Open(): %v", err)
 	}
 	defer file.Close()
-	_, err = file.Seek(seekOffset, 0)
-	if err != nil {
-		return nil, fmt.Errorf("file.Seek(): %v", err)
+	fileContents, err := ioutil.ReadAll(file)
+
+	// Which message numbers should we harvest?
+	msgFileList, _ := action.Index.MessageFileLists[action.Topic]
+	fileMeta := msgFileList.Meta[fileName]
+	startMsgNum := messageNumberToReadFrom
+	if fileMeta.Oldest.MsgNum > startMsgNum {
+		startMsgNum = fileMeta.Oldest.MsgNum
+	}
+	endMsgNum := fileMeta.Newest.MsgNum
+
+	// For each targeted message number, harvest the slice of bytes in the
+	// file that represents it.
+	for msgNum := startMsgNum; msgNum <= endMsgNum; msgNum++ {
+		start := fileMeta.SeekOffsetForMessageNumber[msgNum]
+		end, ok := fileMeta.SeekOffsetForMessageNumber[msgNum+1]
+		if ok == false {
+			end = int64(len(fileContents))
+		}
+		msgBytes := fileContents[start:end]
+		addTo = append(addTo, msgBytes)
 	}
 
-	// Repeatedly do a gob.Decode from the file, which will generate a sequence
-	// of stored.Message. Keep going until EOF. In each iteration, harvest the
-	// minikafka.Message inside the stored.Message, accumulating them in the
-	// caller's slice container provided.
-	for {
-		decoder := gob.NewDecoder(file)
-		var storedMessage stored.Message
-		err = decoder.Decode(&storedMessage)
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return nil, fmt.Errorf("gob.Decoder.Decode(): %v", err)
-		}
-		addTo = append(addTo, storedMessage.Message)
-	}
 	return addTo, nil
 }

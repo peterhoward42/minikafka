@@ -3,17 +3,13 @@
 package actions
 
 import (
-	"bytes"
-	"encoding/gob"
 	"fmt"
 	"os"
-	"time"
 
 	minikafka "github.com/peterhoward42/minikafka"
 	"github.com/peterhoward42/minikafka/svr/backends/implementations/filestore/filenamer"
 	"github.com/peterhoward42/minikafka/svr/backends/implementations/filestore/indexing"
 	"github.com/peterhoward42/minikafka/svr/backends/implementations/filestore/ioutils"
-	"github.com/peterhoward42/minikafka/svr/backends/implementations/filestore/stored"
 )
 
 const maximumFileSize = 1048576 // 1 MiB
@@ -38,22 +34,6 @@ func (action StoreAction) Store() (
 	if err != nil {
 		return -1, "", fmt.Errorf("createTopicDirIfNotExists(): %v", err)
 	}
-	// Prepare the payload that will get stored, now, so we can measure how big
-	// it is, to inform the decisions about whether we should spill over to a new
-	// storage file.
-	msgNumber := action.Index.NextMessageNumberFor(action.Topic)
-	storedMessage := stored.Message{
-		Message:       action.Message,
-		CreationTime:  time.Now(),
-		MessageNumber: int32(msgNumber),
-	}
-	var buf bytes.Buffer
-	err = gob.NewEncoder(&buf).Encode(storedMessage)
-	if err != nil {
-		return -1, "", fmt.Errorf("gob.Encoder.Encode(): %v", err)
-	}
-	bytesToStore := buf.Bytes()
-	msgSize := int64(len(bytesToStore))
 
 	// Establish which storage file to use - including the case for needing to
 	// start a new one.
@@ -63,7 +43,7 @@ func (action StoreAction) Store() (
 	if msgFileName == "" {
 		needNewFile = true
 	} else {
-		needNewFile = action.fileHasInsufficentRoom(msgFileName, msgSize)
+		needNewFile = action.fileHasInsufficentRoom(msgFileName)
 	}
 	if needNewFile {
 		msgFileName, err = action.setupNewFileForTopic()
@@ -71,13 +51,13 @@ func (action StoreAction) Store() (
 			return -1, "", fmt.Errorf("setupNewFileForTopic(): %v", err)
 		}
 	}
-	// Append the message object to the storage file, and mandate the
+	// Append the message bytes to the storage file, and mandate the
 	// index to update itself with this new info.
-	err = action.saveAndRegisterMessage(msgNumber, msgFileName, bytesToStore)
+	messageNumber, err = action.saveAndRegisterMessage(msgFileName)
 	if err != nil {
 		return -1, "", fmt.Errorf("saveAndRegisterMessage(): %v", err)
 	}
-	return int(msgNumber), msgFileName, nil
+	return messageNumber, msgFileName, nil
 }
 
 // createTopicDirIfNotExists looks to see if a directory already exists
@@ -92,9 +72,9 @@ func (action *StoreAction) createTopicDirIfNotExists() error {
 	return nil
 }
 
-func (action *StoreAction) fileHasInsufficentRoom(
-	msgFileName string, msgSize int64) bool {
+func (action *StoreAction) fileHasInsufficentRoom(msgFileName string) bool {
 	msgFileList := action.Index.MessageFileLists[action.Topic]
+	msgSize := int64(len(action.Message))
 	return msgFileList.Meta[msgFileName].Size+msgSize > maximumFileSize
 }
 
@@ -118,19 +98,17 @@ func (action *StoreAction) setupNewFileForTopic() (msgFileName string, err error
 }
 
 // saveAndRegisteMessage appends the message to the specified file and updates
-// the index with this new info. Note this is the point at which the
-// message creation time is evaluated and associated with the message.
+// the index with this new info.
 func (action *StoreAction) saveAndRegisterMessage(
-	msgNumber int, msgFileName string, msgToStore []byte) error {
+	msgFileName string) (msgNumber int, err error) {
 	filepath := filenamer.MessageFilePath(
 		msgFileName, action.Topic, action.RootDir)
-	err := ioutils.AppendToFile(filepath, msgToStore)
+	err = ioutils.AppendToFile(filepath, action.Message)
 	if err != nil {
-		return fmt.Errorf("ioutils.AppendToFile(): %v", err)
+		return 0, fmt.Errorf("ioutils.AppendToFile(): %v", err)
 	}
-	creationTime := time.Now()
 	msgFileList := action.Index.GetMessageFileListFor(action.Topic)
 	fileMeta := msgFileList.Meta[msgFileName]
-	fileMeta.RegisterNewMessage(msgNumber, creationTime, int64(len(msgToStore)))
-	return nil
+	msgNumber = int(fileMeta.RegisterNewMessage(int64(len(action.Message))))
+	return msgNumber, nil
 }

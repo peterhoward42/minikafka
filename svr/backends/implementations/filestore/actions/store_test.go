@@ -191,8 +191,8 @@ func TestIndexIsUpdated(t *testing.T) {
 
 	// Check the index has tracked the sizes of the message files
 	// as they've grown.
-	const gobbedMsgSize int64 = 124
-	assert.Equal(t, 2*gobbedMsgSize, msgFileList.Meta[msgFileUsed].Size)
+	const msgSize int64 = 12
+	assert.Equal(t, 2*msgSize, msgFileList.Meta[msgFileUsed].Size)
 
 	// Check has tracked Oldest and Newest message numbers.
 	assert.Equal(t, int32(1), msgFileList.Meta[msgFileUsed].Oldest.MsgNum)
@@ -212,6 +212,6 @@ func TestIndexIsUpdated(t *testing.T) {
 	expected := int64(0)
 	assert.Equal(t, expected, seek)
 	seek = fileMeta.SeekOffsetForMessageNumber[2]
-	expected = gobbedMsgSize
+	expected = msgSize
 	assert.Equal(t, expected, seek)
 }
