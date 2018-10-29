@@ -2,7 +2,8 @@ o  Persistence using filesystem
     *  stuff I did before...collapsed
     *  substantial redesign experiment whereby only the raw messages go
        into the message files...
-    o  upgrade store action tests to use variable sized messages.
+    *  upgrade store action tests to use variable sized messages.
+    *  upgrade all relevant tests to use ioutils.TmpRootDir
     o  extend poll action tests to use variable sized messages.
     o  extend poll action tests to check all code pathways 
     o  revert to opening out all backingstore suite tests.

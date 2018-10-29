@@ -2,7 +2,6 @@ package actions
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -22,11 +21,7 @@ import (
 func TestRemoveOld(t *testing.T) {
 
 	// Prepare a root directory that we can delete after the test.
-	rootDir, err := ioutil.TempDir("", "filestore")
-	if err != nil {
-		msg := fmt.Sprintf("ioutil.TempDir(): %v", err)
-		assert.Fail(t, msg)
-	}
+	rootDir := ioutils.TmpRootDir(t)
 	defer os.RemoveAll(rootDir)
 
 	// Create an empty index.

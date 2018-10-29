@@ -2,7 +2,6 @@ package actions
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/peterhoward42/minikafka"
 	"github.com/peterhoward42/minikafka/svr/backends/implementations/filestore/indexing"
+	"github.com/peterhoward42/minikafka/svr/backends/implementations/filestore/ioutils"
 )
 
 // Operate the StoreAction in a context where it is obliged to make a new
@@ -18,12 +18,7 @@ import (
 // topic, and make sure it doesn't crash, or report errors.
 func TestWhenHasToMakeDirectory(t *testing.T) {
 
-	// Prepare a root directory that we can delete after the test.
-	rootDir, err := ioutil.TempDir("", "filestore")
-	if err != nil {
-		msg := fmt.Sprintf("ioutil.TempDir(): %v", err)
-		assert.Fail(t, msg)
-	}
+	rootDir := ioutils.TmpRootDir(t)
 	defer os.RemoveAll(rootDir)
 
 	index := indexing.NewIndex()
@@ -38,7 +33,7 @@ func TestWhenHasToMakeDirectory(t *testing.T) {
 	}
 
 	// Make sure that executing the store action doesn't fail.
-	_, _, err = storeAction.Store()
+	_, _, err := storeAction.Store()
 	if err != nil {
 		msg := fmt.Sprintf("storeAction.Store(): %v", err)
 		assert.Fail(t, msg)
@@ -48,13 +43,7 @@ func TestWhenHasToMakeDirectory(t *testing.T) {
 // This test exercises the store action on a virgin store, and thus tests
 // the logic used to create topic directories and a virgin message storage file.
 func TestVirginState(t *testing.T) {
-
-	// Prepare a root directory that we can delete after the test.
-	rootDir, err := ioutil.TempDir("", "filestore")
-	if err != nil {
-		msg := fmt.Sprintf("ioutil.TempDir(): %v", err)
-		assert.Fail(t, msg)
-	}
+	rootDir := ioutils.TmpRootDir(t)
 	defer os.RemoveAll(rootDir)
 
 	index := indexing.NewIndex()
@@ -82,13 +71,7 @@ func TestVirginState(t *testing.T) {
 // Test messages get stored in the same message file, while there is
 // is plenty of room.
 func TestStorageFileReuse(t *testing.T) {
-
-	// Prepare a root directory that we can delete after the test.
-	rootDir, err := ioutil.TempDir("", "filestore")
-	if err != nil {
-		msg := fmt.Sprintf("ioutil.TempDir(): %v", err)
-		assert.Fail(t, msg)
-	}
+	rootDir := ioutils.TmpRootDir(t)
 	defer os.RemoveAll(rootDir)
 
 	index := indexing.NewIndex()
@@ -104,6 +87,7 @@ func TestStorageFileReuse(t *testing.T) {
 
 	// Call the store action twice
 	msgFilesUsed := make([]string, 2)
+	var err error
 	for i := 0; i < 2; i++ {
 		_, msgFilesUsed[i], err = storeAction.Store()
 		if err != nil {
@@ -118,13 +102,7 @@ func TestStorageFileReuse(t *testing.T) {
 // Operate the StoreAction with two very large messages and make sure that the
 // second one causes a new storage file to be used opened.
 func TestTwoLargeMessagesGetPutInDifferentFiles(t *testing.T) {
-
-	// Prepare a root directory that we can delete after the test.
-	rootDir, err := ioutil.TempDir("", "filestore")
-	if err != nil {
-		msg := fmt.Sprintf("ioutil.TempDir(): %v", err)
-		assert.Fail(t, msg)
-	}
+	rootDir := ioutils.TmpRootDir(t)
 	defer os.RemoveAll(rootDir)
 
 	index := indexing.NewIndex()
@@ -140,6 +118,7 @@ func TestTwoLargeMessagesGetPutInDifferentFiles(t *testing.T) {
 
 	// Call the store action twice
 	msgFilesUsed := make([]string, 2)
+	var err error
 	for i := 0; i < 2; i++ {
 		_, msgFilesUsed[i], err = storeAction.Store()
 		if err != nil {
@@ -154,13 +133,7 @@ func TestTwoLargeMessagesGetPutInDifferentFiles(t *testing.T) {
 // Test that the index is left in a properly updated state after some
 // messages are stored.
 func TestIndexIsUpdated(t *testing.T) {
-
-	// Prepare a root directory that we can delete after the test.
-	rootDir, err := ioutil.TempDir("", "filestore")
-	if err != nil {
-		msg := fmt.Sprintf("ioutil.TempDir(): %v", err)
-		assert.Fail(t, msg)
-	}
+	rootDir := ioutils.TmpRootDir(t)
 	defer os.RemoveAll(rootDir)
 
 	index := indexing.NewIndex()
@@ -177,6 +150,7 @@ func TestIndexIsUpdated(t *testing.T) {
 
 	// Call the store action twice
 	var msgFileUsed string
+	var err error
 	for i := 0; i < 2; i++ {
 		_, msgFileUsed, err = storeAction.Store()
 		if err != nil {

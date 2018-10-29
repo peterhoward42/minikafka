@@ -1,13 +1,12 @@
 package filestore
 
 import (
-	"fmt"
-	"io/ioutil"
 	"os"
 	"testing"
 
+	"github.com/peterhoward42/minikafka/svr/backends/implementations/filestore/ioutils"
+
 	"github.com/peterhoward42/minikafka/svr/backends/contract"
-	"github.com/stretchr/testify/assert"
 )
 
 //--------------------------------------------------------------------------------
@@ -21,11 +20,7 @@ import (
 // defined for the BackingStore interface it claims to satisfy.
 func TestBackingStoreConformance(t *testing.T) {
 	// Prepare a root directory that we can delete after the test.
-	rootDir, err := ioutil.TempDir("", "filestore")
-	if err != nil {
-		msg := fmt.Sprintf("ioutil.TempDir(): %v", err)
-		assert.Fail(t, msg)
-	}
+	rootDir := ioutils.TmpRootDir(t)
 	defer os.RemoveAll(rootDir)
 	filestore := FileStore{rootDir}
 	// Delegate to a test suite that takes a contract.BackingStore
