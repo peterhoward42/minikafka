@@ -88,23 +88,17 @@ func (lst *MessageFileList) NumMessagesInFile(name string) int {
 // storage files newer than that one.
 func (lst *MessageFileList) FilesContainingThisMessageAndNewer(
 	msgNumber int) []string {
-	// We can find the target message file in the lst.Names slice using
-	// a binary search.
+	// Special case when no files are registered.
+	if len(lst.Names) == 0 {
+		return []string{}
+	}
+	// Binary search gives us the earliest relevant file.
 	n := len(lst.Names)
 	idx := sort.Search(n, func(i int) bool {
 		name := lst.Names[i]
 		fileMeta := lst.Meta[name]
 		return msgNumber <= int(fileMeta.Newest.MsgNum)
 	})
-	// Catch the special case when none of the files contain that message number.
-	if idx == 0 {
-		firstName := lst.Names[0]
-		fileMeta := lst.Meta[firstName]
-		if msgNumber < int(fileMeta.Oldest.MsgNum) {
-			return []string{}
-		}
-	}
-
-	// General case.
+	// We want the one just identified, plus all later ones.
 	return lst.Names[idx:]
 }

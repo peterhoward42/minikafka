@@ -4,8 +4,9 @@ o  Persistence using filesystem
        into the message files...
     *  upgrade store action tests to use variable sized messages.
     *  upgrade all relevant tests to use ioutils.TmpRootDir
-    o  extend poll action tests to use variable sized messages.
-    o  extend poll action tests to check all code pathways 
+    *  extend poll action tests to use variable sized messages.
+    *  extend poll action tests to check all code pathways 
+    *  fix up file store rationale
     o  revert to opening out all backingstore suite tests.
     o  Remove duplicated code to get index at start of Action methods
     o  Are there some other gob.encode/decode wrappers?

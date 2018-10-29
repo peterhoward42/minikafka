@@ -2,7 +2,7 @@
 
 # Why use the file system for storage?
 
-- Becuase, provided you organise it to avoid seeking inside the message store 
+- Because, where you can organise it to avoid seeking inside the message store 
   files, you can take advantage of the operating system's file caching in memory.
   Thus getting similar performance to that of an in-memory store.
 
@@ -26,17 +26,16 @@
 
 # What's in a message storage file?
 
-- Message storage files are Go GOB serialized binary files and thus can contain
-  non-trivial data structures including variable length elements like slices.
-- The file simply contains stored message objects concatenated.
-- A stored message object contains not only the payload byte slice, but also
-  its message number and creation time.
+- Message storage files are simply the byte sequences comprising the messages,
+  concatenated. A message file, in of itself, has no way of knowing where
+  one message stops, and the next starts.
 
 # Rationale
 
-- Avoids the need for seeking inside any of the  message files for the 
-  produce, or old-message eviction operations. Reduces the number of seek
-  operations needed for a poll operation to one.
+- Avoids the need for seeking inside message files completely.
+- The seek-like behaviour to delimit and fetch messages for the poll operation
+  happens on memory slices, after the necessary (targeted)  message store 
+  files have been read, in their entirety into memory.
 - Makes it possible to determine which message files are relavent to each of the
   operations without looking inside any of them.
 - Moderates the size of message files, so that when one must be re-written, 
@@ -49,7 +48,7 @@
 # Flip-Side of the Rationale Benefits
 - The index file must be read and re-written for each of the 3 
   (produce, consume, evict operations. Although it should remain a 
-  smallish file.
+  relative small file.
 - Access to the the index file is required to be protected with a mutex, thus 
   serializing access to the entire store.  (Possible enhancement: Topics could 
   be made completely independent, and each have an index of their own.
