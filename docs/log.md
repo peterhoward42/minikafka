@@ -26,8 +26,10 @@
            when not present and test these.
             *  code
             o  test
-        o  test config as file
-        o  update readme thus
+                *  when rootdir does not exist
+                o  round trip virgin to not virgin next message number
+        o  Restart testing cli for both storeage options
+        o  update readme for rootDir env var
 o  Update main git branch with this
     o  Check in and push flat-msg-storage-files
     o  Check out and pull main

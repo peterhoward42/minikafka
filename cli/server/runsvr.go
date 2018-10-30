@@ -22,13 +22,14 @@ func main() {
 
 	// Create an in-memory, or file-based backing store according
 	// to the environment variables.
+	var err error
 	var backingStore contract.BackingStore
 	var storeMessage string
 	if rootDir == "" {
 		backingStore = memstore.NewMemStore()
 		storeMessage = "In-memory (volatile) store"
 	} else {
-		backingStore, err := filestore.NewFileStore(rootDir)
+		backingStore, err = filestore.NewFileStore(rootDir)
 		if err != nil {
 			log.Fatalf("filestore.NewFileStore(): %v", err)
 		}
@@ -41,7 +42,7 @@ func main() {
 	log.Printf("Using backing store: %s", storeMessage)
 
 	// Server forever, or until an error condition.
-	err := svr.Serve(host, retentionTime)
+	err = svr.Serve(host, retentionTime)
 	if err != nil {
 		log.Fatalf("svr.Serve: %s", err)
 	}
