@@ -1,6 +1,7 @@
 package contract
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -20,9 +21,9 @@ func RunBackingStoreTests(t *testing.T, implementation BackingStore) {
 	testRemoveWhenNoneOldEnough(t, implementation)
 	testRemoveWhenAllOldEnough(t, implementation)
 	testRemoveWhenOnlySomeOldEnough(t, implementation)
-	//testPollErrorHandlingWhenNoSuchTopic(t, implementation)
-	//testPollWhenTopicIsEmpty(t, implementation)
-	//testNewReadFromAdvancement(t, implementation)
+	testPollErrorHandlingWhenNoSuchTopic(t, implementation)
+	testPollWhenTopicIsEmpty(t, implementation)
+	testNewReadFromAdvancement(t, implementation)
 }
 
 //----------------------------------------------------------------------------
@@ -130,7 +131,9 @@ func testPollErrorHandlingWhenNoSuchTopic(t *testing.T, store BackingStore) {
 	err := store.DeleteContents()
 	assert.Nil(t, err)
 	_, _, err = store.Poll("XXX", 1)
-	assert.EqualError(t, err, "No such topic: XXX")
+	assert.NotNil(t, err)
+	ok := strings.Contains(err.Error(), "topic")
+	assert.True(t, ok)
 }
 
 func testPollWhenTopicIsEmpty(t *testing.T, store BackingStore) {

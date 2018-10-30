@@ -117,34 +117,34 @@ func TestNumMessagesInFile(t *testing.T) {
 	assert.Equal(t, expected, n)
 }
 
-func TestFilesContainingThisMessageAndNewer(t *testing.T) {
+func TestMessageFilesForMessagesFrom(t *testing.T) {
 	index := MakeReferenceIndex()
 	lst := index.MessageFileLists["topicA"]
 
 	// A message number less than any of those used, should provide
-	// an empty list.
-	files := lst.FilesContainingThisMessageAndNewer(-99)
-	expected := []string{}
+	// the full list.
+	files := lst.MessageFilesForMessagesFrom(-99)
+	expected := []string{"file1", "file2"}
 	assert.Equal(t, expected, files)
 
 	// Message #1 should provide file1 and file2.
-	files = lst.FilesContainingThisMessageAndNewer(1)
+	files = lst.MessageFilesForMessagesFrom(1)
 	expected = []string{"file1", "file2"}
 	assert.Equal(t, expected, files)
 
 	// Similar to above, but use a message number in the middle of file1.
-	files = lst.FilesContainingThisMessageAndNewer(3)
+	files = lst.MessageFilesForMessagesFrom(3)
 	expected = []string{"file1", "file2"}
 	assert.Equal(t, expected, files)
 
 	// Check a message number that should provide just file 2.
-	files = lst.FilesContainingThisMessageAndNewer(7)
+	files = lst.MessageFilesForMessagesFrom(7)
 	expected = []string{"file2"}
 	assert.Equal(t, expected, files)
 
 	// Check a higher message number than any used. Should produce
 	// no file names.
-	files = lst.FilesContainingThisMessageAndNewer(9999)
+	files = lst.MessageFilesForMessagesFrom(9999)
 	expected = []string{}
 	assert.Equal(t, expected, files)
 }

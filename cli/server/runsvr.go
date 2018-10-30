@@ -1,24 +1,46 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"time"
 
+	"github.com/peterhoward42/minikafka/svr/backends/implementations/filestore"
+	"github.com/peterhoward42/minikafka/svr/backends/implementations/memstore"
+
+	"github.com/peterhoward42/minikafka/svr/backends/contract"
+
 	"github.com/peterhoward42/minikafka/svr"
 )
-
-const defaultRetentionTime = "5m"
 
 // This commmand-line program instantiates a MiniKafka server and
 // mandates it to start serving.
 func main() {
 
-	host, retentionTime := readEnvironmentVariables()
+	host, retentionTime, rootDir := readEnvironmentVariables()
 
-	svr := svr.NewServer()
+	// Create an in-memory, or file-based backing store according
+	// to the environment variables.
+	var backingStore contract.BackingStore
+	var storeMessage string
+	if rootDir == "" {
+		backingStore = memstore.NewMemStore()
+		storeMessage = "In-memory (volatile) store"
+	} else {
+		backingStore, err := filestore.NewFileStore(rootDir)
+		if err != nil {
+			log.Fatalf("filestore.NewFileStore(): %v", err)
+		}
+		storeMessage = fmt.Sprintf("File-system store rooted at: %s", rootDir)
+	}
+
+	svr := svr.NewServer(backingStore)
+
+	log.Printf("Launching server on host: %v", host)
+	log.Printf("Using backing store: %s", storeMessage)
+
 	// Server forever, or until an error condition.
-	log.Printf("Launching server on: %v", host)
 	err := svr.Serve(host, retentionTime)
 	if err != nil {
 		log.Fatalf("svr.Serve: %s", err)
@@ -27,17 +49,20 @@ func main() {
 	log.Print("Server Finished")
 }
 
-// readEnvironmentVariables fetches the configuration parameters required
-// to run the server from environment variables.
-// It treats their absence as a fatal error.
-func readEnvironmentVariables() (host string, retentionTime time.Duration) {
+// readEnvironmentVariables fetches the configuration parameters parameterise
+// the operation of the server from environment variables.
+func readEnvironmentVariables() (
+	host string, retentionTime time.Duration, rootDir string) {
 
 	const hostEnvVar string = "MINIKAFKA_HOST"
 	const retentionEnvVar string = "MINIKAFKA_RETENTIONTIME"
+	const rootDirEnvVar string = "MINIKAFKA_ROOT_DIR"
 
 	host = os.Getenv(hostEnvVar)
 	rt := os.Getenv(retentionEnvVar)
+	rootDir = os.Getenv(rootDirEnvVar)
 
+	// Host and retention time (unlike root directory) are obligatory.
 	if host == "" {
 		log.Fatalf("Please set the %s environment variable\n"+
 			"E.g. :9999", hostEnvVar)
@@ -52,5 +77,5 @@ func readEnvironmentVariables() (host string, retentionTime time.Duration) {
 		log.Fatalf("Error parsing this retention time (%s) from \n"+
 			"the %s environment variable: %s", rt, retentionEnvVar, err)
 	}
-	return host, retentionTime
+	return host, retentionTime, rootDir
 }

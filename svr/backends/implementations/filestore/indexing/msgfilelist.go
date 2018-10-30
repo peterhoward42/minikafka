@@ -83,10 +83,9 @@ func (lst *MessageFileList) NumMessagesInFile(name string) int {
 	return int(fileMeta.Newest.MsgNum) - int(fileMeta.Oldest.MsgNum) + 1
 }
 
-// FilesContainingThisMessageAndNewer provides the file that contain
-// the message with the given message number, plus all other message
-// storage files newer than that one.
-func (lst *MessageFileList) FilesContainingThisMessageAndNewer(
+// MessageFilesForMessagesFrom provides all the message files that contain
+// messages newer than the given message number. (Inclusive)
+func (lst *MessageFileList) MessageFilesForMessagesFrom(
 	msgNumber int) []string {
 	// Special case when no files are registered.
 	if len(lst.Names) == 0 {

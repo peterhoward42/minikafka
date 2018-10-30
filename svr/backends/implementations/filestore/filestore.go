@@ -21,6 +21,27 @@ type FileStore struct {
 	RootDir string
 }
 
+// NewFileStore provides an intialised FileStore object based on the root
+// directory provided. It either consumes the file store that is already
+// persisted there, or sets up a new one if there isn't one there.
+func NewFileStore(rootDir string) (*FileStore, error) {
+	// Create the root directory if it does not exist.
+	err := ioutils.CreateDirIfDoesntExist(rootDir)
+	if err != nil {
+		return nil, fmt.Errorf("ioutils.CreateDirIfDoesntExist(): %v", err)
+	}
+	// Create and persist a blank index file if doesn't exist.
+	indexFilePath := filenamer.IndexFile(rootDir)
+	if ioutils.Exists(indexFilePath) == false {
+		index := indexing.NewIndex()
+		err := index.Save(indexFilePath)
+		if err != nil {
+			return nil, fmt.Errorf("index.Save(): %v", err)
+		}
+	}
+	return &FileStore{rootDir}, nil
+}
+
 // ------------------------------------------------------------------------
 // METHODS TO SATISFY THE BackingStore INTERFACE.
 //
@@ -125,6 +146,9 @@ func (s FileStore) Poll(topic string, readFrom int) (
 		Index:    index,
 		RootDir:  s.RootDir}
 	foundMessages, newReadFrom, err = pollAction.Poll()
+	if err != nil {
+		return nil, -1, fmt.Errorf("possAction.Poll(): %v", err)
+	}
 
 	// Finish up by mandating the index to re-save itself to disk, ready
 	// for the next API operation to pick up.

@@ -34,7 +34,7 @@ func (action PollAction) Poll() (
 
 	// Which message storage files must we look in?
 	messageNumberToReadFrom := action.ReadFrom
-	fileNames := msgFileList.FilesContainingThisMessageAndNewer(
+	fileNames := msgFileList.MessageFilesForMessagesFrom(
 		messageNumberToReadFrom)
 
 	// If there are none, return benign data.

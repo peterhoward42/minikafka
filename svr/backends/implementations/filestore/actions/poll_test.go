@@ -123,6 +123,19 @@ func TestOnStoreWithNoMessagesRegistered(t *testing.T) {
 
 	assert.Equal(t, 1, newReadFrom)
 }
+func TestWhenTopicIsUnknown(t *testing.T) {
+	// Check an error is reported when we poll for an unknown topic.
+
+	rootDir := ioutils.TmpRootDir(t)
+	defer os.RemoveAll(rootDir)
+
+	index := indexing.NewIndex()
+
+	readFrom := 1
+	action := PollAction{"nosuchtopic", readFrom, index, rootDir}
+	_, _, err := action.Poll()
+	assert.EqualError(t, err, "Unknown topic: nosuchtopic")
+}
 
 func TestWhenReadFromIsEarlierThanAllFiles(t *testing.T) {
 	// Store a handful of tiny messages and make sure that the Poll action
