@@ -26,9 +26,8 @@ func NewFileMeta() *FileMeta {
 
 // RegisterNewMessage updates the FileMeta object according to this new
 // message arriving in the store.
-func (fm *FileMeta) RegisterNewMessage(messageSize int64) (msgNumber int32) {
+func (fm *FileMeta) RegisterNewMessage(msgNumber int32, messageSize int64) {
 
-	msgNumber = fm.Newest.MsgNum + 1
 	fm.SeekOffsetForMessageNumber[msgNumber] = fm.Size
 	fm.Size += messageSize
 
@@ -40,5 +39,4 @@ func (fm *FileMeta) RegisterNewMessage(messageSize int64) (msgNumber int32) {
 		fm.Oldest.Created = creationTime
 	}
 	fm.Newest = MsgMeta{msgNumber, creationTime}
-	return msgNumber
 }

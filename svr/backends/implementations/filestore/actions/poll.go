@@ -52,7 +52,7 @@ func (action PollAction) Poll() (
 		}
 	}
 
-	newReadFrom = action.Index.NextMessageNumberFor(action.Topic)
+	newReadFrom = int(action.Index.NextMessageNumbers[action.Topic])
 
 	return messages, newReadFrom, nil
 }

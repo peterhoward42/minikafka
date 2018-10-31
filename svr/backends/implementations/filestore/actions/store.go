@@ -29,7 +29,8 @@ type StoreAction struct {
 func (action StoreAction) Store() (
 	messageNumber int, msgFileUsed string, err error) {
 
-	// Special case when the store has never encountered this topic before.
+	// Special case when the store has never stored a message for this
+	// this topic before.
 	err = action.createTopicDirIfNotExists()
 	if err != nil {
 		return -1, "", fmt.Errorf("createTopicDirIfNotExists(): %v", err)
@@ -107,8 +108,9 @@ func (action *StoreAction) saveAndRegisterMessage(
 	if err != nil {
 		return 0, fmt.Errorf("ioutils.AppendToFile(): %v", err)
 	}
+	msgNumber = int(action.Index.GetAndIncrementMessageNumberFor(action.Topic))
 	msgFileList := action.Index.GetMessageFileListFor(action.Topic)
 	fileMeta := msgFileList.Meta[msgFileName]
-	msgNumber = int(fileMeta.RegisterNewMessage(int64(len(action.Message))))
+	fileMeta.RegisterNewMessage(int32(msgNumber), int64(len(action.Message)))
 	return msgNumber, nil
 }

@@ -14,12 +14,25 @@ package indexing
 // Index is the top level index object which organises the information it holds
 // by topic.
 type Index struct {
+	// A separate MessageFileList for each topic.
 	MessageFileLists map[string]*MessageFileList
+	// The next message number to issue for each topic.
+	NextMessageNumbers map[string]int32
 }
 
 // NewIndex creates and initialized an Index.
 func NewIndex() *Index {
-	return &Index{map[string]*MessageFileList{}}
+	return &Index{
+		map[string]*MessageFileList{},
+		map[string]int32{},
+	}
+}
+
+// RegisterTopic updates the index data structures to know about a hitherto
+// unknown topic.
+func (index *Index) RegisterTopic(topic string) {
+	index.MessageFileLists[topic] = NewMessageFileList()
+	index.NextMessageNumbers[topic] = 1
 }
 
 // GetMessageFileListFor provides access to the MesageFileList for the
@@ -27,27 +40,18 @@ func NewIndex() *Index {
 func (index *Index) GetMessageFileListFor(topic string) *MessageFileList {
 	_, ok := index.MessageFileLists[topic]
 	if ok == false {
-		index.MessageFileLists[topic] = NewMessageFileList()
+		index.RegisterTopic(topic)
 	}
 	return index.MessageFileLists[topic]
 }
 
-// NextMessageNumberFor provides the next-available message number for a topic.
-// It copes gracefully with the two special cases of the index having no
-// record of that topic, or it having never yet contained any messages.
-func (index Index) NextMessageNumberFor(topic string) int {
-	messageFileList, ok := index.MessageFileLists[topic]
-	if ok == false {
-		return 1
-	}
-	nTopicFiles := len(messageFileList.Names)
-	if nTopicFiles == 0 {
-		return 1
-	}
-	// Consult the meta data for the newest file.
-	newestName := messageFileList.Names[nTopicFiles-1]
-	newestFileMeta := messageFileList.Meta[newestName]
-	return int(newestFileMeta.Newest.MsgNum + 1)
+// GetAndIncrementMessageNumberFor provides the next message number that
+// should be allocated to a message in the given topic, and advances its
+// internal record of this by one.
+func (index *Index) GetAndIncrementMessageNumberFor(topic string) int32 {
+	current := index.NextMessageNumbers[topic]
+	index.NextMessageNumbers[topic]++
+	return current
 }
 
 // CurrentMsgFileNameFor provides the name of the file that is currently being
@@ -82,5 +86,3 @@ func (index Index) PreviouslyUsed(name string, topic string) bool {
 	}
 	return false
 }
-
-//-----------------------------------------------------------------------

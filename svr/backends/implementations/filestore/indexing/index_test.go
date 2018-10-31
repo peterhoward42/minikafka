@@ -3,26 +3,24 @@ package indexing
 import (
 	"sort"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNextMsgNumForTopic(t *testing.T) {
-	index := MakeReferenceIndex()
+func TestGetAndIncrementMessageNumberFor(t *testing.T) {
+	index, _ := MakeReferenceIndex()
 
-	// Should be 1 for unknown topic.
-	nextNum := index.NextMessageNumberFor("nosuchtopic")
-	expected := 1
-	assert.Equal(t, expected, nextNum)
-
-	// Should be 36 in a prepared case.
-	nextNum = index.NextMessageNumberFor("topicB")
-	expected = 36
-	assert.Equal(t, expected, nextNum)
+	// Check a prepared case.
+	nextNum := index.GetAndIncrementMessageNumberFor("topicB")
+	assert.Equal(t, int32(7), nextNum)
+	// Check the auto-increment side effect.
+	nextNum = index.GetAndIncrementMessageNumberFor("topicB")
+	assert.Equal(t, int32(8), nextNum)
 }
 
 func TestCurrentMsgFileNameFor(t *testing.T) {
-	index := MakeReferenceIndex()
+	index, _ := MakeReferenceIndex()
 	// Check correct when topic is known and has files registered.
 	currentName := index.CurrentMsgFileNameFor("topicA")
 	expected := "file2"
@@ -34,7 +32,7 @@ func TestCurrentMsgFileNameFor(t *testing.T) {
 }
 
 func TestPreviouslyUsed(t *testing.T) {
-	index := MakeReferenceIndex()
+	index, _ := MakeReferenceIndex()
 	// When should say yes.
 	used := index.PreviouslyUsed("file1", "topicA")
 	expected := true
@@ -50,14 +48,15 @@ func TestPreviouslyUsed(t *testing.T) {
 }
 
 func TestSpentFiles(t *testing.T) {
-	// Make sure that the identification of spent (i.e. expired) files
-	// is just one file in a given topic, when we set the maximum age
-	// to catch file2, but allow file1 to escape.
-	index := MakeReferenceIndex()
-	maxAge := nowMinusNMinutes(7)
+	// Using the reference index, make sure that the identification of spent
+	// (i.e. expired) files is just the oldest (file1), when we set the
+	// maximum age to be a fraction older than file2.
+	index, times := MakeReferenceIndex()
+	file2Time := times[3]
+	maxAge := file2Time.Add(-time.Duration(20 * time.Millisecond))
 	spentFiles := index.MessageFileLists["topicA"].SpentFiles(maxAge)
 	sort.Strings(spentFiles)
-	expected := []string{"file2"}
+	expected := []string{"file1"}
 	assert.Equal(t, expected, spentFiles)
 }
 
@@ -66,7 +65,7 @@ func TestForgetFiles(t *testing.T) {
 	// the special cases logic that occur in the implementaion.
 
 	// Case when a name is first in the list of names held.
-	index := MakeReferenceIndex()
+	index, _ := MakeReferenceIndex()
 	forgetThese := []string{"file1"}
 	lst := index.MessageFileLists["topicA"]
 	lst.ForgetFiles(forgetThese)
@@ -78,7 +77,7 @@ func TestForgetFiles(t *testing.T) {
 	assert.NotContains(t, lst.Meta, "file1")
 
 	// Case when a name is last in the list of names held.
-	index = MakeReferenceIndex()
+	index, _ = MakeReferenceIndex()
 	forgetThese = []string{"file2"}
 	lst = index.MessageFileLists["topicA"]
 	lst.ForgetFiles(forgetThese)
@@ -90,17 +89,17 @@ func TestForgetFiles(t *testing.T) {
 	assert.NotContains(t, lst.Meta, "file2")
 
 	// Check when a name is not known to the list it copes silently.
-	index = MakeReferenceIndex()
+	index, _ = MakeReferenceIndex()
 	forgetThese = []string{"neverheardof"}
 	lst.ForgetFiles(forgetThese)
 }
 
 func TestNumMessagesInFile(t *testing.T) {
 	// General case.
-	index := MakeReferenceIndex()
+	index, _ := MakeReferenceIndex()
 	lst := index.MessageFileLists["topicA"]
 	n := lst.NumMessagesInFile("file2")
-	expected := 5
+	expected := 3
 	assert.Equal(t, expected, n)
 
 	// Case when file is not known.
@@ -118,7 +117,7 @@ func TestNumMessagesInFile(t *testing.T) {
 }
 
 func TestMessageFilesForMessagesFrom(t *testing.T) {
-	index := MakeReferenceIndex()
+	index, _ := MakeReferenceIndex()
 	lst := index.MessageFileLists["topicA"]
 
 	// A message number less than any of those used, should provide
@@ -133,12 +132,12 @@ func TestMessageFilesForMessagesFrom(t *testing.T) {
 	assert.Equal(t, expected, files)
 
 	// Similar to above, but use a message number in the middle of file1.
-	files = lst.MessageFilesForMessagesFrom(3)
+	files = lst.MessageFilesForMessagesFrom(1)
 	expected = []string{"file1", "file2"}
 	assert.Equal(t, expected, files)
 
 	// Check a message number that should provide just file 2.
-	files = lst.MessageFilesForMessagesFrom(7)
+	files = lst.MessageFilesForMessagesFrom(5)
 	expected = []string{"file2"}
 	assert.Equal(t, expected, files)
 

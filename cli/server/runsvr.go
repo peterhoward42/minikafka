@@ -40,6 +40,7 @@ func main() {
 
 	log.Printf("Launching server on host: %v", host)
 	log.Printf("Using backing store: %s", storeMessage)
+	log.Printf("Messages retained for: %v", retentionTime)
 
 	// Server forever, or until an error condition.
 	err = svr.Serve(host, retentionTime)

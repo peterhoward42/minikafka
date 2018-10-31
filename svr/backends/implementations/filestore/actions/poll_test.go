@@ -281,5 +281,5 @@ func TestResultsWhenFromMultipleFiles(t *testing.T) {
 		assert.Fail(t, msg)
 	}
 	assert.Equal(t, 20, len(messages))
-	assert.Equal(t, 6, newReadFrom)
+	assert.Equal(t, 21, newReadFrom)
 }

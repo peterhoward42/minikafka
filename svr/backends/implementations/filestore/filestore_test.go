@@ -2,7 +2,6 @@ package filestore
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path"
 	"testing"
@@ -36,6 +35,11 @@ func TestBackingStoreConformance(t *testing.T) {
 	contract.RunBackingStoreTests(t, filestore)
 }
 
+//---------------------------------------------------------------------------
+// Some additional tests as the FileStore API level - testing behaviour
+// that is not covered by the BackingStore suite test suite above.
+//---------------------------------------------------------------------------
+
 func TestConstructionOnADirectoryThatDoesntExist(t *testing.T) {
 	// This makes sure that the root directory is created when it doesn't
 	// already exist.
@@ -56,5 +60,51 @@ func TestConstructionOnADirectoryThatDoesntExist(t *testing.T) {
 		msg := fmt.Sprintf("filestore.Store(): %v", err)
 		assert.Fail(t, msg)
 	}
-	log.Printf("hello")
+}
+
+func TestPersistence(t *testing.T) {
+	// This test makes sure that if we store some messages in one
+	// FileStore instance, then when we create a new instance based on
+	// the same root directory - it picks up the stored message and index
+	// left behind by the first instance as it should.
+
+	rootDir := ioutils.TmpRootDir(t)
+	defer os.RemoveAll(rootDir)
+
+	// Create the first file store instance and store something in it.
+	filestore, err := NewFileStore(rootDir)
+	if err != nil {
+		msg := fmt.Sprintf("NewFileStore(): %v", err)
+		assert.Fail(t, msg)
+	}
+	topic := "some topic"
+	msgNumber, err := filestore.Store(topic, []byte("a message"))
+	if err != nil {
+		msg := fmt.Sprintf("filestore.Store(): %v", err)
+		assert.Fail(t, msg)
+	}
+	assert.Equal(t, 1, msgNumber)
+
+	// Create a second file store over the same root directory, store something
+	// in it, and make sure a Poll returns both messages.
+	newFileStore, err := NewFileStore(rootDir)
+	if err != nil {
+		msg := fmt.Sprintf("NewFileStore(): %v", err)
+		assert.Fail(t, msg)
+	}
+	msgNumber, err = newFileStore.Store(topic, []byte("a message"))
+	if err != nil {
+		msg := fmt.Sprintf("filestore.Store(): %v", err)
+		assert.Fail(t, msg)
+	}
+	assert.Equal(t, 2, msgNumber)
+
+	readFrom := 1
+	messages, newReadFrom, err := newFileStore.Poll(topic, readFrom)
+	if err != nil {
+		msg := fmt.Sprintf("newFileStore.Poll(): %v", err)
+		assert.Fail(t, msg)
+	}
+	assert.Equal(t, 2, len(messages))
+	assert.Equal(t, 3, newReadFrom)
 }

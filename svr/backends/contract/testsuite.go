@@ -24,6 +24,7 @@ func RunBackingStoreTests(t *testing.T, implementation BackingStore) {
 	testPollErrorHandlingWhenNoSuchTopic(t, implementation)
 	testPollWhenTopicIsEmpty(t, implementation)
 	testNewReadFromAdvancement(t, implementation)
+	testMessageNumbersIncrementAcrossRemovals(t, implementation)
 }
 
 //----------------------------------------------------------------------------
@@ -183,4 +184,24 @@ func testNewReadFromAdvancement(t *testing.T, store BackingStore) {
 	assert.Nil(t, err)
 	assert.Equal(t, 1, len(messages))
 	assert.Equal(t, 5, newReadFrom)
+}
+
+func testMessageNumbersIncrementAcrossRemovals(t *testing.T, store BackingStore) {
+	err := store.DeleteContents()
+	assert.Nil(t, err)
+
+	// Store a message.
+	_, err = store.Store("topicA", []byte("foo"))
+	assert.Nil(t, err)
+
+	// Remove all messages using the RemoveOldMessages API call.
+	maxAge := time.Now().Add(time.Duration(1 * time.Hour))
+	err = store.RemoveOldMessages(maxAge)
+	assert.Nil(t, err)
+
+	// Do a fresh storage opertation, and ensure the messgae number
+	// allocated is 2.
+	msgNum, err := store.Store("topicA", []byte("foo"))
+	assert.Nil(t, err)
+	assert.Equal(t, 2, msgNum)
 }
