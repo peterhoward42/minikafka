@@ -77,18 +77,16 @@ func (m MemStore) Store(topic string, message minikafka.Message) (
 
 // RemoveOldMessages is defined by, and documented in the
 // backends/contract/BackingStore interface.
-func (m MemStore) RemoveOldMessages(maxAge time.Time) (
-	nRemoved int, err error) {
+func (m MemStore) RemoveOldMessages(maxAge time.Time) (err error) {
 	mutex.Lock()
 	defer mutex.Unlock()
 	for topic := range m.messagesPerTopic {
-		n, err := m.removeOldMessagesFromTopic(topic, maxAge)
+		_, err := m.removeOldMessagesFromTopic(topic, maxAge)
 		if err != nil {
-			return 0, err
+			return err
 		}
-		nRemoved += n
 	}
-	return nRemoved, nil
+	return nil
 }
 
 // Poll is defined by, and documented in the backends/contract/BackingStore

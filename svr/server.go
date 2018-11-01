@@ -2,7 +2,6 @@ package svr
 
 import (
 	"fmt"
-	"log"
 	"net"
 	"time"
 
@@ -11,7 +10,6 @@ import (
 
 	pb "github.com/peterhoward42/minikafka/protocol"
 	"github.com/peterhoward42/minikafka/svr/backends/contract"
-	"github.com/peterhoward42/minikafka/svr/backends/implementations/memstore"
 )
 
 // Server *is* the minikafka server.
@@ -21,12 +19,11 @@ type Server struct {
 	store contract.BackingStore
 }
 
-// NewServer creates and initialises a new server, but does not fire
-// up the underlying grpc server.
-func NewServer() *Server {
-	// First implementation uses an in-memory, volatile storage
-	// solution.
-	return &Server{memstore.NewMemStore()}
+// NewServer creates and initialises a new server, using a backing store
+// type-variant of the caller's choice. (In-Memory, or file-system backed).
+// It does does not fire up the underlying grpc server.
+func NewServer(backingStore contract.BackingStore) *Server {
+	return &Server{backingStore}
 }
 
 // Serve mandates the server to start serving and also to start the automatic
@@ -150,13 +147,10 @@ func (s *Server) startCullingService(
 		// unary-minus on the *retentionTime* time.Duration struct.
 		maxAge := time.Now().Add(-retentionTime)
 		// Delegate to the backing store implementation.
-		nRemoved, err := s.store.RemoveOldMessages(maxAge)
+		err := s.store.RemoveOldMessages(maxAge)
 		if err != nil {
 			errc <- fmt.Errorf("store.RemoveOldMessages: %v", err)
 			return
-		}
-		if nRemoved != 0 {
-			log.Printf("Removed %d expired messages", nRemoved)
 		}
 	}
 }

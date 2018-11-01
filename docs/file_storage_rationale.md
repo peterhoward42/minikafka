@@ -2,15 +2,13 @@
 
 # Why use the file system for storage?
 
-- Becuase, provided you organise it to avoid seeking inside the message store 
-  files, you can take advantage of the operating system's file caching in memory.
-  Thus getting similar performance to that of an in-memory store.
+- Because the in-memory caching in modern file system implementations gives great
+  performance.
 
-  And the operating system's caching is hardened and reliable.
+- And these caching systems are more reliable and battle-hardened than trying to
+  write one yourself.
 
-  See more [here]
-  (https://medium.freecodecamp.org/what-makes-apache-kafka-so-fast-a8d4f94ab145)
-
+  See more [here](https://medium.freecodecamp.org/what-makes-apache-kafka-so-fast-a8d4f94ab145)
 
 # The file/directory schema
 
@@ -26,30 +24,35 @@
 
 # What's in a message storage file?
 
-- Message storage files are Go GOB serialized binary files and thus can contain
-  non-trivial data structures including variable length elements like slices.
-- The file simply contains stored message objects concatenated.
-- A stored message object contains not only the payload byte slice, but also
-  its message number and creation time.
+- Message storage files are simply the byte sequences comprising the messages,
+  concatenated. A message file, in of itself, has no way of knowing where
+  one message stops, and the next starts.
 
 # Rationale
 
-- Avoids the need for seeking inside any of the  message files for the 
-  produce, or old-message eviction operations. Reduces the number of seek
-  operations needed for a poll operation to one.
+- The availability of the index almost completely avoids any (slow) seeking 
+  operations inside files.
+- The seek-like behaviour to delimit and fetch messages for the Poll operation
+  happens on memory slices, after the necessary (targeted)  message store 
+  files have been read, in their entirety into memory.
 - Makes it possible to determine which message files are relavent to each of the
   operations without looking inside any of them.
-- Moderates the size of message files, so that when one must be re-written, 
+- Moderates the size of message files, so that when one must be read into memory 
   the cost is constrained.
 - Reduces the message data-writing cost of the produce operation to only one 
   append operation to one file.
 - Makes it possible to do the old-message eviction operation without mutating
   files - it need only delete whole files.
+- The random-looking file names for message storage files avoids any risk of
+  people thinking the names have semantic significance and then mistakenly 
+  relying on this.
 
 # Flip-Side of the Rationale Benefits
+- It is not horizontally scalable and the size of the store is thus constrained
+  by available memory.
 - The index file must be read and re-written for each of the 3 
   (produce, consume, evict operations. Although it should remain a 
-  smallish file.
+  relative small file in comparison with the message storage files.
 - Access to the the index file is required to be protected with a mutex, thus 
   serializing access to the entire store.  (Possible enhancement: Topics could 
   be made completely independent, and each have an index of their own.

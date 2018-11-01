@@ -5,6 +5,9 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // DeleteDirectoryContents removes everything from the given directory,
@@ -24,7 +27,8 @@ func DeleteDirectoryContents(dir string) error {
 	return nil
 }
 
-// CreateDirIfDoesntExist
+// CreateDirIfDoesntExist creates a directory with the given path,
+// if one is not there already.
 func CreateDirIfDoesntExist(path string) error {
 	err := os.Mkdir(path, 0777)
 	if err == nil {
@@ -55,4 +59,27 @@ func AppendToFile(filepath string, someData []byte) error {
 func Exists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
+}
+
+// CountEntitiesInDir provides the number of entities in the given directory.
+func CountEntitiesInDir(dir string) (int, error) {
+	entities, err := ioutil.ReadDir(dir)
+	if err != nil {
+		return -1, fmt.Errorf("ioutil.ReadDir(): %v", err)
+	}
+	return len(entities), nil
+}
+
+// TmpRootDir creates a temporary directory with a name that begins
+// with "filestore" - in the context of a testing.T object passed in.
+// It handles errors by calling assert.Fail(t,...).
+func TmpRootDir(t *testing.T) string {
+
+	// Prepare a root directory that we can delete after the test.
+	rootDir, err := ioutil.TempDir("", "filestore")
+	if err != nil {
+		msg := fmt.Sprintf("ioutil.TempDir(): %v", err)
+		assert.Fail(t, msg)
+	}
+	return rootDir
 }

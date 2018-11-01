@@ -24,7 +24,7 @@ func TestSaveAndRetrieve(t *testing.T) {
 	file.Close()
 	defer os.Remove(filepath)
 
-	index := MakeReferenceIndex()
+	index, _ := MakeReferenceIndex()
 	err = index.Save(filepath)
 	if err != nil {
 		msg := fmt.Sprintf("SaveIndex(): %v", err)
@@ -36,6 +36,5 @@ func TestSaveAndRetrieve(t *testing.T) {
 		msg := fmt.Sprintf("index.RetrieveIndexFromDisk(): %v", err)
 		assert.FailNow(t, msg)
 	}
-	expected := int32(16)
-	assert.Equal(t, expected, newIndex.NextMessageNumberFor("topicA"))
+	assert.Equal(t, 2, len(index.MessageFileLists["topicA"].Names))
 }
