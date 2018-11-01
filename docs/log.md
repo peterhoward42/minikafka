@@ -10,32 +10,10 @@
     *  complete system regression tests
     *  revert to opening out all backingstore suite tests.
     *  Remove duplicated code to get index at start of Action methods
-    o  Switch cli to using filestore and test it
-        *  How / where
-            *  cli should accept an env var that specifies the root dir
-               for the store, or empty implies memstore, and thus bring
-               up accordingly.
-            *  harvest env vars with erroro handling
-            *  create instance of memstore or backing store accordingly
-            *  server.NewServer should take backing store instance as an
-               argument and use it
-            *  provide the new argument from cli
-        *  log should say which sort of store
-        *  test config as mem
-        *  in prep for below have NewFileServer create root dir and null index file
-           when not present and test these.
-            *  code
-            *  test
-                *  when rootdir does not exist
-                *  round trip virgin to not virgin next message number
-        *  Full regression test run
-        *  Have the server log the culling time
-        *  Restart testing cli for both storeage options
-            *  In mem store
-            *  filestore where no such dir
-            *  filestore on prev used dir
-        o  can the installed artefacts have less clashing names?
-        o  update readme for rootDir env var and expiry
+    *  Switch cli to using filestore and test it
+            *  design
+            o  hypothesise and write
+            o  test
 o  Update main git branch with this
     o  Check in and push flat-msg-storage-files
     o  Check out and pull main
@@ -79,4 +57,23 @@ o  Feasible to performance test?
 o  Consider vid / article
 
 ----------------------------------------------------------------
+README overhaul
 ----------------------------------------------------------------
+o  First section is good but add seconds/minutes/hours/weeks
+o  Add storeage is either file system or in mem
+o  Uses gRPC cleint server comms under hood
+o  But go client libs provided to hide away behind proxy objects.
+
+o  Soften disclaimer
+
+o  Run server like this:
+
+o  Not config options
+
+o  Real world client apps would embed client libs in their own code. But 
+   simple demo command line clients provided. Run like this.
+
+o  This
+
+o  If interested in file sys rationale see here
+o  For inst in building client apps around client libs see here.
