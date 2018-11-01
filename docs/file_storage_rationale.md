@@ -6,7 +6,7 @@
   performance.
 
 - And these caching systems are more reliable and battle-hardened than trying to
-  write on yourself.
+  write one yourself.
 
   See more [here](https://medium.freecodecamp.org/what-makes-apache-kafka-so-fast-a8d4f94ab145)
 
@@ -43,6 +43,9 @@
   append operation to one file.
 - Makes it possible to do the old-message eviction operation without mutating
   files - it need only delete whole files.
+- The random-looking file names for message storage files avoids any risk of
+  people thinking the names have semantic significance and then mistakenly 
+  relying on this.
 
 # Flip-Side of the Rationale Benefits
 - It is not horizontally scalable and the size of the store is thus constrained

@@ -11,15 +11,14 @@
     *  revert to opening out all backingstore suite tests.
     *  Remove duplicated code to get index at start of Action methods
     *  Switch cli to using filestore and test it
-            *  design
-            o  hypothesise and write
-            o  test
+    *  Update docco
+        *  check docs dir
 o  Update main git branch with this
     o  Check in and push flat-msg-storage-files
     o  Check out and pull main
     o  Merge flat-xxx
     o  Push to main
-o  update readem with build / run script
+o  test / fix readme on Windows having uninstalled gk and grpc
 o  should there be some tests for the higher level packages?
 o  some protection for filling disks
 

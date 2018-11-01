@@ -1,4 +1,4 @@
-# Brief for Golang Experience Deepener Exercise
+# Brief for MiniKafka in Go.
 
 A mini service inspired by Kafka.
 
