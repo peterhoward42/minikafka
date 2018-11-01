@@ -71,7 +71,7 @@ for 10 seconds.
 
 The more realistic use-case is to incorporate a producer or consumer client
 library in your own app - as illustrated by the command line 
-[consumer wrapper code](cli/client/mkfk-consumer/runconsmer.go)., or the 
+[consumer wrapper code](cli/client/mkfk-consumer/runconsumer.go)., or the 
 [producer wrapper code](cli/client/mkfk-producer/runproducer.go).
 
 
@@ -79,7 +79,7 @@ library in your own app - as illustrated by the command line
 
 You can similarly wrap the server library in your own code, perhaps to obtain the
 configuration from something other than environment variables. See the [server
-wrapper code](cli/mkfk-server/runserver.go).
+wrapper code](cli/mkfk-server/runsvr.go).
 
 
 # Making Clients in Other Languages
