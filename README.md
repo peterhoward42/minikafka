@@ -36,17 +36,24 @@ methods you can call on proxy objects.
     go get google.golang.org/grpc
     go get github.com/peterhoward42/minikafka
 
+    cd $GOPATH/src/github.com/peterhoward42/minikafka
+    go install ./...
+
     export MINIKAFKA_HOST=":9999"
     export MINIKAFKA_RETENTIONTIME="10s"
     export MINIKAFKA_ROOT_DIR="/tmp/minikafka"
 
     mkfk-server
 
+If you want to use the in-memory store instead of a file-system store:
+
+    export MINIKAFKA_ROOT_DIR=""
+
 # Running a Producer Client
 
 You can try out a simple command line wrapper to the client library:
 
-    mkfk-producer -host localhost:999 -topic topic_foo
+    mkfk-producer -host localhost:9999 -topic topic_foo
 
 This sends each line of text you enter to the server as a *Produce* message.
 See below for the more realistic option of embedding the producer (and consumer) 
@@ -54,65 +61,26 @@ client in your own code.
 
 # Running a Consumer Client
 
-    mkfk-consumer -host localhost:999 -topic topic_foo
+    mkfk-consumer -host localhost:9999 -topic topic_foo
 
 This polls the server every 3 seconds and tells you what it got back.
 Remember though, that the messages only live on the server with these settings
 for 10 seconds.
 
-# Using the Producer Client Library in Your Own Code
+# Using the Client Libraries in Your Own Code
 
-    import (
-        "time"
-        "github.com/peterhoward42/minikafka/client"
-    )
+The more realistic use-case is to incorporate a producer or consumer client
+library in your own app - as illustrated by the command line 
+[consumer wrapper code](cli/client/mkfk-consumer/runconsmer.go)., or the 
+[producer wrapper code](cli/client/mkfk-producer/runproducer.go).
 
-	timeout := time.Duration(500 * time.Millisecond)
-	producer, err := client.NewProducer("some_topic", timeout, ":9999")
-    message := make([]byte, 300)
-    msgNumber, err := producer.SendMessage(message)
-
-# Using the Consumer Client Library in Your Own Code
-
-    import (
-        "time"
-        "github.com/peterhoward42/minikafka/client"
-    )
-
-    // Your app will probably persist the message number to read from (***).
-	readFrom := 1 
-
-	timeout := time.Duration(500 * time.Millisecond)
-	consumer, err := clientlib.NewConsumer(
-            "some_topic", readFrom, timeout, ":9999")
-
-	ticker := time.NewTicker(3 * time.Second)
-	defer ticker.Stop()
-
-	for range ticker.C {
-		messages, newReadFrom, err := consumer.Poll()
-        // (***) Persist newReadFrom for the next re-launch.
-	}
 
 # Launching the Server From Your Own Code
 
-You can launch the server programmatically (instead of using the command line 
-wrapper) - and inject its configuration like this:
+You can similarly wrap the server library in your own code, perhaps to obtain the
+configuration from something other than environment variables. See the [server
+wrapper code](cli/mkfk-server/runserver.go).
 
-
-    import (
-        "time"
-
-        "github.com/peterhoward42/minikafka/svr/backends/implementations/filestore"
-        "github.com/peterhoward42/minikafka/svr"
-    )
-
-    rootDir := "/tmp/mkfk-store"
-    backingStore, err = filestore.NewFileStore(rootDir) // See also NewMemStore()
-
-	svr := svr.NewServer(backingStore)
-    retentionTime := time.Duration(10 * time.Seconds)
-	err = svr.Serve(":9999", retentionTime)
 
 # Making Clients in Other Languages
 
