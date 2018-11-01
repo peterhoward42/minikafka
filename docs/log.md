@@ -30,28 +30,10 @@
                 *  round trip virgin to not virgin next message number
         *  Full regression test run
         *  Have the server log the culling time
-        o  Restart testing cli for both storeage options
+        *  Restart testing cli for both storeage options
             *  In mem store
             *  filestore where no such dir
-            o  filestore on prev used dir
-                o  when server from cli using existing rootDir, it says next 
-                   stored message is being saved as message number 1?
-                    *  get to bottom of
-                        *  message culling is losing knowledge of current file
-                           and thencenext msg nuber
-                            *  make sure capture with failing suite test
-                            *  design solution
-                            *  code and test the solution incrementally
-                                *  code
-                                *  test up from index upwards
-                            o  rename method in index to say next
-                o  after production of 4 messages, consumer clie saying
-                   poll only got 1 (which may be ok), but that nextmsgNum
-                   advanced to 2 - which is wrong.
-                    o  put temp logging in to debug
-                    o  get to bottom of
-                    o  make sure capture fix in a test
-                o  after production of 4 messages, consumer clie saying
+            *  filestore on prev used dir
         o  can the installed artefacts have less clashing names?
         o  update readme for rootDir env var and expiry
 o  Update main git branch with this
