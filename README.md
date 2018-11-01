@@ -9,7 +9,7 @@ like [Kafka](https://kafka.apache.org/) but simpler.
 - Other Clients can subscribe to messages as they arrive using the
   *Consumer* client library.
 - Messages are not removed from the server when they are consumed.
-- Thus, indidual consuming clients can consume the stream at their own rate.
+- Thus, individual consuming clients can consume the stream at their own rate.
 - But Messages **are** removed from the server when they reach a configurable
   *age*; specified in anything from milliseconds to days.
 
@@ -96,8 +96,8 @@ for 10 seconds.
 
 # Launching the Server From Your Own Code
 
-You can launch the server programmatically (instead of using the CLI wrapper) - and 
-inject its configuration like this:
+You can launch the server programmatically (instead of using the command line 
+wrapper) - and inject its configuration like this:
 
 
     import (
