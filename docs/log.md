@@ -59,6 +59,10 @@ o  Consider vid / article
 ----------------------------------------------------------------
 README overhaul
 ----------------------------------------------------------------
+o say its go!!!!
+o file rationale
+o  cuter links
+
 o  First section is good but add seconds/minutes/hours/weeks
 o  Add storeage is either file system or in mem
 o  Uses gRPC cleint server comms under hood
