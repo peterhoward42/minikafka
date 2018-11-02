@@ -28,7 +28,7 @@ methods you can call on proxy objects.
 - It has decent unit test coverage
 - The design, code and documentation is respectable, but has not been peer
   reviewed yet.
-- It is still a work in progress with a few minor todos.
+- It is still a work in progress
 - It hasn't been benchmarked, tuned or stress-tested yet.
 
 # Getting and Running the Server
