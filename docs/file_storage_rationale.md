@@ -2,8 +2,9 @@
 
 # Why use the file system for storage?
 
-- Because the in-memory caching in modern file system implementations gives great
-  performance.
+- Because Kafka does. Reasoning that modern operating systems do a great 
+  job of caching recently accessed files in memory, which means that most of 
+  the blocking IO is to/from memory and therefore fast.
 
 - And these caching systems are more reliable and battle-hardened than trying to
   write one yourself.
@@ -24,7 +25,7 @@
 
 # What's in a message storage file?
 
-- Message storage files are simply the byte sequences comprising the messages,
+- Message storage files are simply the byte sequences comprising the messages -
   concatenated. A message file, in of itself, has no way of knowing where
   one message stops, and the next starts.
 
@@ -33,7 +34,7 @@
 - The availability of the index almost completely avoids any (slow) seeking 
   operations inside files.
 - The seek-like behaviour to delimit and fetch messages for the Poll operation
-  happens on memory slices, after the necessary (targeted)  message store 
+  happens on memory slices, after the necessary message store 
   files have been read, in their entirety into memory.
 - Makes it possible to determine which message files are relavent to each of the
   operations without looking inside any of them.
@@ -48,11 +49,11 @@
   relying on this.
 
 # Flip-Side of the Rationale Benefits
-- It is not horizontally scalable and the size of the store is thus constrained
-  by available memory.
+- It does not scale horizontally.
 - The index file must be read and re-written for each of the 3 
   (produce, consume, evict operations. Although it should remain a 
-  relative small file in comparison with the message storage files.
+  relative small file in comparison with the message storage files. And the
+  serilize/deserialize steps are relatively fast - using Gob encoding.
 - Access to the the index file is required to be protected with a mutex, thus 
   serializing access to the entire store.  (Possible enhancement: Topics could 
   be made completely independent, and each have an index of their own.
