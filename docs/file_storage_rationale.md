@@ -53,7 +53,7 @@
 - The index file must be read and re-written for each of the 3 
   (produce, consume, evict operations. Although it should remain a 
   relative small file in comparison with the message storage files. And the
-  serilize/deserialize steps are relatively fast - using Gob encoding.
+  serialize/deserialize steps are relatively fast - using Gob encoding.
 - Access to the the index file is required to be protected with a mutex, thus 
   serializing access to the entire store.  (Possible enhancement: Topics could 
   be made completely independent, and each have an index of their own.
